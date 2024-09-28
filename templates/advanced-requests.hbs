@@ -1,0 +1,35 @@
+<div class="advanced-requests-freeScreen-body{{#unless show}} ar-hidden{{/unless}}" style="z-index: {{_z}}; height: {{_h}}px; top: {{_y}}%; right: {{_x}}%;">
+    <div class="ar-resizable-handle"><i class="fas fa-bars"></i></div>
+    <div class="ar-freeScreen-queue" style="width: {{_w}};{{#if widthDependOnQueue}} overflow-x: hidden;{{/if}}" id="ar-freeScreen-queue">
+        {{#each queue}}
+            <div class="ar-request-container-freeScreen ar-level-{{level}}" data-id="{{id}}" data-tooltip="{{name}}">
+                <img src="{{img}}">
+                <div class="ar-queue-warning ar-level-{{level}}">
+                    <img src="modules/advanced-requests/assets/request{{level}}.webp">
+                </div>
+            </div>
+        {{/each}}
+    </div>
+    <div class="ar-freeScreen-buttons">
+        {{#if firstRequest}}
+            <div class="ar-freeScreen-button ar-level-0" data-level="0" data-tooltip="{{localize "advanced-requests.buttons.firstRequestTooltip"}}">
+                <i class="fa-regular fa-hand ar-request-icon"></i>
+            </div>
+        {{/if}}
+        {{#if secondRequest}}
+            <div class="ar-freeScreen-button ar-level-1" data-level="1" data-tooltip="{{localize "advanced-requests.buttons.secondRequestTooltip"}}">
+                <i class="fa-solid fa-hand ar-request-icon"></i>
+            </div>
+        {{/if}}
+        {{#if thirdRequest}}
+            <div class="ar-freeScreen-button ar-level-2" data-level="2" data-tooltip="{{localize "advanced-requests.buttons.thirdRequestTooltip"}}">
+                <i class="fa-solid fa-hand-sparkles ar-request-icon"></i>
+            </div>
+        {{/if}}
+    </div>
+    <div class="ar-freeScreen-addButtons">
+        <div class="ar-freeScreen-mover" style="cursor: grab"><i class="fas fa-arrows-up-down-left-right"></i></div>
+        <div class="ar-window-to-chat" style="cursor: pointer"><i class="fas fa-message"></i></div>
+    </div>
+</div>
+{{!--  --}}

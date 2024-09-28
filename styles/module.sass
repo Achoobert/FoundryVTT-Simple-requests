@@ -1,0 +1,205 @@
+.advanced-requests-chat-body
+    min-width: 100%
+    display: flex
+    padding: 2px 0
+    order: -1
+
+
+.ar-chat-buttons
+    display: flex
+    justify-content: center
+    align-items: center
+    flex-direction: column-reverse
+    border-radius: 5px 8px 8px 5px
+    overflow: hidden
+
+
+.ar-chat-button
+    flex: 1
+    min-width: 30px
+    display: grid
+    justify-items: center
+    align-items: center
+    cursor: pointer
+    border: 1px solid black
+    box-shadow: 0 0 6px inset #8d9ea7
+
+.ar-chat-queue,
+.ar-freeScreen-queue
+    flex: 1
+    position: relative
+    border-radius: 5px
+    max-height: 100%
+    align-items: center
+    display: flex
+    overflow-x: scroll
+    overflow-y: hidden
+
+.ar-chat-queue
+    border: 1px solid black
+    padding: 1px
+    box-shadow: 0 0 6px inset #8d9ea7
+
+.ar-freeScreen-queue
+    padding: 1px
+    min-width: 11px
+
+@keyframes slowPulse 
+    0%
+        box-shadow: 0 0 4px 4px #ff00005e, 0 0 3px 1px #ff000094
+    50%
+        box-shadow: 0 0 3px 2px #ff00002c, 0 0 2px 1px #ff000028
+    100%
+        box-shadow: 0 0 4px 4px #ff00005e, 0 0 3px 1px #ff000094
+
+@keyframes fastPulse
+    0%
+        box-shadow: 0 0 6px 5px #ff00007d, 0 0 4px 2px #ff0000b5
+    50%
+        box-shadow: 0 0 4px 3px #ff000042, 0 0 2px 1px #ff00003a
+    100%
+        box-shadow: 0 0 6px 5px #ff00007d, 0 0 4px 2px #ff0000b5
+        
+
+// Контейнер для заявок ПОД ЧАТОМ
+.ar-request-container-chat
+    transition: transform 0.3s ease-in-out
+    &.ar-hidden
+        transform: translateY(55px)
+    
+.ar-request-container-chat,
+.ar-request-container-freeScreen
+    width: fit-content
+    height: 90%
+    border-radius: 50%
+    margin: 0 2px
+    position: relative
+    & > img
+        height: 100%
+        border-radius: 50%
+    &.ar-level-1
+        box-shadow: 0 0 6px 5px #ff00007d, 0 0 4px 2px #ff0000b5
+        animation: slowPulse 2.5s ease-in-out infinite 
+    &.ar-level-2
+        box-shadow: 0 0 6px 5px #ff00007d, 0 0 4px 2px #ff0000b5
+        animation: fastPulse 1.5s ease-in-out infinite
+    .ar-queue-warning
+        position: absolute
+        top: -5%
+        right: -15%
+        width: 65%
+        height: 65%
+        transform: rotate(10deg)
+        img
+            border: none
+
+// Кнопка смены расположения окна заявок
+.ar-chat-queue-transfer
+    position: absolute
+    width: 99.5%
+    height: 100%
+    align-items: center
+    display: grid
+    justify-items: center
+    transition: transform 0.3s ease-in-out
+    cursor: pointer
+    i
+        text-shadow: -3px 3px 1px black
+        font-size: 20px
+        transform: rotate(270deg)
+    &.ar-hidden
+        transform: translateY(-50px)
+
+// Анимация восклицательных знаков для заявок
+@keyframes rotateClockwise 
+    0% 
+        transform: rotate(10deg)
+    50% 
+        transform: rotate(15deg)
+    100% 
+        transform: rotate(10deg)
+@keyframes rotateCounterClockwise 
+    0% 
+        transform: rotate(10deg)
+    50% 
+        transform: rotate(5deg)
+    100% 
+        transform: rotate(10deg)
+@keyframes shake
+    0%, 100%
+        transform: translateX(0)
+    10%, 30%, 50%, 70%, 90%
+        transform: translateX(1px) 
+    20%, 40%, 60%, 80%
+        transform: translateX(0)
+@keyframes strong-shake
+    0%, 100%
+        transform: translateX(0) 
+    10%, 30%, 50%, 70%, 90%
+        transform: translateX(2px)
+    20%, 40%, 60%, 80%
+        transform: translateX(-2px)
+
+.ar-queue-warning
+    &.ar-level-0
+        animation: rotateClockwise 2s infinite alternate
+        animation: rotateCounterClockwise 2s infinite alternate
+    &.ar-level-1
+        animation: rotateClockwise 1s infinite alternate, rotateCounterClockwise 1s infinite alternate, shake 0.8s infinite
+    &.ar-level-2
+        animation: rotateClockwise 1s infinite alternate
+        animation: rotateCounterClockwise 1s infinite alternate
+        animation: strong-shake 0.3s infinite
+
+// Стили для окна заявок В СВОБОДКЕ
+.advanced-requests-freeScreen-body
+    min-width: 60px
+    display: flex
+    position: absolute
+    border: 2px solid black
+    border-radius: 8px
+    box-shadow: 0 0 3px #444 inset
+    background: rgba(0, 0, 0, 0.6)
+    overflow: hidden
+    i
+        text-shadow: 2px 2px 0px black
+        color: #b9b2a2
+    &.ar-hidden
+        display: none !important
+
+.ar-resizable-handle
+    position: absolute
+    bottom: 0
+    left: 0
+    width: 8px
+    height: 8px
+    cursor: nesw-resize
+    pointer-events: all
+    z-index: 1
+    i
+        transform: rotate(45deg) translate(-4px, 1px)
+
+.ar-freeScreen-addButtons
+    align-items: center
+    justify-items: center
+    display: grid
+    div
+        padding: 0 5px
+
+.ar-freeScreen-button
+    flex: 1
+    min-width: 30px
+    display: grid
+    justify-items: center
+    align-items: center
+    cursor: pointer
+
+.ar-freeScreen-buttons
+    display: flex
+    justify-content: center
+    align-items: center
+    flex-direction: column-reverse
+    overflow: hidden
+    border: 1px solid
+    border-top: none
+    border-bottom: none

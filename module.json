@@ -1,0 +1,40 @@
+{
+	"title": "Advanced Requests",
+	"description": "A module that adds a convenient way to use the Requests rule, allowing the GM to more effectively distribute attention between players.",
+	"version": "1.0",
+    "compatibility": {
+      "minimum": "11",
+      "verified": "11"
+    },
+	"authors": [
+		{
+			"name": "Nazgob"
+		}
+	],
+  "socket": true,
+	"esmodules": [
+    "scripts/main.js",
+    "scripts/settings.js"
+	],
+	"styles": [
+		"styles/module.css"
+	],
+  "languages": [
+    {
+      "lang": "ru",
+      "name": "Russian",
+      "path": "language/ru.json",
+      "flags": {}
+    },
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "language/en.json",
+      "flags": {}
+    }
+  ],
+  "id": "advanced-requests",
+  "url": "https://www.patreon.com/Nazgob",
+  "manifest": "https://module.fvtt.club/s/HMnBwygzPj4Dbaf/download",
+  "download": "https://module.fvtt.club/s/wZBgJDNGJmPSjwe/download"
+}
