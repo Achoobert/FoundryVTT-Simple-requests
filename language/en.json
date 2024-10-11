@@ -11,9 +11,11 @@
             "reqClickSoundHint": "Path to the file for the sound when activating a request",
             "useForRequests": "What to use for requests",
             "useForRequestsHint": "Choose what will be used for the name and image of your requests. If the \"Custom\" option is selected, you can specify the name and image file path in the setting below",
-            "ufrToken": "Token",
-            "ufrActor": "Actor",
-            "ufrUser": "User",
+            "ufrToken": "Токен выбранного актёра",
+            "ufrActor": "Изображение выбранного актёра",
+            "ufrPlayerToken": "Токен персонажа игрока",
+            "ufrPlayerActor": "Изображение персонажа игрока",
+            "ufrUser": "Аватар игрока",
             "ufrControlled": "Controlled token on scene",
             "ufrCustom": "Custom",
             "customImage": "Custom image for requests",
@@ -35,10 +37,16 @@
             "thirdRequest": "Third request",
             "thirdRequestHint": "Show the 'Third request' button (urgent!)",
             "widthDependOnQueue": "Width depends on the number of requests",
-            "widthDependOnQueueHint": "If active, the width of the requests field in the Free Window will depend on the number of requests, setting the minimum possible width"
+            "widthDependOnQueueHint": "If active, the width of the requests field in the Free Window will depend on the number of requests, setting the minimum possible width",
+            "resetActor": "Сброс выбранного актёра",
+            "resetActorLabel": "Сбросить выбранного актёра",
+            "resetActorHint": "При нажатии актёр используемый при выборе варианта \"Токен/Изображение выбранного актёра\" настройки \"Что использовать для заявки\" будет сброшен",
+            "actorReset": "Выбор актёра сброшен ✔"
         },
         "errors": {
-            "noReqClickSound": "File not found at the specified path"
+            "noReqClickSound": "File not found at the specified path",
+            "actorNotFound": "Актёр не найден - подробности в консоли",
+            "noControlledTokens": "Выберите токен на сцене для создания заявки!"
         },
         "chatMessage": {
             "activateRequest1": "Player \"",
@@ -49,6 +57,19 @@
             "secondRequestTooltip": "Important request",
             "thirdRequestTooltip": "Urgent request!",
             "queueTransferTooltip": "Change the position of the requests window to Free"
+        },
+        "imageHelper": {
+            "title1": "Изображение для Заявки не установлено",
+            "title2": "Пожалуйста, убедитесь что все пункты установлены верно",
+            "useForRequests": "Использовать для заявок:",
+            "choosenActor": "Выбранный актёр",
+            "actorDropArea": "Перенесите сюда Актёра",
+            "imagePath": "Путь к изображению:",
+            "imagePathPlaceholder": "Например: icons/svg/mystery-man.svg",
+            "imageName": "Имя:",
+            "notCustom": "Вы можете устанавливать свой Путь к изображению и Имя только при выбранном варианте \"Своё\" в первом пункте",
+            "choosenActorTooltip": "Нажмите \"ПКМ\" чтобы очистить выбор актёра",
+            "imageDoesntExistTooltip": "Файл по указанному пути не найден"
         }
     }
 }

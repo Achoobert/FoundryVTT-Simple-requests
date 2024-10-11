@@ -1,4 +1,5 @@
 import { Constants as C } from "./const.js";
+import { ImageHelper } from "./imageHelper.js";
 
 // Рендер окна заявок в чате
 Hooks.on("renderSidebarTab", (app, html, data) => {
@@ -117,7 +118,6 @@ function addRequestListener(element, reRender = false) {
     element?.addEventListener('click', async () => {
         if (game.user.isGM) {
             const messageActivate = game.settings.get(C.ID, "messageActivate")
-            const soundActivate = game.settings.get(C.ID, "soundActivate")
             if (messageActivate) {
                 const _user = game.users.find(u=>u.isGM) || game.user
                 ChatMessage.create({
@@ -126,17 +126,6 @@ function addRequestListener(element, reRender = false) {
                     content: game.i18n.localize(`${C.ID}.chatMessage.activateRequest1`) + game.users.find(u=>u.id == elId)?.name + game.i18n.localize(`${C.ID}.chatMessage.activateRequest2`) // изменить по типу "Игрок какой-то там сделал заявку"
                 })
             }
-            if (soundActivate) {
-                const reqClickSound = game.settings.get(C.ID, "reqClickSound")
-                if (reqClickSound && await srcExists(reqClickSound)) {
-                    AudioHelper.play({
-                        src: reqClickSound,
-                        volume: game.settings.get("core", "globalInterfaceVolume"),
-                    });
-                } else {
-                    ui.notifications.warn(game.i18n.localize(`${C.ID}.errors.noReqClickSound`) + " — " + reqClickSound);
-                }
-            }
         }
         await deleteRequest(elId, reRender)
     })
@@ -144,27 +133,42 @@ function addRequestListener(element, reRender = false) {
 }
 
 async function addRequest(reqLevel, reRender = false) {
-    const data = getRequestData(reqLevel);
+    const useForRequests = game.settings.get(C.ID, "useForRequests");
+    const data = getRequestData(reqLevel, useForRequests);
 
-    const queue = getQueue();
-    if (queue.some(item=>item.id == data.id)) {
-        queue.splice(queue.findIndex(item => item.id === data.id), 1);
-    }
-    const index = queue.findLastIndex((item) => item.level > reqLevel);
-    queue.splice(index + 1, 0, data);
+    // Проверяем что имеется картинка для реквеста
+    const defaultUserImg = "icons/svg/mystery-man.svg" // (HOW DO I GET A FUCKING SYSTEM DEFAULT AVATAR?)
+    const defaultImg = useForRequests == "user" ? defaultUserImg : Actor.implementation.getDefaultArtwork({type: "someActorType"}).img
 
-    const options = {changes: ['addRequest'], reqId: data.id};
-    if (game.user.isGM) {
-        await game.settings.set(C.ID, 'queue', queue, options);
+    const hasImage = (data.img && data.img != defaultImg && await srcExists(defaultImg))
+    
+
+    if (hasImage) {
+        const queue = getQueue();
+        if (queue.some(item=>item.id == data.id)) {
+            queue.splice(queue.findIndex(item => item.id === data.id), 1);
+        }
+        const index = queue.findLastIndex((item) => item.level > reqLevel);
+        queue.splice(index + 1, 0, data);
+    
+        const options = {changes: ['addRequest'], reqId: data.id};
+        if (game.user.isGM) {
+            await game.settings.set(C.ID, 'queue', queue, options);
+        } else {
+            game.socket.emit(`module.${C.ID}`, {
+                type: 'queue',
+                settingData: queue,
+                options
+            });
+        }
+        if (reRender) AdvancedRequestsApp._render(true)
+    } else if (useForRequests == "controlled") {
+        ui.notifications.warn(game.i18n.localize(`${C.ID}.errors.noControlledTokens`));
     } else {
-        game.socket.emit(`module.${C.ID}`, {
-            type: 'queue',
-            settingData: queue,
-            options
-        });
+        new ImageHelper().render(true)
     }
-    if (reRender) AdvancedRequestsApp._render(true)
 }
+
 
 async function deleteRequest(id, reRender = false) {
     const queue = getQueue();
@@ -182,18 +186,27 @@ async function deleteRequest(id, reRender = false) {
     if (reRender) AdvancedRequestsApp._render(true)
 }
 
-const getRequestData = (reqLevel = 0) => {
-    const useForRequests = game.settings.get(C.ID, "useForRequests");
+export const getRequestData = (reqLevel = 0, useForRequests) => {
     let data = {
         level: reqLevel,
         id: game.user.id
     }
+    const _actor = game.actors.get(game.settings.get(C.ID, "selectedActorId"))
+    const _controlled = canvas.tokens.controlled[0]
     switch (useForRequests) {
         case "token":
-            data.img = game.user.character?.prototypeToken?.texture?.src
-            data.name = game.user.character?.prototypeToken?.name
+            data.img = _actor?.prototypeToken?.texture?.src
+            data.name = _actor?.prototypeToken?.name
             break;
         case "actor":
+            data.img = _actor?.img
+            data.name = _actor?.name
+            break;
+        case "playerToken":
+            data.img = game.user.character?.prototypeToken?.texture?.src 
+            data.name = game.user.character?.prototypeToken?.name
+            break;
+        case "playerActor":
             data.img = game.user.character?.img
             data.name = game.user.character?.name
             break;
@@ -205,11 +218,17 @@ const getRequestData = (reqLevel = 0) => {
             data.img = game.settings.get(C.ID, "customImage")
             data.name = game.settings.get(C.ID, "customName")
             break;
+        case "controlled":
+            data.img = _controlled?.document?.texture?.src
+            data.name = _controlled?.document?.name
+            break;
         default:
             data.img = game.user.avatar
             data.name = game.user.name
             break;
     }
+    data.img = data.img || ""
+    data.name = data.name || ""
     return data
 }
 
@@ -251,12 +270,9 @@ export class AdvancedRequestsApp extends FormApplication {
             thirdRequest: game.settings.get(C.ID, "thirdRequest"),
             widthDependOnQueue: game.settings.get(C.ID, "widthDependOnQueue"),
         }
-        console.log("data", data);
-        console.log("requestsPosition", game.settings.get(C.ID, "requestsPosition"));
-        console.log("?", (game.settings.get(C.ID, "requestsPosition") == "freeScreen"));
 
         let freeScreenData = game.settings.get(C.ID, "freeScreenData");
-        const freeScreenDataTemplate = {_x: 10, _y: 10, _w: 250, _h: game.settings.get(C.ID, "chatQueueHeight"), _z: game.settings.get(C.ID, "freeScreenZIndex")};
+        const freeScreenDataTemplate = {_x: 30, _y: 10, _w: 250, _h: game.settings.get(C.ID, "chatQueueHeight"), _z: game.settings.get(C.ID, "freeScreenZIndex")};
         freeScreenData = foundry.utils.mergeObject(freeScreenData, freeScreenDataTemplate, {overwrite: false});
         freeScreenData._w = data.widthDependOnQueue ? "fit-content" : `${freeScreenData._w}px`
         
@@ -419,6 +435,18 @@ Hooks.on("updateSetting", async (setting, value, options, userId) => {
     }
     if (changes.includes("deleteRequest")) {
         queueEl.removeChild(queueEl.querySelector(`[data-id="${options.reqId}"]`))
+        const soundActivate = game.settings.get(C.ID, "soundActivate")
+        if (soundActivate) {
+            const reqClickSound = game.settings.get(C.ID, "reqClickSound")
+            if (reqClickSound && await srcExists(reqClickSound)) {
+                AudioHelper.play({
+                    src: reqClickSound,
+                    volume: game.settings.get("core", "globalInterfaceVolume"),
+                });
+            } else {
+                ui.notifications.warn(game.i18n.localize(`${C.ID}.errors.noReqClickSound`) + " — " + reqClickSound);
+            }
+        }
     }
     AdvancedRequestsApp._render()
 })
@@ -441,7 +469,10 @@ Hooks.on('setup', () => {
 TODO:
 
 ✖ Синхроназация настроек с ГМом
-- Звук только для того кто кликнул слышен, балбес (чё?)
+✔ Звук только для того кто кликнул слышен, балбес (чё?)
+✔ Предупреждение если выбрано "controlled" для реквеста и токенов под контролем нет
+✔ Да "выбранный токен на сцене" вообще в целом то не работает, лол
+✔ Добавить кнопку открытия меню настройки заявки в меню настроек
 
 ✖ В каком углу стрелочка
 ✖ Наличие границы всей коробки (+вместе со стрелочкой или без неё)

@@ -18,6 +18,16 @@ Hooks.once('init', function() {
     });
     }
 
+    // Сбросить выбранного актёра
+    game.settings.registerMenu(C.ID, "resetActor", {
+        name: game.i18n.localize(`${C.ID}.settings.resetActor`),
+        label: game.i18n.localize(`${C.ID}.settings.resetActorLabel`),
+        hint: game.i18n.localize(`${C.ID}.settings.resetActorHint`),
+		icon: 'fas fa-user-xmark',
+		restricted: true,
+        type: ResetActor,
+    })
+
     // Воспроизводить звук при создании заявок
     registerSettings("soundCreate", "client", true, Boolean, true)
     // Воспроизводить звук при активации заявок
@@ -29,7 +39,15 @@ Hooks.once('init', function() {
     // Звук заявок (путь к файлу)
     registerSettings("reqClickSound", "client", true, String, "modules/advanced-requests/assets/samples/fingerSnapping.wav", "audio")
     // Что использовать для заявок
-    const ufrChooseList = {"token": game.i18n.localize(`${C.ID}.settings.ufrToken`), "actor": game.i18n.localize(`${C.ID}.settings.ufrActor`), "user": game.i18n.localize(`${C.ID}.settings.ufrUser`), "controlled": game.i18n.localize(`${C.ID}.settings.ufrControlled`), "custom": game.i18n.localize(`${C.ID}.settings.ufrCustom`)};
+    const ufrChooseList = {
+        "playerToken": game.i18n.localize(`${C.ID}.settings.ufrPlayerToken`),
+        "playerActor": game.i18n.localize(`${C.ID}.settings.ufrPlayerActor`),
+        "token": game.i18n.localize(`${C.ID}.settings.ufrToken`), 
+        "actor": game.i18n.localize(`${C.ID}.settings.ufrActor`), 
+        "user": game.i18n.localize(`${C.ID}.settings.ufrUser`), 
+        "controlled": game.i18n.localize(`${C.ID}.settings.ufrControlled`), 
+        "custom": game.i18n.localize(`${C.ID}.settings.ufrCustom`)
+    };
     registerSettings("useForRequests", "client", true, String, "token", null, false, ufrChooseList)
     // Кастомное изображение для заявок
     registerSettings("customImage", "client", true, String, "", "image")
@@ -51,10 +69,12 @@ Hooks.once('init', function() {
     registerSettings("thirdRequest", "world", true, Boolean, true, null, updateChatRequestButtons)
 
     // СКРЫТЫЕ
+    // ID выбранного игроком Актёра
+    registerSettings("selectedActorId", "client", false, String, "")
     // Очередь заявок
     registerSettings("queue", "world", false, Array, [])
     // Данные окна заявок в свободке
-    registerSettings("freeScreenData", "client", false, Object, {}, null, true)
+    registerSettings("freeScreenData", "client", false, Object, {})
 });
 
 Hooks.on("ready", () => {
@@ -92,3 +112,26 @@ function updateChatRequestButtons() {
 function reRender() {
     AdvancedRequestsApp._render()
 }
+
+export class ResetActor extends FormApplication {
+    constructor() {
+        super();
+    }
+    static get defaultOptions() {
+        const options = super.defaultOptions;
+        options.title = '';
+        options.id = 'ar-reset-actor';
+        options.template = `modules/${C.ID}/templates/actorReset.html`;
+        options.closeOnSubmit = true;
+        options.popOut = true;
+        options.width = 1;
+        options.height = 1;
+        return options;
+    }
+    static async createBackup(app) {
+        await game.settings.set(C.ID, "selectedActorId", "");
+        ui.notifications.info(game.i18n.localize(`${C.ID}.settings.actorReset`));
+        app.close({ force: true });
+    }
+}
+Hooks.on("renderResetActor", ResetActor.createBackup);

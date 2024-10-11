@@ -1,0 +1,54 @@
+<div class="image-helper">
+    <div class="ih-header">
+        <span>{{localize "advanced-requests.imageHelper.title1"}}</span>
+        <span>{{localize "advanced-requests.imageHelper.title2"}}</span>
+    </div>
+    <div class="ih-body">
+        <div class="ih-box flexrow">
+            <div class="ih-icon"><i class="fas fa-check"></i></div>
+            <div class="ih-label"><span>{{localize "advanced-requests.imageHelper.useForRequests"}}</span></div>
+            <div class="ih-input">
+                <select class="ih-select">
+                    {{#each options}}
+                        <option value="{{key}}"{{#if selected}} selected{{/if}}>{{name}}</option>
+                    {{/each}}
+                </select>
+            </div>
+        </div>
+        <div class="ih-box ih-actor-box flexrow{{#unless useActor}} ih-hidden{{/unless}}" data-tooltip="{{localize "advanced-requests.imageHelper.choosenActorTooltip"}}">
+            <div class="ih-icon"><i class="fas fa-{{#if hasActor}}check{{else}}xmark{{/if}}"></i></div>
+            <div class="ih-label"><span>{{localize "advanced-requests.imageHelper.choosenActor"}}</span></div>
+            <div class="ih-input">
+                {{#if hasActor}}
+                    <div class="ih-actor">
+                        <img src="{{imagePath}}" alt="{{name}}"/>
+                        <span>{{name}}</span>
+                    </div>
+                {{else}}
+                    <div class="ih-drop-box">
+                        <div class="ih-drop-area">
+                            <i class="fas fa-plus"></i>
+                            <span>{{localize "advanced-requests.imageHelper.actorDropArea"}}</span>
+                        </div>
+                    </div>
+                {{/if}}
+            </div>
+        </div>
+        {{!-- БЛЯТЬ Я МОГ РЕШИТЬ ЭТО ПО НОРМАЛЬНОМУ НО Я ВЫБРАЛ ПУТЬ ГРЕХА --}}
+        {{#unless useActor}}<div class="ih-box" style="display: none"></div>{{/unless}}
+        <div class="ih-box flexrow" {{#if imageDoesntExist}}data-tooltip="{{localize "advanced-requests.imageHelper.imageDoesntExistTooltip"}}"{{/if}}>
+            <div class="ih-icon"><i class="fas fa-{{#if imageDoesntExist}}triangle-exclamation{{else if hasImage}}check{{else}}xmark{{/if}}"></i></div>
+            <div class="ih-label"><span>{{localize "advanced-requests.imageHelper.imagePath"}}</span></div>
+            <div class="ih-input">
+                <input type="text" class="ih-image-path" value="{{imagePath}}" placeholder="{{localize "advanced-requests.imageHelper.imagePathPlaceholder"}}"{{#if disableInputs}} disabled data-tooltip="{{localize "advanced-requests.imageHelper.notCustom"}}"{{/if}}{{#if (eq focusEl "imagePath")}} autofocus{{/if}}/>
+            </div>
+        </div>
+        <div class="ih-box flexrow">
+            <div class="ih-icon"><i class="fas fa-{{#if hasName}}check{{else}}xmark{{/if}}"></i></div>
+            <div class="ih-label"><span>{{localize "advanced-requests.imageHelper.imageName"}}</span></div>
+            <div class="ih-input">
+                <input type="text" class="ih-name" value="{{name}}"{{#if disableInputs}} disabled data-tooltip="{{localize "advanced-requests.imageHelper.notCustom"}}"{{/if}}{{#if (eq focusEl "name")}} autofocus{{/if}}/>
+            </div>
+        </div>
+    </div>
+</div>
