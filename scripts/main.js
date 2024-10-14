@@ -21,6 +21,15 @@ Hooks.on("renderSidebarTab", (app, html, data) => {
         const containerEl = getRequestElement(item)
         queueBox.append(containerEl)
     })
+    // Кнопка открытия менюшки заявок
+    const requestsMenuButton = document.createElement("div");
+    requestsMenuButton.classList.add("ar-chat-requests-menu");
+    requestsMenuButton.innerHTML = `<i class="fas fa-gear"></i>`
+    requestsMenuButton.dataset.tooltip = game.i18n.localize(`${C.ID}.buttons.requestsMenuTooltip`);
+    requestsMenuButton.addEventListener("click", () => {
+        new ImageHelper().render(true)
+    })
+    queueBox.append(requestsMenuButton)
     // Кнопка смены расположения
     const transferButton = document.createElement("div");
     transferButton.className = "ar-chat-queue-transfer ar-hidden";
@@ -116,7 +125,8 @@ function addRequestListener(element, reRender = false) {
         await deleteRequest(elId, reRender)
     })
     element?.addEventListener('click', async () => {
-        if (game.user.isGM) {
+        const isGM = game.user.isGM
+        if (isGM) {
             const messageActivate = game.settings.get(C.ID, "messageActivate")
             if (messageActivate) {
                 const _user = game.users.find(u=>u.isGM) || game.user
@@ -127,7 +137,7 @@ function addRequestListener(element, reRender = false) {
                 })
             }
         }
-        await deleteRequest(elId, reRender)
+        await deleteRequest(elId, reRender, isGM)
     })
     if (reRender) AdvancedRequestsApp._render(true)
 }
@@ -151,7 +161,7 @@ async function addRequest(reqLevel, reRender = false) {
         const index = queue.findLastIndex((item) => item.level > reqLevel);
         queue.splice(index + 1, 0, data);
     
-        const options = {changes: ['addRequest'], reqId: data.id};
+        const options = {changes: ['addRequest', 'playSound'], reqId: data.id};
         if (game.user.isGM) {
             await game.settings.set(C.ID, 'queue', queue, options);
         } else {
@@ -170,10 +180,11 @@ async function addRequest(reqLevel, reRender = false) {
 }
 
 
-async function deleteRequest(id, reRender = false) {
+async function deleteRequest(id, reRender = false, playSound = false) {
     const queue = getQueue();
     queue.splice(queue.findIndex(item => item.id === id), 1);
     const options = {changes: ['deleteRequest'], reqId: id};
+    if (playSound) options.changes.push("playSound")
     if (game.user.isGM) {
         await game.settings.set(C.ID, 'queue', queue, options);
     } else {
@@ -410,38 +421,45 @@ export class AdvancedRequestsApp extends FormApplication {
 
 Hooks.on("updateSetting", async (setting, value, options, userId) => {
     if (!setting.key == `${C.ID}.queue`) return
-    const queueEl = document.getElementById("ar-chat-queue")
+    const queueEls = document.querySelectorAll(".ar-chat-queue")
     const queue = setting.value
     const changes = options.changes || []
     if (changes.includes("addRequest")) {
         const queueItemData = queue.find((item) => item.id == options.reqId)
         if (!queueItemData) return
-        const existingEls = queueEl.querySelectorAll(`[data-id="${options.reqId}"]`)
-        existingEls.forEach(el => el.remove())
-        const requestEl = getRequestElement(queueItemData)
-        const index = queue.findIndex((item) => item.id == queueItemData.id);
-        const prevEl = queueEl.children[index]
-        if (prevEl) {
-            queueEl.insertBefore(requestEl, prevEl)
-        } else {
-            queueEl.append(requestEl)
-        }
-        if (game.settings.get(C.ID, "soundCreate")) {
+        queueEls.forEach((queueEl) => {
+            const existingEls = queueEl.querySelectorAll(`[data-id="${options.reqId}"]`)
+            existingEls.forEach(el => el.remove())
+            const requestEl = getRequestElement(queueItemData)
+            const index = queue.findIndex((item) => item.id == queueItemData.id);
+            const prevEl = queueEl.children[index]
+            if (prevEl) {
+                queueEl.insertBefore(requestEl, prevEl)
+            } else {
+                queueEl.append(requestEl)
+            }
+        })
+        if (game.settings.get(C.ID, "soundCreate") && changes.includes("playSound")) {
+            let volume = game.settings.get(C.ID, "useFoundryInterfaceVolume") ? game.settings.get("core", "globalInterfaceVolume") : game.settings.get(C.ID, "soundCreateVolume") * 0.01
+            if (queueItemData.level == 2) volume *= 1.9
             AudioHelper.play({
                 src: `modules/${C.ID}/assets/request${queueItemData.level}.wav`,
-                volume: game.settings.get("core", "globalInterfaceVolume"),
+                volume: volume,
             });
         }
     }
     if (changes.includes("deleteRequest")) {
-        queueEl.removeChild(queueEl.querySelector(`[data-id="${options.reqId}"]`))
-        const soundActivate = game.settings.get(C.ID, "soundActivate")
+        queueEls.forEach((queueEl) => {
+            queueEl.removeChild(queueEl.querySelector(`[data-id="${options.reqId}"]`))
+        })
+        const soundActivate = game.settings.get(C.ID, "soundActivate") && changes.includes("playSound")
         if (soundActivate) {
             const reqClickSound = game.settings.get(C.ID, "reqClickSound")
             if (reqClickSound && await srcExists(reqClickSound)) {
+                const volume = game.settings.get(C.ID, "useFoundryInterfaceVolume") ? game.settings.get("core", "globalInterfaceVolume") : game.settings.get(C.ID, "soundActivateVolume") * 0.01
                 AudioHelper.play({
                     src: reqClickSound,
-                    volume: game.settings.get("core", "globalInterfaceVolume"),
+                    volume: volume,
                 });
             } else {
                 ui.notifications.warn(game.i18n.localize(`${C.ID}.errors.noReqClickSound`) + " — " + reqClickSound);
@@ -465,14 +483,74 @@ Hooks.on('setup', () => {
     });
 });
 
+// Синхронизация с Visual Novel
+Hooks.on("updateSetting", async (setting, value, _options, userId) => {
+    if (setting.key == `visual-novel-dialogues.advancedRequestsSync`) {
+        await game.settings.set(C.ID, 'visualNovelSync', value.key)
+    } else if (setting.key == `visual-novel-dialogues.vnData`) {
+        if (_options.stopFuckingAround) return
+        const changes = _options.change
+        const queue = getQueue();
+        const vnData = foundry.utils.deepClone(setting.value)
+        const reqId = _options.requestId
+        let data = vnData.requests.find((item) => item.id == _options.requestId)
+        if (changes.includes("requestAdd") && data) {
+            data.level -= 1
+            if (queue.some(item=>item.id == reqId)) {
+                queue.splice(queue.findIndex(item => item.id === reqId), 1);
+            }
+            const index = queue.findLastIndex((item) => item.level > reqLevel);
+            queue.splice(index + 1, 0, data);
+        
+            const options = {changes: ['addRequest'], reqId: reqId, stopFuckingAround: true};
+            if (game.user.isGM) {
+                await game.settings.set(C.ID, 'queue', queue, options);
+            } else {
+                game.socket.emit(`module.${C.ID}`, {
+                    type: 'queue',
+                    settingData: queue,
+                    options
+                });
+            }
+            AdvancedRequestsApp._render(true)
+        }
+        if (changes.includes("requestsRemove")) {
+            queue.splice(queue.findIndex(item => item.id === reqId), 1);
+            const options = {changes: ['deleteRequest'], reqId: reqId, stopFuckingAround: true};
+            if (game.user.isGM) {
+                await game.settings.set(C.ID, 'queue', queue, options);
+            } else {
+                game.socket.emit(`module.${C.ID}`, {
+                    type: 'queue',
+                    settingData: queue,
+                    options
+                });
+            }
+            AdvancedRequestsApp._render(true)
+        }
+    }
+})
 /*
 TODO:
 
 ✖ Синхроназация настроек с ГМом
-✔ Звук только для того кто кликнул слышен, балбес (чё?)
+✔ *Звук только для того кто кликнул слышен
 ✔ Предупреждение если выбрано "controlled" для реквеста и токенов под контролем нет
 ✔ Да "выбранный токен на сцене" вообще в целом то не работает, лол
 ✔ Добавить кнопку открытия меню настройки заявки в меню настроек
+✔ Свой тумблер звука вместо звука интерфейса (+ локализация)
+✔ Кнопка "Использовать громкость Интерфейса FoundryVTT"
+✔ *Изменение расположения окна заявок В МЕНЮ НАСТРОЕК не изменяет нихуя :(:(:(:(:(
+✔ Кнопка открытия менюшки заявок в окне заявок
+✔ *Если игрок удаляет свою заявку, звук воспроизводится один хуй
+✔ Заменить кнопку "Сбросить выбор актёра" на поле IDшника выбранного актёра
+✔ *Не работает с чатом в мини-окне
+✔ *Убрать надпись сверху окна заявок если всё норм
+✔ Увеличить громкость третьего
+✔ *У игроков не работает drag-and-drop
+✔ Добавить Filepicker в меню настройки для элемента Custom
+
+- Видевотокены не работают (imc src не поддерживает видеофайлы)
 
 ✖ В каком углу стрелочка
 ✖ Наличие границы всей коробки (+вместе со стрелочкой или без неё)

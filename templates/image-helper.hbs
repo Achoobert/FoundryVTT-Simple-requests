@@ -1,5 +1,5 @@
 <div class="image-helper">
-    <div class="ih-header">
+    <div class="ih-header"{{#unless showWarningText}} style="display: none"{{/unless}}>
         <span>{{localize "advanced-requests.imageHelper.title1"}}</span>
         <span>{{localize "advanced-requests.imageHelper.title2"}}</span>
     </div>
@@ -34,20 +34,22 @@
                 {{/if}}
             </div>
         </div>
-        {{!-- БЛЯТЬ Я МОГ РЕШИТЬ ЭТО ПО НОРМАЛЬНОМУ НО Я ВЫБРАЛ ПУТЬ ГРЕХА --}}
-        {{#unless useActor}}<div class="ih-box" style="display: none"></div>{{/unless}}
+        {{#unless useActor}}<div class="ih-box" style="display: none"></div>{{/unless}} {{!-- БЛЯТЬ Я МОГ РЕШИТЬ ЭТО ПО НОРМАЛЬНОМУ НО Я ВЫБРАЛ ПУТЬ ГРЕХА --}}
         <div class="ih-box flexrow" {{#if imageDoesntExist}}data-tooltip="{{localize "advanced-requests.imageHelper.imageDoesntExistTooltip"}}"{{/if}}>
             <div class="ih-icon"><i class="fas fa-{{#if imageDoesntExist}}triangle-exclamation{{else if hasImage}}check{{else}}xmark{{/if}}"></i></div>
             <div class="ih-label"><span>{{localize "advanced-requests.imageHelper.imagePath"}}</span></div>
-            <div class="ih-input">
-                <input type="text" class="ih-image-path" value="{{imagePath}}" placeholder="{{localize "advanced-requests.imageHelper.imagePathPlaceholder"}}"{{#if disableInputs}} disabled data-tooltip="{{localize "advanced-requests.imageHelper.notCustom"}}"{{/if}}{{#if (eq focusEl "imagePath")}} autofocus{{/if}}/>
+            <div class="ih-input {{#if isCustom}}ih-filepicker-body{{/if}}">
+                <input type="text" class="ih-image-path" value="{{imagePath}}" placeholder="{{localize "advanced-requests.imageHelper.imagePathPlaceholder"}}"{{#if disableInputs}} disabled data-tooltip="{{localize "advanced-requests.imageHelper.notCustom"}}"{{/if}}/>
+                <button type="button"{{#unless isCustom}} style="display: none"{{/unless}} class="ih-filepicker" data-type="image" data-target="{{customFolderTarget}}" title="{{localize "FILES.BrowseTooltip"}}" tabindex="-1">
+                    <i class="fas fa-file-import fa-fw"></i>
+                </button>
             </div>
         </div>
         <div class="ih-box flexrow">
             <div class="ih-icon"><i class="fas fa-{{#if hasName}}check{{else}}xmark{{/if}}"></i></div>
             <div class="ih-label"><span>{{localize "advanced-requests.imageHelper.imageName"}}</span></div>
             <div class="ih-input">
-                <input type="text" class="ih-name" value="{{name}}"{{#if disableInputs}} disabled data-tooltip="{{localize "advanced-requests.imageHelper.notCustom"}}"{{/if}}{{#if (eq focusEl "name")}} autofocus{{/if}}/>
+                <input type="text" class="ih-name" value="{{name}}"{{#if disableInputs}} disabled data-tooltip="{{localize "advanced-requests.imageHelper.notCustom"}}"{{/if}}/>
             </div>
         </div>
     </div>

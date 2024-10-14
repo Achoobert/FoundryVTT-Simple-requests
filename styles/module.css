@@ -306,7 +306,7 @@
 .ih-input {
   flex: 3;
   padding-left: 10px;
-  display: grid;
+  display: flex;
   align-items: center;
 }
 .ih-input select, .ih-input input {
@@ -316,6 +316,23 @@
   border-radius: 5px;
   font-weight: 600;
   font-family: "Primitive";
+  width: 100%;
+}
+.ih-input > div {
+  flex: 1;
+}
+
+.ih-filepicker {
+  flex: 0;
+  background-color: rgba(0, 23, 98, 0.18);
+  color: #242424;
+  border: 2px solid rgba(42, 23, 177, 0.3490196078);
+  border-radius: 5px;
+  height: 26px;
+  display: grid;
+}
+.ih-filepicker i {
+  line-height: 22px;
 }
 
 .ih-drop-box {
@@ -375,4 +392,22 @@
 }
 .ih-box:nth-child(even) .ih-input {
   background-image: linear-gradient(to right, rgba(56, 84, 209, 0.3294117647) 0%, rgba(56, 84, 209, 0.1843137255) 60%, rgba(0, 0, 0, 0) 100%);
+}
+
+.ar-chat-requests-menu {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 3px;
+  display: grid;
+  align-items: center;
+  justify-items: center;
+  cursor: pointer;
+}
+.ar-chat-requests-menu i {
+  font-size: 85% !important;
+  margin: 0;
+  justify-self: center;
+  align-self: center;
+  line-height: 100% !important;
 }/*# sourceMappingURL=module.css.map */

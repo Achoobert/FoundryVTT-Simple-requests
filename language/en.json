@@ -11,11 +11,11 @@
             "reqClickSoundHint": "Path to the file for the sound when activating a request",
             "useForRequests": "What to use for requests",
             "useForRequestsHint": "Choose what will be used for the name and image of your requests. If the \"Custom\" option is selected, you can specify the name and image file path in the setting below",
-            "ufrToken": "Токен выбранного актёра",
-            "ufrActor": "Изображение выбранного актёра",
-            "ufrPlayerToken": "Токен персонажа игрока",
-            "ufrPlayerActor": "Изображение персонажа игрока",
-            "ufrUser": "Аватар игрока",
+            "ufrToken": "Selected actor token artwork",
+            "ufrActor": "Selected actor character artwork",
+            "ufrPlayerToken": "User token artwork",
+            "ufrPlayerActor": "User character artwork",
+            "ufrUser": "User Avatar",
             "ufrControlled": "Controlled token on scene",
             "ufrCustom": "Custom",
             "customImage": "Custom image for requests",
@@ -25,7 +25,7 @@
             "chatQueueHeight": "Height of the request queue below the chat",
             "chatQueueHeightHint": "Height of the request queue element (default is 60)",
             "requestsPosition": "Requests window position",
-            "requestsPositionHint": "With \"Free on screen\" selected, you can freely move the requests window around the entire FounryVTT window. Hovering over the requests window while holding \"Shift\" will reveal a button that toggles this setting when pressed",
+            "requestsPositionHint": "With \"Free on screen\" selected, you can freely move the requests window around the entire FoundryVTT window. Hovering over the requests window while holding \"Shift\" will reveal a button that toggles this setting when pressed",
             "qpChat": "Under the chat",
             "qpFreeScreen": "Free on screen",
             "freeScreenZIndex": "Z-index of the Requests window",
@@ -38,15 +38,21 @@
             "thirdRequestHint": "Show the 'Third request' button (urgent!)",
             "widthDependOnQueue": "Width depends on the number of requests",
             "widthDependOnQueueHint": "If active, the width of the requests field in the Free Window will depend on the number of requests, setting the minimum possible width",
-            "resetActor": "Сброс выбранного актёра",
-            "resetActorLabel": "Сбросить выбранного актёра",
-            "resetActorHint": "При нажатии актёр используемый при выборе варианта \"Токен/Изображение выбранного актёра\" настройки \"Что использовать для заявки\" будет сброшен",
-            "actorReset": "Выбор актёра сброшен ✔"
+            "selectedActorId": "ID of the Actor selected for requests",
+            "selectedActorIdHint": "The actor with this ID will be used for requests if the \"Token/Image of the selected actor\" option is selected in the \"What to use for requests\" setting",
+            "soundCreateVolume": "Sound volume when creating a request",
+            "soundCreateVolumeHint": "Volume is set as a percentage from 0% to 100% (50% by default)",
+            "soundActivateVolume": "Sound volume when activating a request",
+            "soundActivateVolumeHint": "Volume is set as a percentage from 0% to 100% (50% by default)",
+            "useFoundryInterfaceVolume": "Use FoundryVTT Interface Volume",
+            "useFoundryInterfaceVolumeHint": "If enabled, the volume of creating and activating requests will be equal to the volume of the FoundryVTT interface.",
+            "visualNovelSync": "Synchronizing requests with Visual Novel Dialogues",
+            "visualNovelSyncHint": "If active, requests will be synchronized with requests of the \"Visual Novel Dialogues\" module"
         },
         "errors": {
             "noReqClickSound": "File not found at the specified path",
-            "actorNotFound": "Актёр не найден - подробности в консоли",
-            "noControlledTokens": "Выберите токен на сцене для создания заявки!"
+            "actorNotFound": "Actor not found - details in console",
+            "noControlledTokens": "Select a token on the stage to create a request!"
         },
         "chatMessage": {
             "activateRequest1": "Player \"",
@@ -56,20 +62,21 @@
             "firstRequestTooltip": "Common request",
             "secondRequestTooltip": "Important request",
             "thirdRequestTooltip": "Urgent request!",
-            "queueTransferTooltip": "Change the position of the requests window to Free"
+            "queueTransferTooltip": "Change the position of the requests window to Free",
+            "requestsMenuTooltip": "Open the requests settings menu"
         },
         "imageHelper": {
-            "title1": "Изображение для Заявки не установлено",
-            "title2": "Пожалуйста, убедитесь что все пункты установлены верно",
-            "useForRequests": "Использовать для заявок:",
-            "choosenActor": "Выбранный актёр",
-            "actorDropArea": "Перенесите сюда Актёра",
-            "imagePath": "Путь к изображению:",
-            "imagePathPlaceholder": "Например: icons/svg/mystery-man.svg",
-            "imageName": "Имя:",
-            "notCustom": "Вы можете устанавливать свой Путь к изображению и Имя только при выбранном варианте \"Своё\" в первом пункте",
-            "choosenActorTooltip": "Нажмите \"ПКМ\" чтобы очистить выбор актёра",
-            "imageDoesntExistTooltip": "Файл по указанному пути не найден"
+            "title1": "The image for Request is not set",
+            "title2": "Please make sure all crossmarks are checked",
+            "useForRequests": "Use for requests:",
+            "choosenActor": "Selected actor",
+            "actorDropArea": "Drag-and-drop actor here",
+            "imagePath": "Path to image:",
+            "imagePathPlaceholder": "For example: icons/svg/mystery-man.svg",
+            "imageName": "Name:",
+            "notCustom": "You can set your own Path to the image and Name only if you select the \"Custom\" option in the first item",
+            "choosenActorTooltip": "Right-click to clear the actor selection",
+            "imageDoesntExistTooltip": "The file at the specified path was not found"
         }
     }
 }

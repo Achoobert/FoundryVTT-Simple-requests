@@ -1,8 +1,8 @@
 import { AdvancedRequestsApp } from "./main.js";
-import { Constants as C } from "./const.js";
+import { Constants as C, visualNoverIsActive } from "./const.js";
 
 Hooks.once('init', function() {
-    const registerSettings = (key, _scope = 'world', _config = true, _type = Boolean, _default = true, _filePicker = null, onChange = () => {}, choices = null) => {
+    const registerSettings = (key, _scope = 'world', _config = true, _type = Boolean, _default = true, _filePicker = null, onChange = () => {}, _choices = null, _range = null) => {
         game.settings.register(C.ID, key, {
         ...{
             name: game.i18n.localize(`${C.ID}.settings.${key}`),
@@ -14,24 +14,24 @@ Hooks.once('init', function() {
             onChange: onChange,
         }, 
         ...(_filePicker ? {filePicker: _filePicker} : {}),
-        ...(choices ? { choices: choices } : {}),
+        ...(_choices ? { choices: _choices } : {}),
+        ...(_range ? { range: _range } : {})
     });
     }
 
-    // Сбросить выбранного актёра
-    game.settings.registerMenu(C.ID, "resetActor", {
-        name: game.i18n.localize(`${C.ID}.settings.resetActor`),
-        label: game.i18n.localize(`${C.ID}.settings.resetActorLabel`),
-        hint: game.i18n.localize(`${C.ID}.settings.resetActorHint`),
-		icon: 'fas fa-user-xmark',
-		restricted: true,
-        type: ResetActor,
-    })
+    // Синхронизация с Visual Novel
+    registerSettings("visualNovelSync", "world", visualNoverIsActive(), Boolean, true)
 
     // Воспроизводить звук при создании заявок
     registerSettings("soundCreate", "client", true, Boolean, true)
+    // Громкость звука при создании заявок
+    registerSettings("soundCreateVolume", "client", true, Number, 50, null, null, null, {min: 0, max: 100, step: 1})
     // Воспроизводить звук при активации заявок
     registerSettings("soundActivate", "client", true, Boolean, true)
+    // Громкость звука при активации заявок
+    registerSettings("soundActivateVolume", "client", true, Number, 50, null, null, null, {min: 0, max: 100, step: 1})
+    // Использовать громкость звука Интерфейса фаундри
+    registerSettings("useFoundryInterfaceVolume", "client", true, Boolean, true)
     // Сообщение при активации заявок
     registerSettings("messageActivate", "client", true, Boolean, true)
     // Ширина поля заявок в Свободном окне зависит от количества заявок
@@ -48,7 +48,9 @@ Hooks.once('init', function() {
         "controlled": game.i18n.localize(`${C.ID}.settings.ufrControlled`), 
         "custom": game.i18n.localize(`${C.ID}.settings.ufrCustom`)
     };
-    registerSettings("useForRequests", "client", true, String, "token", null, false, ufrChooseList)
+    registerSettings("useForRequests", "client", true, String, "playerToken", null, false, ufrChooseList)
+    // ID выбранного игроком Актёра
+    registerSettings("selectedActorId", "client", true, String, "")
     // Кастомное изображение для заявок
     registerSettings("customImage", "client", true, String, "", "image")
     // Кастомное имя для заявок
@@ -56,7 +58,7 @@ Hooks.once('init', function() {
     // Высота списка заявок под чатом
     registerSettings("chatQueueHeight", "client", true, Number, 60, null, changeChatQueueHeight)
     // Положение окна заявок
-    registerSettings("requestsPosition", "client", true, String, "chat", null, false, {"chat": game.i18n.localize(`${C.ID}.settings.qpChat`), "freeScreen": game.i18n.localize(`${C.ID}.settings.qpFreeScreen`)})
+    registerSettings("requestsPosition", "client", true, String, "chat", null, updatePosition, {"chat": game.i18n.localize(`${C.ID}.settings.qpChat`), "freeScreen": game.i18n.localize(`${C.ID}.settings.qpFreeScreen`)})
     // zIndex окна заявок
     registerSettings("freeScreenZIndex", "client", true, Number, 10, null, reRender)
 
@@ -69,8 +71,6 @@ Hooks.once('init', function() {
     registerSettings("thirdRequest", "world", true, Boolean, true, null, updateChatRequestButtons)
 
     // СКРЫТЫЕ
-    // ID выбранного игроком Актёра
-    registerSettings("selectedActorId", "client", false, String, "")
     // Очередь заявок
     registerSettings("queue", "world", false, Array, [])
     // Данные окна заявок в свободке
@@ -113,25 +113,7 @@ function reRender() {
     AdvancedRequestsApp._render()
 }
 
-export class ResetActor extends FormApplication {
-    constructor() {
-        super();
-    }
-    static get defaultOptions() {
-        const options = super.defaultOptions;
-        options.title = '';
-        options.id = 'ar-reset-actor';
-        options.template = `modules/${C.ID}/templates/actorReset.html`;
-        options.closeOnSubmit = true;
-        options.popOut = true;
-        options.width = 1;
-        options.height = 1;
-        return options;
-    }
-    static async createBackup(app) {
-        await game.settings.set(C.ID, "selectedActorId", "");
-        ui.notifications.info(game.i18n.localize(`${C.ID}.settings.actorReset`));
-        app.close({ force: true });
-    }
+function updatePosition(value) {
+    AdvancedRequestsApp._render();
+    document.getElementById("advanced-requests-chat-body").style.display = (value == "chat" ? null : "none")
 }
-Hooks.on("renderResetActor", ResetActor.createBackup);

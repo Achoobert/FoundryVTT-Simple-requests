@@ -1,7 +1,7 @@
 {
 	"title": "Advanced Requests",
 	"description": "A module that adds a convenient way to use the Requests rule, allowing the GM to more effectively distribute attention between players.",
-	"version": "1.0",
+	"version": "0.9",
     "compatibility": {
       "minimum": "11",
       "verified": "11"
@@ -36,5 +36,5 @@
   "id": "advanced-requests",
   "url": "https://github.com/JabaNazgob/FoundryVTT-Advanced-requests",
   "manifest": "https://github.com/JabaNazgob/FoundryVTT-Advanced-requests/releases/latest/download/module.json",
-  "download": "https://github.com/JabaNazgob/FoundryVTT-Advanced-requests/releases/download/v0.1/module.zip"
+  "download": "https://github.com/JabaNazgob/FoundryVTT-Advanced-requests/releases/download/v0.9/module.zip"
 }

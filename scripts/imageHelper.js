@@ -2,9 +2,8 @@ import { Constants as C } from "./const.js";
 import { getRequestData } from "./main.js";
 
 export class ImageHelper extends FormApplication {
-    constructor(focusEl = null) {
+    constructor() {
         super();
-        this.focusEl = focusEl
     }
 
     static get defaultOptions() {
@@ -46,8 +45,10 @@ export class ImageHelper extends FormApplication {
             hasName: !!requestData.name,
             useActor: ["playerActor", "playerToken", "actor", "token"].includes(useForRequests),
             hasActor: !!["playerActor", "playerToken"].includes(useForRequests) ? !!game.user.character : !!game.actors.get(game.settings.get(C.ID, "selectedActorId")),
-            imageDoesntExist: !_srcExists
+            imageDoesntExist: !_srcExists,
+            isCustom: useForRequests == "custom",
         }
+        const customFolderTarget = (imageHelperData.isCustom && imageHelperData.hasImage) ? imageHelperData.imagePath.replace(/\/[^/]+$/, '') : null
         
         // disableInputs
         const disableInputs = game.settings.get(C.ID, "useForRequests") != "custom"
@@ -63,10 +64,9 @@ export class ImageHelper extends FormApplication {
             return acc
         }, [])
 
-        //focusEl
-        let focusEl = this.focusEl
+        const showWarningText = !imageHelperData.hasImage || !imageHelperData.hasName || (imageHelperData.useActor && !imageHelperData.hasActor) || imageHelperData.imageDoesntExist
 
-        return { ...imageHelperData, disableInputs: disableInputs, options: options , focusEl: focusEl }
+        return { ...imageHelperData, disableInputs: disableInputs, options: options, customFolderTarget: customFolderTarget, showWarningText: showWarningText };
     }
 
     activateListeners(html) {
@@ -123,19 +123,42 @@ export class ImageHelper extends FormApplication {
             }
             await game.settings.set(C.ID, "customName", value)
         })
+
+        // FilePicker
+        html[0].querySelector(".ih-filepicker").addEventListener("click", async (event) => {
+            const useForRequests = game.settings.get(C.ID, "useForRequests")
+            if (useForRequests != "custom") return
+            new FilePicker({classes: ["filepicker"], current: game.settings.get(C.ID, "customImage"), type: "image", displayMode: "thumbs", callback: async (image) => {
+                if (image) {
+                    await game.settings.set(C.ID, "customImage", image)
+                    const imagePathInputEl = html[0].querySelector(".ih-image-path")
+                    imagePathInputEl.value = decodeURI(image)
+                    const iconEl = imagePathInputEl.closest(".ih-box").querySelector("i")
+                    iconEl.className = "fas fa-check"
+                };
+            }}).render();
+        })
     }
     
     async _updateObject(event, formData) {
     }
+    
+    _canDragDrop(event) {
+        return true;
+    }
 
     async _onDrop(event) {
+        console.log("event: ", event)
         const actorData = event.dataTransfer.getData('text/plain');
+        console.log("actorData: ", actorData)
         if (!actorData || actorData === "") return
         let transferData = JSON.parse(actorData)
+        console.log("transferData: ", transferData)
         if (transferData?.type != "Actor") return
 
         const id = transferData.uuid?.split(".")?.pop() || ""
         const actor = game.actors.get(id)
+        console.log("actor: ", actor)
         if (!actor) {
             ui.notifications.error(game.i18n.localize(`${C.ID}.errors.actorNotFound`))
             console.log("Actor not found")
@@ -146,6 +169,7 @@ export class ImageHelper extends FormApplication {
         const useForRequests = game.settings.get(C.ID, "useForRequests")
         const useCharActor = ["playerToken", "playerActor"].includes(useForRequests)
 
+        console.log("useCharActor: ", useCharActor)
         if (useCharActor) {
             await game.user.update({character: actor})
         } else {
