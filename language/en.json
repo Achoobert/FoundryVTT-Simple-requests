@@ -70,6 +70,7 @@
             "title2": "Please make sure all crossmarks are checked",
             "useForRequests": "Use for requests:",
             "choosenActor": "Selected actor",
+            "userChar": "User character",
             "actorDropArea": "Drag-and-drop actor here",
             "imagePath": "Path to image:",
             "imagePathPlaceholder": "For example: icons/svg/mystery-man.svg",

@@ -65,8 +65,10 @@ export class ImageHelper extends FormApplication {
         }, [])
 
         const showWarningText = !imageHelperData.hasImage || !imageHelperData.hasName || (imageHelperData.useActor && !imageHelperData.hasActor) || imageHelperData.imageDoesntExist
+        // const choosenActorLoc = useForRequests.includes("player")
+        const choosenActorLoc = game.i18n.localize(`${C.ID}.imageHelper.${useForRequests.includes("player") ? "userChar" : "choosenActor"}`)
 
-        return { ...imageHelperData, disableInputs: disableInputs, options: options, customFolderTarget: customFolderTarget, showWarningText: showWarningText };
+        return { ...imageHelperData, disableInputs: disableInputs, options: options, customFolderTarget: customFolderTarget, showWarningText: showWarningText, choosenActorLoc: choosenActorLoc };
     }
 
     activateListeners(html) {
@@ -148,17 +150,13 @@ export class ImageHelper extends FormApplication {
     }
 
     async _onDrop(event) {
-        console.log("event: ", event)
         const actorData = event.dataTransfer.getData('text/plain');
-        console.log("actorData: ", actorData)
         if (!actorData || actorData === "") return
         let transferData = JSON.parse(actorData)
-        console.log("transferData: ", transferData)
         if (transferData?.type != "Actor") return
 
         const id = transferData.uuid?.split(".")?.pop() || ""
         const actor = game.actors.get(id)
-        console.log("actor: ", actor)
         if (!actor) {
             ui.notifications.error(game.i18n.localize(`${C.ID}.errors.actorNotFound`))
             console.log("Actor not found")
@@ -169,7 +167,6 @@ export class ImageHelper extends FormApplication {
         const useForRequests = game.settings.get(C.ID, "useForRequests")
         const useCharActor = ["playerToken", "playerActor"].includes(useForRequests)
 
-        console.log("useCharActor: ", useCharActor)
         if (useCharActor) {
             await game.user.update({character: actor})
         } else {

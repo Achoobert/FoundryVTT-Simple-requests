@@ -70,6 +70,7 @@
             "title2": "Пожалуйста, убедитесь что все пункты установлены верно",
             "useForRequests": "Использовать для заявок:",
             "choosenActor": "Выбранный актёр",
+            "userChar": "Персонаж игрока",
             "actorDropArea": "Перенесите сюда Актёра",
             "imagePath": "Путь к изображению:",
             "imagePathPlaceholder": "Например: icons/svg/mystery-man.svg",
