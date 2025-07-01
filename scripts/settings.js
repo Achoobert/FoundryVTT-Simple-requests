@@ -1,4 +1,3 @@
-import { AdvancedRequestsApp } from "./main.js";
 import { Constants as C, visualNoverIsActive } from "./const.js";
 
 Hooks.once('init', function() {
@@ -76,10 +75,6 @@ Hooks.once('init', function() {
     // Данные окна заявок в свободке
     registerSettings("freeScreenData", "client", false, Object, {})
 });
-
-Hooks.on("ready", () => {
-    AdvancedRequestsApp.activate();
-})
 
 function changeChatQueueHeight() {
     const chatQueueEl = document.getElementById("advanced-requests-chat-body");

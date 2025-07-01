@@ -1,5 +1,4 @@
 import { Constants as C } from "./const.js";
-import { ImageHelper } from "./imageHelper.js";
 
 // Рендер окна заявок в чате
 Hooks.on("renderSidebarTab", (app, html, data) => {
@@ -93,7 +92,42 @@ Hooks.on("renderSidebarTab", (app, html, data) => {
         buttonDiv.append(button)
     })
     div.append(buttonDiv);
-    html[0].querySelector("#chat-controls").prepend(div);
+
+    // Remove any existing dash to avoid duplicates
+    console.error("Removing existing dash");
+    html[0].querySelectorAll(".adv-requests-dash").forEach(el => el.remove());
+    // Create the dash
+    const dash = document.createElement("section");
+    dash.className = "adv-requests-dash";
+    dash.innerHTML = "<button>Hello World</button>";
+    // Insert above dice-tray if present, else at end
+    const diceTray = html[0].querySelector(".dice-tray");
+    if (diceTray) diceTray.parentNode.insertBefore(dash, diceTray);
+    else html[0].appendChild(dash);
+
+    // --- Injection point update for Foundry v13+ ---
+    let injected = false;
+    // Foundry v13+ uses '.chat-sidebar .chat-controls', older uses '#chat-controls'
+    if (game.release && game.release.generation >= 13) {
+        // Try to find the new chat controls container
+        const chatControls = html[0].querySelector('.chat-sidebar .chat-controls') || html[0].querySelector('.chat-controls');
+        if (chatControls) {
+            chatControls.prepend(div);
+            injected = true;
+        }
+    }
+    if (!injected) {
+        // Fallback for older versions
+        const oldChatControls = html[0].querySelector('#chat-controls');
+        if (oldChatControls) {
+            oldChatControls.prepend(div);
+            injected = true;
+        }
+    }
+    if (!injected) {
+        // As a last resort, prepend to the main html
+        html[0].prepend(div);
+    }
 });
 
 const getRequestElement = (item) => {
@@ -148,7 +182,8 @@ async function addRequest(reqLevel, reRender = false) {
 
     // Проверяем что имеется картинка для реквеста
     const defaultUserImg = "icons/svg/mystery-man.svg" // (HOW DO I GET A FUCKING SYSTEM DEFAULT AVATAR?)
-    const defaultImg = useForRequests == "user" ? defaultUserImg : Actor.implementation.getDefaultArtwork({type: "someActorType"}).img
+    const defaultImg = useForRequests == "user" ? defaultUserImg : Actor.implementation.getDefaultArtwork({type: "someActorType"}).img;
+    
 
     const hasImage = (data.img && data.img != defaultImg && await srcExists(defaultImg))
     
@@ -243,181 +278,17 @@ export const getRequestData = (reqLevel = 0, useForRequests) => {
     return data
 }
 
-// Свободное окно
-export class AdvancedRequestsApp extends FormApplication {
-    static instance = null
-    constructor() {
-        super();
-    }
-    
-    static get defaultOptions() {
-        const defaults = super.defaultOptions;
-
-        const overrides = {
-            popOut: false,
-            classes: ['advanced-requests-app'],
-            width: '100%',
-            height: '100%',
-            resizable: false,
-            editable: false,
-            id: "AdvancedRequestsApp",
-            template: `modules/${C.ID}/templates/advanced-requests.hbs`,
-            title: `Advanced Requests`,
-            userId: game.userId,
-            closeOnSubmit: false,
-            submitOnChange: false,
-        };
-        const mergedOptions = foundry.utils.mergeObject(defaults, overrides);
-        return mergedOptions;
-    }
-
-    getData(options) {
-
-        const data = {
-            queue: game.settings.get(C.ID, "queue"),
-            show: (game.settings.get(C.ID, "requestsPosition") == "freeScreen"),
-            firstRequest: game.settings.get(C.ID, "firstRequest"),
-            secondRequest: game.settings.get(C.ID, "secondRequest"),
-            thirdRequest: game.settings.get(C.ID, "thirdRequest"),
-            widthDependOnQueue: game.settings.get(C.ID, "widthDependOnQueue"),
-        }
-
-        let freeScreenData = game.settings.get(C.ID, "freeScreenData");
-        const freeScreenDataTemplate = {_x: 30, _y: 10, _w: 250, _h: game.settings.get(C.ID, "chatQueueHeight"), _z: game.settings.get(C.ID, "freeScreenZIndex")};
-        freeScreenData = foundry.utils.mergeObject(freeScreenData, freeScreenDataTemplate, {overwrite: false});
-        freeScreenData._w = data.widthDependOnQueue ? "fit-content" : `${freeScreenData._w}px`
-        
-        return { ...data, ...freeScreenData };
-    }
-
-    static activate() {
-        this.instance = new AdvancedRequestsApp();
-        this.instance.render(true);
-    }
-
-    static _render() {
-        this.instance.render(true);
-    }
-
-    activateListeners(html) {
-        super.activateListeners(html);
-
-        // mover
-        const grabEl = html[0].querySelector(".ar-freeScreen-mover");
-        const requestsWindow = html[0]
-        let isDragging = false;
-        let startX, startY, initialX, initialY;
-        grabEl.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            startX = e.clientX;
-            startY = e.clientY;
-            initialX = parseFloat(requestsWindow.style.right) || 0;
-            initialY = parseFloat(requestsWindow.style.top) || 0;
-            grabEl.style.cursor = 'grabbing';
-
-            document.addEventListener('mousemove', onMouseMove);
-            document.addEventListener('mouseup', onMouseUp);
-        });
-        function onMouseMove(e) {
-            if (!isDragging) return;
-            const dx = (e.clientX - startX) / window.innerWidth * 100
-            const dy = (e.clientY - startY) / window.innerHeight * 100
-            const shiftPressed = e.shiftKey;
-            if (shiftPressed) {
-                if (Math.abs(dx) > Math.abs(dy)) {
-                    requestsWindow.style.right = `${(initialX - dx)}%`;
-                    requestsWindow.style.top = `${initialY}%`;
-                } else {
-                    requestsWindow.style.top = `${initialY + dy}%`;
-                    requestsWindow.style.right = `${(initialX)}%`;
-                }
-            } else {
-                requestsWindow.style.top = `${initialY + dy}%`;
-                requestsWindow.style.right= `${(initialX - dx)}%`;
-            }
-        }
-
-        async function onMouseUp() {
-            isDragging = false;
-            grabEl.style.cursor = 'grab';
-            document.removeEventListener('mousemove', onMouseMove);
-            document.removeEventListener('mouseup', onMouseUp);
-            let _data = game.settings.get(C.ID, "freeScreenData");
-            _data._x = parseFloat(requestsWindow.style.right) || 0;
-            _data._y = parseFloat(requestsWindow.style.top) || 0;
-            await game.settings.set(C.ID, "freeScreenData", _data);
-        }
-
-        // Перенести окно в чат
-        html[0].querySelector(".ar-window-to-chat").addEventListener("click", async () => {
-            await game.settings.set(C.ID, "requestsPosition", "chat");
-            AdvancedRequestsApp._render();
-            document.getElementById("advanced-requests-chat-body").style.display = null
-        })
-
-        // Заявки
-        const requestEls = html[0].querySelectorAll(".ar-request-container-freeScreen")
-        requestEls.forEach((el) => {addRequestListener(el, true)})
-
-        // Кнопки заявок
-        const addReqButtons = html[0].querySelectorAll(".ar-freeScreen-button")
-        addReqButtons.forEach((el) => {
-            el.addEventListener("click", async () => {
-                await addRequest(parseInt(el.dataset.level), true)
-            })
-        })
-
-        // Кнопка изменения размера
-        const resizeEl = html[0].querySelector(".ar-resizable-handle");
-        const queueEl = requestsWindow.querySelector(".ar-freeScreen-queue");
-        let isResizing = false;
-        let startW, startH, initialW, initialH;
-        let widthDependOnQueue
-        resizeEl.addEventListener('mousedown', (e) => {
-            isResizing = true;
-            startW = e.clientX;
-            startH = e.clientY;
-            widthDependOnQueue = game.settings.get(C.ID, "widthDependOnQueue");
-            initialW = parseInt(queueEl.style.width) || 0;
-            initialH = parseInt(requestsWindow.style.height) || 0;
-
-            document.addEventListener('mousemove', onMouseMoveResize);
-            document.addEventListener('mouseup', onMouseUpResize);
-        });
-        function onMouseMoveResize(e) {
-            if (!isResizing) return;
-            const dw = (e.clientX - startW)
-            const dh = (e.clientY - startH)
-            const shiftPressed = e.shiftKey;
-            // Math.max добавлены в качестве ограничителя, чтобы ширина не могла быть меньше высоты и чтобы ограничить минимальную высоту 55-ю пикселями (ну вот надо так)
-            if (shiftPressed) {
-                if (Math.abs(dx) > Math.abs(dy)) {
-                    queueEl.style.width = widthDependOnQueue ? "fit-content" : (`${Math.max(initialW - dw, initialH)}px`);
-                    requestsWindow.style.height = `${Math.max(initialH, 55)}px`;
-                } else {
-                    requestsWindow.style.height = `${Math.max(initialH + dh, 55)}px`;
-                    queueEl.style.width = widthDependOnQueue ? "fit-content" : (`${initialW}px`);
-                }
-            } else {
-                requestsWindow.style.height = `${Math.max(initialH + dh, 55)}px`;
-                queueEl.style.width = widthDependOnQueue ? "fit-content" : (`${(Math.max(initialW - dw, initialH + dh))}px`);
-            }
-        }
-
-        async function onMouseUpResize() {
-            isResizing = false;
-            document.removeEventListener('mousemove', onMouseMoveResize);
-            document.removeEventListener('mouseup', onMouseUpResize);
-            let _data = game.settings.get(C.ID, "freeScreenData");
-            _data._w = parseInt(queueEl.style.width) || 0;
-            _data._h = parseInt(requestsWindow.style.height) || 0;
-            await game.settings.set(C.ID, "freeScreenData", _data);
-        }
-    }
-
-    async _updateObject(event, formData) {
-    }
-}
+// Remove AdvancedRequestsApp and ApplicationV2 usage for now
+// let AdvancedRequestsApp;
+// Hooks.once('init', function() {
+//   AdvancedRequestsApp = class AdvancedRequestsApp extends ApplicationV2 {
+//     ...
+//   }
+//   window.AdvancedRequestsApp = AdvancedRequestsApp;
+//   Hooks.once('ready', () => {
+//     AdvancedRequestsApp.activate();
+//   });
+// });
 
 Hooks.on("updateSetting", async (setting, value, options, userId) => {
     if (!setting.key == `${C.ID}.queue`) return
@@ -530,3 +401,27 @@ Hooks.on("updateSetting", async (setting, value, _options, userId) => {
         }
     }
 })
+
+function injectAdvRequestsDash() {
+    const chatMessage = document.getElementById("chat-message");
+    if (!chatMessage) {
+        console.warn("[Advanced Requests] #chat-message not found");
+        return;
+    }
+    // Remove any existing dash to avoid duplicates
+    chatMessage.parentNode.querySelectorAll(".adv-requests-dash").forEach(el => el.remove());
+    // Create the dash
+    const dash = document.createElement("section");
+    dash.className = "adv-requests-dash";
+    dash.innerHTML = "<button>Hello World</button>";
+    // Insert above chat-message
+    chatMessage.parentNode.insertBefore(dash, chatMessage);
+    console.log("[Advanced Requests] adv-requests-dash injected above chat-message", dash);
+}
+
+Hooks.once("renderChatLog", injectAdvRequestsDash);
+Hooks.on("renderChatLog", injectAdvRequestsDash);
+Hooks.on("closeChatLog", injectAdvRequestsDash);
+Hooks.on("activateChatLog", injectAdvRequestsDash);
+Hooks.on("deactivateChatLog", injectAdvRequestsDash);
+Hooks.on("collapseSidebar", injectAdvRequestsDash);
