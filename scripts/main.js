@@ -422,32 +422,71 @@ Hooks.once("socketlib.ready", () => {
 });
 
 if (!CONFIG.ADVREQUESTS) CONFIG.ADVREQUESTS = {};
+CONFIG.ADVREQUESTS.queue = CONFIG.ADVREQUESTS.queue || [];
+
+function renderAdvRequestsDash() {
+    const dash = document.createElement("section");
+    dash.className = "adv-requests-dash flexcol";
+
+    // Queue display
+    const queueRow = document.createElement("div");
+    queueRow.className = "adv-requests-queue flexrow";
+    for (const req of CONFIG.ADVREQUESTS.queue) {
+        const chip = document.createElement("div");
+        chip.className = `adv-request-chip level-${req.level}`;
+        chip.title = `${req.name} (${["Common", "Important", "Urgent"][req.level]})`;
+        chip.innerHTML = `<img src="${req.img || "icons/svg/mystery-man.svg"}" style="width:24px;height:24px;border-radius:50%;"> ${req.name}`;
+        // Remove on click (for now, only self)
+        if (req.userId === game.user.id) {
+            chip.onclick = (event) => {
+                event.preventDefault();
+                CONFIG.ADVREQUESTS.queue = CONFIG.ADVREQUESTS.queue.filter(r => r.userId !== game.user.id);
+                moveAdvRequestsDash();
+            };
+        }
+        queueRow.appendChild(chip);
+    }
+    dash.appendChild(queueRow);
+
+    // Add request buttons
+    const btnRow = document.createElement("div");
+    btnRow.className = "adv-requests-buttons flexrow";
+    ["Common", "Important", "Urgent"].forEach((label, level) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.textContent = label;
+        btn.onclick = (event) => {
+            event.preventDefault();
+            // Add request for this user
+            CONFIG.ADVREQUESTS.queue = CONFIG.ADVREQUESTS.queue.filter(r => r.userId !== game.user.id);
+            CONFIG.ADVREQUESTS.queue.push({
+                userId: game.user.id,
+                name: game.user.name,
+                img: game.user.avatar,
+                level
+            });
+            moveAdvRequestsDash();
+        };
+        btnRow.appendChild(btn);
+    });
+    dash.appendChild(btnRow);
+
+    return dash;
+}
 
 function moveAdvRequestsDash() {
     const inputElement = document.getElementById("chat-message");
-    // Remove from DOM if not present
     if (!inputElement) {
         if (CONFIG.ADVREQUESTS.element?.parentNode) CONFIG.ADVREQUESTS.element.parentNode.removeChild(CONFIG.ADVREQUESTS.element);
         return;
     }
-    // Create dash if it doesn't exist
-    if (!CONFIG.ADVREQUESTS.element) {
-        const dash = document.createElement("section");
-        dash.className = "adv-requests-dash";
-        const btn = document.createElement("button");
-        btn.textContent = "Hello World";
-        btn.onclick = (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            if (advRequestsSocket) {
-                advRequestsSocket.executeForEveryone("helloWorldClicked", game.user.name);
-            }
-        };
-        dash.appendChild(btn);
-        CONFIG.ADVREQUESTS.element = dash;
-    }
-    // Move dash above chat-message
-    inputElement.parentNode.insertBefore(CONFIG.ADVREQUESTS.element, inputElement);
+    // Remove any existing dash to avoid duplicates
+    document.querySelectorAll(".adv-requests-dash").forEach(el => el.remove());
+    // Always re-render
+    const dash = renderAdvRequestsDash();
+    dash.id = "adv-requests-dash";
+    CONFIG.ADVREQUESTS.element = dash;
+    inputElement.parentNode.insertBefore(dash, inputElement);
 }
 
 Hooks.once("renderChatLog", moveAdvRequestsDash);

@@ -415,7 +415,7 @@
 .adv-requests-dash {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  min-height: 15px;
   width: 100%;
   box-sizing: border-box;
 }
