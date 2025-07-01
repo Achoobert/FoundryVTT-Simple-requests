@@ -182,6 +182,7 @@ class AdvancedRequestsManager {
     this.socket.register("addRequest", this._addRequest.bind(this));
     this.socket.register("removeRequest", this._removeRequest.bind(this));
     this.socket.register("activateRequest", this._activateRequest.bind(this));
+    this.socket.register("syncQueue", this._syncQueue.bind(this));
     // Debug handler
     this.socket.register("debugPing", this._debugPing.bind(this));
     // Hello World handler
@@ -204,7 +205,15 @@ class AdvancedRequestsManager {
     this.socket.executeForOthers("helloWorldClicked", game.user.name);
   }
 
-  // All clients update their own local queue
+  _syncQueue(newQueue) {
+    CONFIG.ADVREQUESTS.queue = newQueue;
+    moveAdvRequestsDash();
+  }
+
+  syncQueueToOthers() {
+    this.socket.executeForOthers("syncQueue", CONFIG.ADVREQUESTS.queue);
+  }
+
   _addRequest(requestData) {
     let queue = CONFIG.ADVREQUESTS.queue || [];
     queue = queue.filter(r => r.userId !== requestData.userId);
@@ -212,6 +221,7 @@ class AdvancedRequestsManager {
     queue.splice(index + 1, 0, requestData);
     CONFIG.ADVREQUESTS.queue = queue;
     moveAdvRequestsDash();
+    this.syncQueueToOthers();
   }
 
   _removeRequest(userId) {
@@ -219,6 +229,7 @@ class AdvancedRequestsManager {
     queue = queue.filter(r => r.userId !== userId);
     CONFIG.ADVREQUESTS.queue = queue;
     moveAdvRequestsDash();
+    this.syncQueueToOthers();
   }
 
   _activateRequest(userId) {
@@ -238,9 +249,9 @@ class AdvancedRequestsManager {
     queue = queue.filter(r => r.userId !== userId);
     CONFIG.ADVREQUESTS.queue = queue;
     moveAdvRequestsDash();
+    this.syncQueueToOthers();
   }
 
-  // Called by any client
   addRequest(requestData) {
     this.socket.executeForEveryone("addRequest", requestData);
   }
