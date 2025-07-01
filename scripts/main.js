@@ -99,7 +99,16 @@ Hooks.on("renderSidebarTab", (app, html, data) => {
     // Create the dash
     const dash = document.createElement("section");
     dash.className = "adv-requests-dash";
-    dash.innerHTML = "<button>Hello World</button>";
+    const btn = document.createElement("button");
+    btn.textContent = "Hello World";
+    btn.onclick = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (advRequestsSocket) {
+            advRequestsSocket.executeForEveryone("helloWorldClicked", game.user.name);
+        }
+    };
+    dash.appendChild(btn);
     // Insert above dice-tray if present, else at end
     const diceTray = html[0].querySelector(".dice-tray");
     if (diceTray) diceTray.parentNode.insertBefore(dash, diceTray);
@@ -402,19 +411,32 @@ Hooks.on("updateSetting", async (setting, value, _options, userId) => {
     }
 })
 
+// --- SocketLib integration ---
+let advRequestsSocket;
+
+Hooks.once("socketlib.ready", () => {
+    advRequestsSocket = socketlib.registerModule("advanced-requests");
+    advRequestsSocket.register("helloWorldClicked", (userName) => {
+        console.log(`[Advanced Requests] Hello World clicked by: ${userName}`);
+    });
+});
+
 function injectAdvRequestsDash() {
     const chatMessage = document.getElementById("chat-message");
-    if (!chatMessage) {
-        console.warn("[Advanced Requests] #chat-message not found");
-        return;
-    }
-    // Remove any existing dash to avoid duplicates
+    if (!chatMessage) return;
     chatMessage.parentNode.querySelectorAll(".adv-requests-dash").forEach(el => el.remove());
-    // Create the dash
     const dash = document.createElement("section");
     dash.className = "adv-requests-dash";
-    dash.innerHTML = "<button>Hello World</button>";
-    // Insert above chat-message
+    const btn = document.createElement("button");
+    btn.textContent = "Hello World";
+    btn.onclick = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (advRequestsSocket) {
+            advRequestsSocket.executeForEveryone("helloWorldClicked", game.user.name);
+        }
+    };
+    dash.appendChild(btn);
     chatMessage.parentNode.insertBefore(dash, chatMessage);
     console.log("[Advanced Requests] adv-requests-dash injected above chat-message", dash);
 }
