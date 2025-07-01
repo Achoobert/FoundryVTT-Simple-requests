@@ -410,4 +410,12 @@
   justify-self: center;
   align-self: center;
   line-height: 100% !important;
-}/*# sourceMappingURL=module.css.map */
+}
+
+.adv-requests-dash {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+}

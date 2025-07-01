@@ -421,29 +421,38 @@ Hooks.once("socketlib.ready", () => {
     });
 });
 
-function injectAdvRequestsDash() {
-    const chatMessage = document.getElementById("chat-message");
-    if (!chatMessage) return;
-    chatMessage.parentNode.querySelectorAll(".adv-requests-dash").forEach(el => el.remove());
-    const dash = document.createElement("section");
-    dash.className = "adv-requests-dash";
-    const btn = document.createElement("button");
-    btn.textContent = "Hello World";
-    btn.onclick = (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        if (advRequestsSocket) {
-            advRequestsSocket.executeForEveryone("helloWorldClicked", game.user.name);
-        }
-    };
-    dash.appendChild(btn);
-    chatMessage.parentNode.insertBefore(dash, chatMessage);
-    console.log("[Advanced Requests] adv-requests-dash injected above chat-message", dash);
+if (!CONFIG.ADVREQUESTS) CONFIG.ADVREQUESTS = {};
+
+function moveAdvRequestsDash() {
+    const inputElement = document.getElementById("chat-message");
+    // Remove from DOM if not present
+    if (!inputElement) {
+        if (CONFIG.ADVREQUESTS.element?.parentNode) CONFIG.ADVREQUESTS.element.parentNode.removeChild(CONFIG.ADVREQUESTS.element);
+        return;
+    }
+    // Create dash if it doesn't exist
+    if (!CONFIG.ADVREQUESTS.element) {
+        const dash = document.createElement("section");
+        dash.className = "adv-requests-dash";
+        const btn = document.createElement("button");
+        btn.textContent = "Hello World";
+        btn.onclick = (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            if (advRequestsSocket) {
+                advRequestsSocket.executeForEveryone("helloWorldClicked", game.user.name);
+            }
+        };
+        dash.appendChild(btn);
+        CONFIG.ADVREQUESTS.element = dash;
+    }
+    // Move dash above chat-message
+    inputElement.parentNode.insertBefore(CONFIG.ADVREQUESTS.element, inputElement);
 }
 
-Hooks.once("renderChatLog", injectAdvRequestsDash);
-Hooks.on("renderChatLog", injectAdvRequestsDash);
-Hooks.on("closeChatLog", injectAdvRequestsDash);
-Hooks.on("activateChatLog", injectAdvRequestsDash);
-Hooks.on("deactivateChatLog", injectAdvRequestsDash);
-Hooks.on("collapseSidebar", injectAdvRequestsDash);
+Hooks.once("renderChatLog", moveAdvRequestsDash);
+Hooks.on("renderChatLog", moveAdvRequestsDash);
+Hooks.on("closeChatLog", moveAdvRequestsDash);
+Hooks.on("activateChatLog", moveAdvRequestsDash);
+Hooks.on("deactivateChatLog", moveAdvRequestsDash);
+Hooks.on("collapseSidebar", moveAdvRequestsDash);
