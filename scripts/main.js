@@ -104,16 +104,6 @@ Hooks.on("renderSidebarTab", (app, html, data) => {
     // Create the dash
     const dash = document.createElement("section");
     dash.className = "adv-requests-dash";
-    const btn = document.createElement("button");
-    btn.textContent = "Hello World";
-    btn.onclick = (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        if (advRequestsSocket) {
-            advRequestsSocket.executeForEveryone("helloWorldClicked", game.user.name);
-        }
-    };
-    dash.appendChild(btn);
     // Insert above dice-tray if present, else at end
     const diceTray = html[0].querySelector(".dice-tray");
     if (diceTray) diceTray.parentNode.insertBefore(dash, diceTray);
@@ -151,39 +141,123 @@ const REQUEST_ACTIVATE = "activateRequest";
 let advRequestsSocket;
 
 Hooks.once("socketlib.ready", () => {
+    console.error("SocketLib ready");
     advRequestsSocket = socketlib.registerModule("advanced-requests");
     advRequestsSocket.register("helloWorldClicked", (userName) => {
         console.log(`[Advanced Requests] Hello World clicked by: ${userName}`);
     });
     // Register request management actions after socket is initialized
     advRequestsSocket.register(REQUEST_REMOVE, async (requestId) => {
-        removeRequestById(requestId);
+        console.log(`[Advanced Requests] REQUEST_REMOVE received for:`, requestId, "by", game.user.name);
+        if (!game.user.isGM) return;
+        let queue = game.settings.get(C.ID, 'queue') || [];
+        queue = queue.filter(r => r.userId !== requestId);
+        await game.settings.set(C.ID, 'queue', queue);
     });
     advRequestsSocket.register(REQUEST_ACTIVATE, async (requestId) => {
-        activateRequestById(requestId);
+        console.log(`[Advanced Requests] REQUEST_ACTIVATE received for:`, requestId, "by", game.user.name);
+        if (!game.user.isGM) return;
+        let queue = game.settings.get(C.ID, 'queue') || [];
+        const req = queue.find(r => r.userId === requestId);
+        if (!req) return;
+        // Play sound (customizable per level in future)
+        const sound = game.settings.get(C.ID, "reqClickSound") || "modules/advanced-requests/assets/samples/fingerSnapping.wav";
+        foundry.audio.AudioHelper.play({ src: sound, volume: 0.8, autoplay: true, loop: false });
+        // Chat message
+        ChatMessage.create({
+            user: game.user.id,
+            speaker: { alias: game.user.name },
+            content: `${req.name} ${game.i18n.localize("advanced-requests.chatMessage.activateRequest2")}`
+        });
+        // Remove request
+        queue = queue.filter(r => r.userId !== requestId);
+        await game.settings.set(C.ID, 'queue', queue);
     });
 });
 
-function removeRequestById(requestId) {
-    CONFIG.ADVREQUESTS.queue = CONFIG.ADVREQUESTS.queue.filter(r => r.userId !== requestId);
-    moveAdvRequestsDash();
-}
+class AdvancedRequestsManager {
+  constructor() {
+    this.moduleName = "advanced-requests";
+    this.socket = socketlib.registerModule(this.moduleName);
+    this.socket.register("addRequest", this._addRequest.bind(this));
+    this.socket.register("removeRequest", this._removeRequest.bind(this));
+    this.socket.register("activateRequest", this._activateRequest.bind(this));
+    // Debug handler
+    this.socket.register("debugPing", this._debugPing.bind(this));
+    // Hello World handler
+    this.socket.register("helloWorldClicked", this._helloWorldClicked.bind(this));
+  }
 
-function activateRequestById(requestId) {
-    const req = CONFIG.ADVREQUESTS.queue.find(r => r.userId === requestId);
+  _debugPing(senderName) {
+    console.log(`[Advanced Requests] Received debug ping from: ${senderName}`);
+  }
+
+  sendDebugPing() {
+    this.socket.executeForOthers("debugPing", game.user.name);
+  }
+
+  _helloWorldClicked(userName) {
+    console.log(`[Advanced Requests] Hello World clicked by: ${userName}`);
+  }
+
+  sendHelloWorld() {
+    this.socket.executeForOthers("helloWorldClicked", game.user.name);
+  }
+
+  // All clients update their own local queue
+  _addRequest(requestData) {
+    let queue = CONFIG.ADVREQUESTS.queue || [];
+    queue = queue.filter(r => r.userId !== requestData.userId);
+    const index = queue.findLastIndex(item => item.level > requestData.level);
+    queue.splice(index + 1, 0, requestData);
+    CONFIG.ADVREQUESTS.queue = queue;
+    moveAdvRequestsDash();
+  }
+
+  _removeRequest(userId) {
+    let queue = CONFIG.ADVREQUESTS.queue || [];
+    queue = queue.filter(r => r.userId !== userId);
+    CONFIG.ADVREQUESTS.queue = queue;
+    moveAdvRequestsDash();
+  }
+
+  _activateRequest(userId) {
+    let queue = CONFIG.ADVREQUESTS.queue || [];
+    const req = queue.find(r => r.userId === userId);
     if (!req) return;
-    // Play sound (customizable per level in future)
-    const sound = game.settings.get(C.ID, "reqClickSound") || "modules/advanced-requests/assets/samples/fingerSnapping.wav";
+    // Play sound
+    const sound = game.settings.get(this.moduleName, "reqClickSound") || "modules/advanced-requests/assets/samples/fingerSnapping.wav";
     foundry.audio.AudioHelper.play({ src: sound, volume: 0.8, autoplay: true, loop: false });
     // Chat message
     ChatMessage.create({
-        user: game.user.id,
-        speaker: { alias: game.user.name },
-        content: `${req.name} ${game.i18n.localize("advanced-requests.chatMessage.activateRequest2")}`
+      user: game.user.id,
+      speaker: { alias: game.user.name },
+      content: `${req.name} ${game.i18n.localize("advanced-requests.chatMessage.activateRequest2")}`
     });
     // Remove request
-    removeRequestById(requestId);
+    queue = queue.filter(r => r.userId !== userId);
+    CONFIG.ADVREQUESTS.queue = queue;
+    moveAdvRequestsDash();
+  }
+
+  // Called by any client
+  addRequest(requestData) {
+    this.socket.executeForEveryone("addRequest", requestData);
+  }
+
+  removeRequest(userId) {
+    this.socket.executeForEveryone("removeRequest", userId);
+  }
+
+  activateRequest(userId) {
+    this.socket.executeForEveryone("activateRequest", userId);
+  }
 }
+
+// Initialize manager on init
+Hooks.once("init", () => {
+  window.advancedRequests = new AdvancedRequestsManager();
+});
 
 function getRequestElement(item) {
     // Контейнер
@@ -206,22 +280,18 @@ function getRequestElement(item) {
         event.preventDefault();
         event.stopPropagation();
         if (game.user.isGM && game.user.id !== item.userId) {
-            // GM activates request (LMB)
-            advRequestsSocket.executeForEveryone(REQUEST_ACTIVATE, item.userId);
+            window.advancedRequests.activateRequest(item.userId);
         } else if (game.user.id === item.userId) {
-            // Player removes own request (LMB)
-            advRequestsSocket.executeForEveryone(REQUEST_REMOVE, item.userId);
+            window.advancedRequests.removeRequest(item.userId);
         }
     });
     containerEl.addEventListener('contextmenu', async (event) => {
         event.preventDefault();
         event.stopPropagation();
         if (game.user.isGM) {
-            // GM removes any request (RMB)
-            advRequestsSocket.executeForEveryone(REQUEST_REMOVE, item.userId);
+            window.advancedRequests.removeRequest(item.userId);
         } else if (game.user.id === item.userId) {
-            // Player removes own request (RMB)
-            advRequestsSocket.executeForEveryone(REQUEST_REMOVE, item.userId);
+            window.advancedRequests.removeRequest(item.userId);
         }
     });
     return containerEl;
@@ -369,6 +439,9 @@ export const getRequestData = (reqLevel = 0, useForRequests) => {
 // });
 
 Hooks.on("updateSetting", async (setting, value, options, userId) => {
+    if (setting.key === `${C.ID}.queue`) {
+        console.log(`[Advanced Requests] updateSetting fired for queue. User: ${game.user.name}, Value:`, value, "Options:", options, "userId:", userId);
+    }
     if (!setting.key == `${C.ID}.queue`) return
     const queueEls = document.querySelectorAll(".ar-chat-queue")
     const queue = setting.value
@@ -490,7 +563,7 @@ function renderAdvRequestsDash() {
     for (const req of CONFIG.ADVREQUESTS.queue) {
         const chip = document.createElement("div");
         chip.className = `adv-request-chip level-${req.level}`;
-        chip.title = `${req.name} (${["Common", "Important", "Urgent"][req.level]})`;
+        chip.title = `${req.name} (${["Common", "Important", "Urgent", "test"][req.level]})`;
         chip.innerHTML = `<img src="${req.img || "icons/svg/mystery-man.svg"}" style="width:24px;height:24px;border-radius:50%;"> ${req.name}`;
         // Remove on click (for now, only self)
         if (req.userId === game.user.id) {
@@ -507,22 +580,30 @@ function renderAdvRequestsDash() {
     // Add request buttons
     const btnRow = document.createElement("div");
     btnRow.className = "adv-requests-buttons flexrow";
-    ["Common", "Important", "Urgent"].forEach((label, level) => {
+    ["Common", "Important", "Urgent", "test"].forEach((label, level) => {
         const btn = document.createElement("button");
         btn.type = "button";
         btn.textContent = label;
-        btn.onclick = (event) => {
-            event.preventDefault();
-            // Add request for this user
-            CONFIG.ADVREQUESTS.queue = CONFIG.ADVREQUESTS.queue.filter(r => r.userId !== game.user.id);
-            CONFIG.ADVREQUESTS.queue.push({
-                userId: game.user.id,
-                name: game.user.name,
-                img: game.user.avatar,
-                level
-            });
-            moveAdvRequestsDash();
-        };
+        if (label === "test") {
+            btn.onclick = (event) => {
+                event.preventDefault();
+                window.advancedRequests.sendHelloWorld();
+                console.log("[Advanced Requests] Sent Hello World to all other users from test button.");
+            };
+        } else {
+            btn.onclick = (event) => {
+                event.preventDefault();
+                // Add request for this user
+                CONFIG.ADVREQUESTS.queue = CONFIG.ADVREQUESTS.queue.filter(r => r.userId !== game.user.id);
+                CONFIG.ADVREQUESTS.queue.push({
+                    userId: game.user.id,
+                    name: game.user.name,
+                    img: game.user.avatar,
+                    level
+                });
+                moveAdvRequestsDash();
+            };
+        }
         btnRow.appendChild(btn);
     });
     dash.appendChild(btnRow);
@@ -531,6 +612,7 @@ function renderAdvRequestsDash() {
 }
 
 function moveAdvRequestsDash() {
+    console.log("[Advanced Requests] moveAdvRequestsDash called by", game.user.name, "queue:", CONFIG.ADVREQUESTS.queue);
     const inputElement = document.getElementById("chat-message");
     if (!inputElement) {
         if (CONFIG.ADVREQUESTS.element?.parentNode) CONFIG.ADVREQUESTS.element.parentNode.removeChild(CONFIG.ADVREQUESTS.element);
@@ -551,3 +633,20 @@ Hooks.on("closeChatLog", moveAdvRequestsDash);
 Hooks.on("activateChatLog", moveAdvRequestsDash);
 Hooks.on("deactivateChatLog", moveAdvRequestsDash);
 Hooks.on("collapseSidebar", moveAdvRequestsDash);
+
+// Minimal SocketLib test for communication
+Hooks.once("ready", () => {
+  if (!window.socketlib) {
+    console.error("SocketLib is not loaded!");
+    return;
+  }
+  const testSocket = socketlib.registerModule("advanced-requests");
+  testSocket.register("test", (msg) => {
+    console.log("[SocketLib Test] Received:", msg, "from", game.user.name);
+  });
+  if (game.user.isGM) {
+    setTimeout(() => {
+      testSocket.executeForEveryone("test", "Hello from GM " + game.user.name);
+    }, 2000);
+  }
+});
