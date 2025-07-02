@@ -283,6 +283,15 @@ class AdvancedRequestsManager {
   _addRequest(requestData) {
     log_socket("receiving request from other client", requestData);
     add_new_request_LOCAL_QUEUE(requestData);
+    // Play sound for new request if not from self
+    if (requestData.userId !== game.user.id) {
+       foundry.audio.AudioHelper.play({
+          src: "modules/advanced-requests/assets/request0.wav",
+          volume: 0.8,
+          autoplay: true,
+          loop: false
+       });
+    }
     moveAdvRequestsDash();
   }
 
@@ -467,6 +476,7 @@ async function addRequest(reqLevel, reRender = false) {
 // })
 
 function renderAdvRequestsDash() {
+    debugger; // DEBUG: renderAdvRequestsDash called
     const dash = document.createElement("section");
     dash.className = "adv-requests-dash flexcol";
 
@@ -542,10 +552,12 @@ function renderAdvRequestsDash() {
 }
 
 function moveAdvRequestsDash() {
+    debugger; // DEBUG: moveAdvRequestsDash called
     log_socket("moveAdvRequestsDash called by", game.user.name);
     log_socket("current queue", CONFIG.ADVREQUESTS.queue);
     const chatInput = document.querySelector("#chat-message.chat-input");
     if (!chatInput) {
+        debugger; // DEBUG: chatInput not found in moveAdvRequestsDash
         if (CONFIG.ADVREQUESTS.element?.parentNode) CONFIG.ADVREQUESTS.element.parentNode.removeChild(CONFIG.ADVREQUESTS.element);
         return;
     }
@@ -557,10 +569,10 @@ function moveAdvRequestsDash() {
     chatInput.parentNode.insertBefore(dash, chatInput);
 }
 
-Hooks.once("renderChatLog", moveAdvRequestsDash);
-Hooks.on("renderChatLog", moveAdvRequestsDash);
-Hooks.on("closeChatLog", moveAdvRequestsDash);
-Hooks.on("activateChatLog", moveAdvRequestsDash);
-Hooks.on("deactivateChatLog", moveAdvRequestsDash);
-Hooks.on("collapseSidebar", moveAdvRequestsDash);
+Hooks.once("renderChatLog", function() { debugger; moveAdvRequestsDash(); });
+Hooks.on("renderChatLog", function() { debugger; moveAdvRequestsDash(); });
+Hooks.on("closeChatLog", function() { debugger; moveAdvRequestsDash(); });
+Hooks.on("activateChatLog", function() { debugger; moveAdvRequestsDash(); });
+Hooks.on("deactivateChatLog", function() { debugger; moveAdvRequestsDash(); });
+Hooks.on("collapseSidebar", function() { debugger; moveAdvRequestsDash(); });
 
