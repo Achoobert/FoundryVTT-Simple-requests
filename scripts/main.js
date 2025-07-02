@@ -25,8 +25,8 @@ Hooks.on("renderChatInput", (app, html, data) => {
     // Create the dash
     const dash = renderAdvRequestsDash();
     dash.id = "adv-requests-dash";
-    // Insert after the chat input
-    chatInput.parentNode.insertBefore(dash, chatInput.nextSibling);
+    // Insert BEFORE the chat input
+    chatInput.parentNode.insertBefore(dash, chatInput);
     CONFIG.ADVREQUESTS.element = dash;
 });
 Hooks.on("userConnected", () => {
@@ -512,7 +512,6 @@ function renderAdvRequestsDash() {
 function moveAdvRequestsDash() {
     log_socket("moveAdvRequestsDash called by", game.user.name);
     log_socket("current queue", CONFIG.ADVREQUESTS.queue);
-    // Use the same selector as Foundry VTT v11+ for chat input
     const chatInput = document.querySelector("#chat-message.chat-input");
     if (!chatInput) {
         if (CONFIG.ADVREQUESTS.element?.parentNode) CONFIG.ADVREQUESTS.element.parentNode.removeChild(CONFIG.ADVREQUESTS.element);
@@ -522,7 +521,8 @@ function moveAdvRequestsDash() {
     const dash = renderAdvRequestsDash();
     dash.id = "adv-requests-dash";
     CONFIG.ADVREQUESTS.element = dash;
-    chatInput.parentNode.insertBefore(dash, chatInput.nextSibling);
+    // Insert BEFORE the chat input
+    chatInput.parentNode.insertBefore(dash, chatInput);
 }
 
 Hooks.once("renderChatLog", moveAdvRequestsDash);
