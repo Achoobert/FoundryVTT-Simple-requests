@@ -30,6 +30,8 @@ TODO: Restore Advanced Requests Functionality
    - Ensure the UI is accessible and visually clear for all users.
    - GM should be able to customise an audio sound for each category of request.
 
+7. add playbook e2e testin
+
 Implementation Notes:
 - Use the same UI look, DOM placement and CSS structure as dice-calculator for the default (above chat message input) position.
 - Use a single source of truth for the queue (e.g., a setting or in-memory object, synchronized via SocketLib). Copy `raise-my-hand`'s Implementation

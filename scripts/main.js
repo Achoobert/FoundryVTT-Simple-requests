@@ -5,7 +5,13 @@ if (!window.CONFIG) window.CONFIG = {};
 if (!CONFIG.ADVREQUESTS) CONFIG.ADVREQUESTS = {};
 if (!Array.isArray(CONFIG.ADVREQUESTS.queue)) CONFIG.ADVREQUESTS.queue = [];
 
-// Рендер окна заявок в чате
+let log_socket = (str, obj) => {
+    let message = "advanced-requests: " + str;
+    console.log({message, data: obj});
+}
+
+
+
 Hooks.on("renderSidebarTab", (app, html, data) => {
     if (app.tabName !== "chat") return;
     const div = document.createElement("div");
@@ -15,17 +21,14 @@ Hooks.on("renderSidebarTab", (app, html, data) => {
     const height = game.settings.get(C.ID, "chatQueueHeight") + "px";
     div.style.minHeight = height
     div.style.maxHeight = height
-    // Очередь
     const queueBox = document.createElement("div");
     queueBox.classList.add("ar-chat-queue");
     queueBox.id = "ar-chat-queue"
     const queue = getQueue();
     queue.forEach((item) => {
-        // Токены в очереди
         const containerEl = getRequestElement(item)
         queueBox.append(containerEl)
     })
-    // Кнопка открытия менюшки заявок
     const requestsMenuButton = document.createElement("div");
     requestsMenuButton.classList.add("ar-chat-requests-menu");
     requestsMenuButton.innerHTML = `<i class="fas fa-gear"></i>`
@@ -34,14 +37,12 @@ Hooks.on("renderSidebarTab", (app, html, data) => {
         new ImageHelper().render(true)
     })
     queueBox.append(requestsMenuButton)
-    // Кнопка смены расположения
     const transferButton = document.createElement("div");
     transferButton.className = "ar-chat-queue-transfer ar-hidden";
     transferButton.innerHTML = `<i class="fas fa-up-right-from-square"></i>`
     transferButton.dataset.tooltip = game.i18n.localize(`${C.ID}.buttons.queueTransferTooltip`);
     let isElementHovered = false
     div.addEventListener("mouseover", (e) => {
-        // Если шифт зажат - создаём кнопку смены расположения
         isElementHovered = true
         if (e.shiftKey) {
             transferButton.classList.toggle("ar-hidden", false);
@@ -82,7 +83,6 @@ Hooks.on("renderSidebarTab", (app, html, data) => {
     })
     queueBox.append(transferButton);
     div.append(queueBox);
-    // Кнопки
     const buttonDiv = document.createElement("div");
     buttonDiv.classList.add("ar-chat-buttons");
     ["first", "second", "third"].forEach((reqLevel, i) => {
@@ -134,58 +134,22 @@ Hooks.on("renderSidebarTab", (app, html, data) => {
     }
 });
 
-const REQUEST_REMOVE = "removeRequest";
-const REQUEST_ACTIVATE = "activateRequest";
+
 
 // --- SocketLib integration ---
-let advRequestsSocket;
-
-Hooks.once("socketlib.ready", () => {
-    console.error("SocketLib ready");
-    advRequestsSocket = socketlib.registerModule("advanced-requests");
-    advRequestsSocket.register("helloWorldClicked", (userName) => {
-        console.log(`[Advanced Requests] Hello World clicked by: ${userName}`);
-    });
-    // Register request management actions after socket is initialized
-    advRequestsSocket.register(REQUEST_REMOVE, async (requestId) => {
-        console.log(`[Advanced Requests] REQUEST_REMOVE received for:`, requestId, "by", game.user.name);
-        if (!game.user.isGM) return;
-        let queue = game.settings.get(C.ID, 'queue') || [];
-        queue = queue.filter(r => r.userId !== requestId);
-        await game.settings.set(C.ID, 'queue', queue);
-    });
-    advRequestsSocket.register(REQUEST_ACTIVATE, async (requestId) => {
-        console.log(`[Advanced Requests] REQUEST_ACTIVATE received for:`, requestId, "by", game.user.name);
-        if (!game.user.isGM) return;
-        let queue = game.settings.get(C.ID, 'queue') || [];
-        const req = queue.find(r => r.userId === requestId);
-        if (!req) return;
-        // Play sound (customizable per level in future)
-        const sound = game.settings.get(C.ID, "reqClickSound") || "modules/advanced-requests/assets/samples/fingerSnapping.wav";
-        foundry.audio.AudioHelper.play({ src: sound, volume: 0.8, autoplay: true, loop: false });
-        // Chat message
-        ChatMessage.create({
-            user: game.user.id,
-            speaker: { alias: game.user.name },
-            content: `${req.name} ${game.i18n.localize("advanced-requests.chatMessage.activateRequest2")}`
-        });
-        // Remove request
-        queue = queue.filter(r => r.userId !== requestId);
-        await game.settings.set(C.ID, 'queue', queue);
-    });
-});
 
 class AdvancedRequestsManager {
   constructor() {
     this.moduleName = "advanced-requests";
     this.socket = socketlib.registerModule(this.moduleName);
+    this.socket.register("createRequest", this._createRequest.bind(this));
     this.socket.register("addRequest", this._addRequest.bind(this));
     this.socket.register("removeRequest", this._removeRequest.bind(this));
     this.socket.register("activateRequest", this._activateRequest.bind(this));
+    this.socket.register("updateRequestQueue", this._updateRequestQueue.bind(this));
     this.socket.register("syncQueue", this._syncQueue.bind(this));
-    // Debug handler
+    // Debug/Hello handlers
     this.socket.register("debugPing", this._debugPing.bind(this));
-    // Hello World handler
     this.socket.register("helloWorldClicked", this._helloWorldClicked.bind(this));
   }
 
@@ -206,33 +170,93 @@ class AdvancedRequestsManager {
   }
 
   _syncQueue(newQueue) {
+    log_socket("syncing queue", newQueue);
+    CONFIG.ADVREQUESTS.queue = newQueue;
+    moveAdvRequestsDash();
+  }
+  _createRequest(newQueue) {
+    log_socket("syncing queue", newQueue);
     CONFIG.ADVREQUESTS.queue = newQueue;
     moveAdvRequestsDash();
   }
 
   syncQueueToOthers() {
+    log_socket("sending queue", CONFIG.ADVREQUESTS.queue);
     this.socket.executeForOthers("syncQueue", CONFIG.ADVREQUESTS.queue);
   }
 
-  _addRequest(requestData) {
+  // When THIS CLIENT creates a request locally
+  createRequest(requestData) {
+    log_socket("creating request locally", requestData);
+    // Update local queue immediately
     let queue = CONFIG.ADVREQUESTS.queue || [];
     queue = queue.filter(r => r.userId !== requestData.userId);
     const index = queue.findLastIndex(item => item.level > requestData.level);
     queue.splice(index + 1, 0, requestData);
     CONFIG.ADVREQUESTS.queue = queue;
     moveAdvRequestsDash();
-    this.syncQueueToOthers();
+    // Send to all other clients
+    this.socket.executeForOthers("addRequest", requestData);
   }
 
-  _removeRequest(userId) {
+  // When receiving a request from another client
+  _addRequest(requestData) {
+    log_socket("receiving request from other client", requestData);
+    let queue = CONFIG.ADVREQUESTS.queue || [];
+    queue = queue.filter(r => r.userId !== requestData.userId);
+    const index = queue.findLastIndex(item => item.level > requestData.level);
+    queue.splice(index + 1, 0, requestData);
+    CONFIG.ADVREQUESTS.queue = queue;
+    moveAdvRequestsDash();
+  }
+
+  // Check if user is authorized to remove this request
+  isAuthorizedToRemove(userId) {
+    return game.user.isGM || game.user.id === userId;
+  }
+
+  // When THIS CLIENT removes a request locally
+  removeRequest(userId) {
+    if (!this.isAuthorizedToRemove(userId)) {
+      log_socket("unauthorized remove attempt", { userId, user: game.user.id, isGM: game.user.isGM });
+      return;
+    }
+    log_socket("removing request locally", userId);
+    // Update local queue immediately
     let queue = CONFIG.ADVREQUESTS.queue || [];
     queue = queue.filter(r => r.userId !== userId);
     CONFIG.ADVREQUESTS.queue = queue;
     moveAdvRequestsDash();
-    this.syncQueueToOthers();
+    // Send to all other clients
+    this.socket.executeForOthers("removeRequest", userId);
+  }
+
+  // When receiving a remove request from another client
+  _removeRequest(userId) {
+    log_socket("receiving remove request from other client", userId);
+    let queue = CONFIG.ADVREQUESTS.queue || [];
+    queue = queue.filter(r => r.userId !== userId);
+    CONFIG.ADVREQUESTS.queue = queue;
+    moveAdvRequestsDash();
+  }
+
+  // Update entire queue (for bulk operations)
+  updateRequestQueue(queueData) {
+    log_socket("updating entire queue", queueData);
+    CONFIG.ADVREQUESTS.queue = queueData;
+    moveAdvRequestsDash();
+    this.socket.executeForOthers("updateRequestQueue", queueData);
+  }
+
+  // When receiving queue update from another client
+  _updateRequestQueue(queueData) {
+    log_socket("receiving queue update from other client", queueData);
+    CONFIG.ADVREQUESTS.queue = queueData;
+    moveAdvRequestsDash();
   }
 
   _activateRequest(userId) {
+    log_socket("activating request", userId);
     let queue = CONFIG.ADVREQUESTS.queue || [];
     const req = queue.find(r => r.userId === userId);
     if (!req) return;
@@ -252,21 +276,13 @@ class AdvancedRequestsManager {
     this.syncQueueToOthers();
   }
 
-  addRequest(requestData) {
-    this.socket.executeForEveryone("addRequest", requestData);
-  }
-
-  removeRequest(userId) {
-    this.socket.executeForEveryone("removeRequest", userId);
-  }
-
   activateRequest(userId) {
     this.socket.executeForEveryone("activateRequest", userId);
   }
 }
 
-// Initialize manager on init
-Hooks.once("init", () => {
+// Initialize manager after SocketLib is ready
+Hooks.once("socketlib.ready", () => {
   window.advancedRequests = new AdvancedRequestsManager();
 });
 
@@ -336,6 +352,7 @@ function addRequestListener(element, reRender = false) {
 }
 
 async function addRequest(reqLevel, reRender = false) {
+    log_socket("original add request", {reqLevel, reRender})
     const useForRequests = game.settings.get(C.ID, "useForRequests");
     const data = getRequestData(reqLevel, useForRequests);
 
@@ -343,29 +360,17 @@ async function addRequest(reqLevel, reRender = false) {
     const defaultUserImg = "icons/svg/mystery-man.svg" // (HOW DO I GET A FUCKING SYSTEM DEFAULT AVATAR?)
     const defaultImg = useForRequests == "user" ? defaultUserImg : Actor.implementation.getDefaultArtwork({type: "someActorType"}).img;
     
-
     const hasImage = (data.img && data.img != defaultImg && await srcExists(defaultImg))
     
-
     if (hasImage) {
-        const queue = getQueue();
-        if (queue.some(item=>item.id == data.id)) {
-            queue.splice(queue.findIndex(item => item.id === data.id), 1);
-        }
-        const index = queue.findLastIndex((item) => item.level > reqLevel);
-        queue.splice(index + 1, 0, data);
-    
-        const options = {changes: ['addRequest', 'playSound'], reqId: data.id};
-        if (game.user.isGM) {
-            await game.settings.set(C.ID, 'queue', queue, options);
-        } else {
-            game.socket.emit(`module.${C.ID}`, {
-                type: 'queue',
-                settingData: queue,
-                options
-            });
-        }
-        if (reRender) AdvancedRequestsApp._render(true)
+        // Use the new manager to create the request
+        const requestData = {
+            userId: data.id,
+            name: data.name,
+            img: data.img,
+            level: reqLevel
+        };
+        window.advancedRequests.createRequest(requestData);
     } else if (useForRequests == "controlled") {
         ui.notifications.warn(game.i18n.localize(`${C.ID}.errors.noControlledTokens`));
     } else {
@@ -375,20 +380,8 @@ async function addRequest(reqLevel, reRender = false) {
 
 
 async function deleteRequest(id, reRender = false, playSound = false) {
-    const queue = getQueue();
-    queue.splice(queue.findIndex(item => item.id === id), 1);
-    const options = {changes: ['deleteRequest'], reqId: id};
-    if (playSound) options.changes.push("playSound")
-    if (game.user.isGM) {
-        await game.settings.set(C.ID, 'queue', queue, options);
-    } else {
-        game.socket.emit(`module.${C.ID}`, {
-            type: 'queue',
-            settingData: queue,
-            options
-        });
-    }
-    if (reRender) AdvancedRequestsApp._render(true)
+    // Use the new manager to remove the request
+    window.advancedRequests.removeRequest(id);
 }
 
 export const getRequestData = (reqLevel = 0, useForRequests) => {
@@ -449,72 +442,9 @@ export const getRequestData = (reqLevel = 0, useForRequests) => {
 //   });
 // });
 
-Hooks.on("updateSetting", async (setting, value, options, userId) => {
-    if (setting.key === `${C.ID}.queue`) {
-        console.log(`[Advanced Requests] updateSetting fired for queue. User: ${game.user.name}, Value:`, value, "Options:", options, "userId:", userId);
-    }
-    if (!setting.key == `${C.ID}.queue`) return
-    const queueEls = document.querySelectorAll(".ar-chat-queue")
-    const queue = setting.value
-    const changes = options.changes || []
-    if (changes.includes("addRequest")) {
-        const queueItemData = queue.find((item) => item.id == options.reqId)
-        if (!queueItemData) return
-        queueEls.forEach((queueEl) => {
-            const existingEls = queueEl.querySelectorAll(`[data-id="${options.reqId}"]`)
-            existingEls.forEach(el => el.remove())
-            const requestEl = getRequestElement(queueItemData)
-            const index = queue.findIndex((item) => item.id == queueItemData.id);
-            const prevEl = queueEl.children[index]
-            if (prevEl) {
-                queueEl.insertBefore(requestEl, prevEl)
-            } else {
-                queueEl.append(requestEl)
-            }
-        })
-        if (game.settings.get(C.ID, "soundCreate") && changes.includes("playSound")) {
-            let volume = game.settings.get(C.ID, "useFoundryInterfaceVolume") ? game.settings.get("core", "globalInterfaceVolume") : game.settings.get(C.ID, "soundCreateVolume") * 0.01
-            if (queueItemData.level == 2) volume *= 1.9
-            AudioHelper.play({
-                src: `modules/${C.ID}/assets/request${queueItemData.level}.wav`,
-                volume: volume,
-            });
-        }
-    }
-    if (changes.includes("deleteRequest")) {
-        queueEls.forEach((queueEl) => {
-            queueEl.removeChild(queueEl.querySelector(`[data-id="${options.reqId}"]`))
-        })
-        const soundActivate = game.settings.get(C.ID, "soundActivate") && changes.includes("playSound")
-        if (soundActivate) {
-            const reqClickSound = game.settings.get(C.ID, "reqClickSound")
-            if (reqClickSound && await srcExists(reqClickSound)) {
-                const volume = game.settings.get(C.ID, "useFoundryInterfaceVolume") ? game.settings.get("core", "globalInterfaceVolume") : game.settings.get(C.ID, "soundActivateVolume") * 0.01
-                AudioHelper.play({
-                    src: reqClickSound,
-                    volume: volume,
-                });
-            } else {
-                ui.notifications.warn(game.i18n.localize(`${C.ID}.errors.noReqClickSound`) + " — " + reqClickSound);
-            }
-        }
-    }
-    AdvancedRequestsApp._render()
-})
 
-Hooks.on('setup', () => {
-    game.socket.on(`module.${C.ID}`, async ({ type, settingData, options }) => {
-        if (game.user.isGM) {
-            switch (type) {
-                case 'queue':
-                    await game.settings.set(C.ID, 'queue', settingData, options);
-                    ;
-                default:
-                    ;
-            }
-        }
-    });
-});
+
+
 
 // Синхронизация с Visual Novel
 Hooks.on("updateSetting", async (setting, value, _options, userId) => {
@@ -580,8 +510,7 @@ function renderAdvRequestsDash() {
         if (req.userId === game.user.id) {
             chip.onclick = (event) => {
                 event.preventDefault();
-                CONFIG.ADVREQUESTS.queue = CONFIG.ADVREQUESTS.queue.filter(r => r.userId !== game.user.id);
-                moveAdvRequestsDash();
+                window.advancedRequests.removeRequest(game.user.id);
             };
         }
         queueRow.appendChild(chip);
@@ -604,15 +533,13 @@ function renderAdvRequestsDash() {
         } else {
             btn.onclick = (event) => {
                 event.preventDefault();
-                // Add request for this user
-                CONFIG.ADVREQUESTS.queue = CONFIG.ADVREQUESTS.queue.filter(r => r.userId !== game.user.id);
-                CONFIG.ADVREQUESTS.queue.push({
+                const requestData = {
                     userId: game.user.id,
                     name: game.user.name,
                     img: game.user.avatar,
                     level
-                });
-                moveAdvRequestsDash();
+                };
+                window.advancedRequests.createRequest(requestData);
             };
         }
         btnRow.appendChild(btn);
@@ -623,7 +550,8 @@ function renderAdvRequestsDash() {
 }
 
 function moveAdvRequestsDash() {
-    console.log("[Advanced Requests] moveAdvRequestsDash called by", game.user.name, "queue:", CONFIG.ADVREQUESTS.queue);
+    log_socket("moveAdvRequestsDash called by", game.user.name);
+    log_socket("current queue", CONFIG.ADVREQUESTS.queue);
     const inputElement = document.getElementById("chat-message");
     if (!inputElement) {
         if (CONFIG.ADVREQUESTS.element?.parentNode) CONFIG.ADVREQUESTS.element.parentNode.removeChild(CONFIG.ADVREQUESTS.element);
@@ -645,19 +573,3 @@ Hooks.on("activateChatLog", moveAdvRequestsDash);
 Hooks.on("deactivateChatLog", moveAdvRequestsDash);
 Hooks.on("collapseSidebar", moveAdvRequestsDash);
 
-// Minimal SocketLib test for communication
-Hooks.once("ready", () => {
-  if (!window.socketlib) {
-    console.error("SocketLib is not loaded!");
-    return;
-  }
-  const testSocket = socketlib.registerModule("advanced-requests");
-  testSocket.register("test", (msg) => {
-    console.log("[SocketLib Test] Received:", msg, "from", game.user.name);
-  });
-  if (game.user.isGM) {
-    setTimeout(() => {
-      testSocket.executeForEveryone("test", "Hello from GM " + game.user.name);
-    }, 2000);
-  }
-});
