@@ -10,9 +10,20 @@ let log_socket = (str, obj) => {
     console.log({message, data: obj});
 }
 
-
+userConnected
+// app: ChatLog,
+// elements: Record<string, HTMLElement>,
+// context: RenderChatInputContext,
+Hooks.on("renderChatInput", () => {
+    // move 'renderSidebarTab' logic here
+});
+Hooks.on("userConnected", () => {
+    // if queue, send them the queue
+    // on receiving side, be prepared to reconcile mupliple incoming queues
+});
 
 Hooks.on("renderSidebarTab", (app, html, data) => {
+    debugger
     if (app.tabName !== "chat") return;
     const div = document.createElement("div");
     div.classList.add("advanced-requests-chat-body");
@@ -60,7 +71,7 @@ Hooks.on("renderSidebarTab", (app, html, data) => {
     })
     document.addEventListener("keydown", (e) => {
         if ((e.code == "ShiftLeft" || e.code == "ShiftRight") && isElementHovered) {
-            // Если шифт зажат - создаём кнопку смены расположения
+            // If shift is held down - create the button to change location
             transferButton.classList.toggle("ar-hidden", false);
             queueBox.querySelectorAll(".ar-request-container-chat").forEach((el) => {
                 el.classList.toggle("ar-hidden", true);
@@ -69,7 +80,7 @@ Hooks.on("renderSidebarTab", (app, html, data) => {
     })
     document.addEventListener("keyup", (e) => {
         if ((e.code == "ShiftLeft" || e.code == "ShiftRight") && isElementHovered) {
-            // Если шифт зажат - создаём кнопку смены расположения
+            // If shift is held down - create the button to change location
             transferButton.classList.toggle("ar-hidden", true);
             queueBox.querySelectorAll(".ar-request-container-chat").forEach((el) => {
                 el.classList.toggle("ar-hidden", false);
@@ -134,8 +145,6 @@ Hooks.on("renderSidebarTab", (app, html, data) => {
     }
 });
 
-
-
 // --- SocketLib integration ---
 
 class AdvancedRequestsManager {
@@ -150,7 +159,7 @@ class AdvancedRequestsManager {
     this.socket.register("syncQueue", this._syncQueue.bind(this));
     // Debug/Hello handlers
     this.socket.register("debugPing", this._debugPing.bind(this));
-    this.socket.register("helloWorldClicked", this._helloWorldClicked.bind(this));
+    this.socket.register("helloWorldClicked", this._debugPing.bind(this));
   }
 
   _debugPing(senderName) {
@@ -159,14 +168,6 @@ class AdvancedRequestsManager {
 
   sendDebugPing() {
     this.socket.executeForOthers("debugPing", game.user.name);
-  }
-
-  _helloWorldClicked(userName) {
-    console.log(`[Advanced Requests] Hello World clicked by: ${userName}`);
-  }
-
-  sendHelloWorld() {
-    this.socket.executeForOthers("helloWorldClicked", game.user.name);
   }
 
   _syncQueue(newQueue) {
@@ -255,6 +256,7 @@ class AdvancedRequestsManager {
     moveAdvRequestsDash();
   }
 
+  // prompt user who 'owns' the request, and remove it from queue
   _activateRequest(userId) {
     log_socket("activating request", userId);
     let queue = CONFIG.ADVREQUESTS.queue || [];
@@ -286,17 +288,19 @@ Hooks.once("socketlib.ready", () => {
   window.advancedRequests = new AdvancedRequestsManager();
 });
 
+// this is legacy code, but we should use these logic patterns.
 function getRequestElement(item) {
-    // Контейнер
+    // Container
+    console.error("rendering element")
     const containerEl = document.createElement('div');
     containerEl.className = `ar-request-container-chat ar-level-${item.level}`;
     containerEl.dataset.id = item.userId;
     containerEl.dataset.tooltip = item.name;
-    // Изображение
+    // Image
     const tokenImgEl = document.createElement('img');
     tokenImgEl.src = item.img;
     containerEl.append(tokenImgEl);
-    // Знак предупреждения
+    // Warning sign
     const warningEl = document.createElement('div');
     warningEl.className = `ar-queue-warning ar-level-${item.level}`;
     warningEl.innerHTML = `<img src="modules/${C.ID}/assets/request${item.level}.webp"/>`;
@@ -356,7 +360,7 @@ async function addRequest(reqLevel, reRender = false) {
     const useForRequests = game.settings.get(C.ID, "useForRequests");
     const data = getRequestData(reqLevel, useForRequests);
 
-    // Проверяем что имеется картинка для реквеста
+    // Check that there is an image for the request
     const defaultUserImg = "icons/svg/mystery-man.svg" // (HOW DO I GET A FUCKING SYSTEM DEFAULT AVATAR?)
     const defaultImg = useForRequests == "user" ? defaultUserImg : Actor.implementation.getDefaultArtwork({type: "someActorType"}).img;
     
@@ -442,57 +446,11 @@ export const getRequestData = (reqLevel = 0, useForRequests) => {
 //   });
 // });
 
-
-
-
-
-// Синхронизация с Visual Novel
-Hooks.on("updateSetting", async (setting, value, _options, userId) => {
-    if (setting.key == `visual-novel-dialogues.advancedRequestsSync`) {
-        await game.settings.set(C.ID, 'visualNovelSync', value.key)
-    } else if (setting.key == `visual-novel-dialogues.vnData`) {
-        if (_options.stopFuckingAround) return
-        const changes = _options.change
-        const queue = getQueue();
-        const vnData = foundry.utils.deepClone(setting.value)
-        const reqId = _options.requestId
-        let data = vnData.requests.find((item) => item.id == _options.requestId)
-        if (changes.includes("requestAdd") && data) {
-            data.level -= 1
-            if (queue.some(item=>item.id == reqId)) {
-                queue.splice(queue.findIndex(item => item.id === reqId), 1);
-            }
-            const index = queue.findLastIndex((item) => item.level > reqLevel);
-            queue.splice(index + 1, 0, data);
-        
-            const options = {changes: ['addRequest'], reqId: reqId, stopFuckingAround: true};
-            if (game.user.isGM) {
-                await game.settings.set(C.ID, 'queue', queue, options);
-            } else {
-                game.socket.emit(`module.${C.ID}`, {
-                    type: 'queue',
-                    settingData: queue,
-                    options
-                });
-            }
-            AdvancedRequestsApp._render(true)
-        }
-        if (changes.includes("requestsRemove")) {
-            queue.splice(queue.findIndex(item => item.id === reqId), 1);
-            const options = {changes: ['deleteRequest'], reqId: reqId, stopFuckingAround: true};
-            if (game.user.isGM) {
-                await game.settings.set(C.ID, 'queue', queue, options);
-            } else {
-                game.socket.emit(`module.${C.ID}`, {
-                    type: 'queue',
-                    settingData: queue,
-                    options
-                });
-            }
-            AdvancedRequestsApp._render(true)
-        }
-    }
-})
+// Hooks.on("updateSetting", async (setting, value, _options, userId) => {
+//     if (setting.key == `visual-novel-dialogues.advancedRequestsSync`) {
+//         await game.settings.set(C.ID, 'visualNovelSync', value.key)
+//     }
+// })
 
 function renderAdvRequestsDash() {
     const dash = document.createElement("section");
@@ -506,7 +464,14 @@ function renderAdvRequestsDash() {
         chip.className = `adv-request-chip level-${req.level}`;
         chip.title = `${req.name} (${["Common", "Important", "Urgent", "test"][req.level]})`;
         chip.innerHTML = `<img src="${req.img || "icons/svg/mystery-man.svg"}" style="width:24px;height:24px;border-radius:50%;"> ${req.name}`;
-        // Remove on click (for now, only self)
+        // Remove on click (if own or GM)
+        if (game.user.isGM) {
+            chip.onclick = (event) => {
+                event.preventDefault();
+                // remove newest and highest priority review, read timestamp?
+                // window.advancedRequests.removeRequest(game.user.id);
+            };
+        }
         if (req.userId === game.user.id) {
             chip.onclick = (event) => {
                 event.preventDefault();
@@ -527,7 +492,7 @@ function renderAdvRequestsDash() {
         if (label === "test") {
             btn.onclick = (event) => {
                 event.preventDefault();
-                window.advancedRequests.sendHelloWorld();
+                window.advancedRequests.sendDebugPing();
                 console.log("[Advanced Requests] Sent Hello World to all other users from test button.");
             };
         } else {
