@@ -5,14 +5,91 @@ if (!window.CONFIG) window.CONFIG = {};
 if (!CONFIG.ADVREQUESTS) CONFIG.ADVREQUESTS = {};
 if (!Array.isArray(CONFIG.ADVREQUESTS.queue)) CONFIG.ADVREQUESTS.queue = [];
 
+// queue logic
+/**
+ * Get the current request queue, sorted by urgency (level) and recency (timestamp, newest first)
+ */
+function pop_request_LOCAL_QUEUE() {
+   let queue = CONFIG.ADVREQUESTS.queue || [];
+   // Sort by level (descending: urgent first), then by timestamp (descending: newest first)
+   return queue.slice().sort((a, b) => {
+      if (b.level !== a.level) return b.level - a.level;
+      return b.timestamp - a.timestamp;
+   });
+   // TODO remove from queue
+}
+
+/**
+ * Get the current request queue, sorted by urgency (level) and recency (timestamp, newest first)
+ */
+function get_requests_LOCAL_QUEUE() {
+    let queue = CONFIG.ADVREQUESTS.queue || [];
+    // Sort by level (descending: urgent first), then by timestamp (descending: newest first)
+    return queue.slice().sort((a, b) => {
+       if (b.level !== a.level) return b.level - a.level;
+       return b.timestamp - a.timestamp;
+    });
+ }
+
+/**
+ * Add a new request to the queue, including a timestamp. Insert relative to urgency and recency.
+ * @param {Object} requestData - Must include userId, name, img, level
+ */
+function add_new_request_LOCAL_QUEUE(requestData) {
+   let queue = CONFIG.ADVREQUESTS.queue || [];
+   // if user has a request with same urgency
+   const existing = queue.find(r => r.userId === requestData.userId);
+   if (existing && existing.level === requestData.level) {
+      // Do not update 
+      return queue;
+   }
+   // Add timestamp if not present
+   if (!requestData.timestamp) requestData.timestamp = Date.now();
+   // Remove any existing request from this user
+   queue = queue.filter(r => r.userId !== requestData.userId);
+   // Insert and sort
+   queue.push(requestData);
+   queue = queue.sort((a, b) => {
+      if (b.level !== a.level) return b.level - a.level;
+      return b.timestamp - a.timestamp;
+   });
+   CONFIG.ADVREQUESTS.queue = queue;
+   return queue;
+}
+
+/**
+ * Remove a request from the queue. Defaults to removing the newest and most urgent for a user.
+ * @param {string} userId
+ */
+function remove_request_LOCAL_QUEUE(userId) {
+   let queue = CONFIG.ADVREQUESTS.queue || [];
+   // Remove the most urgent, newest request for this user
+   let idx = queue.findIndex(r => r.userId === userId);
+   if (idx !== -1) queue.splice(idx, 1);
+   CONFIG.ADVREQUESTS.queue = queue;
+   return queue;
+}
+
+/**
+ * Load a queue from another user (e.g., after refresh or join)
+ * @param {Array} newQueue
+ */
+function load_queue_requests_LOCAL_QUEUE(newQueue) {
+   // Validate and sort, most urgent + oldest
+//    there should only be one request per user
+   if (!Array.isArray(newQueue)) return;
+   CONFIG.ADVREQUESTS.queue = newQueue.slice().sort((a, b) => {
+      if (b.level !== a.level) return b.level - a.level;
+      return b.timestamp - a.timestamp;
+   });
+   return CONFIG.ADVREQUESTS.queue;
+}
+
 let log_socket = (str, obj) => {
     let message = "advanced-requests: " + str;
     console.log({message, data: obj});
 }
 
-// app: ChatLog,
-// elements: Record<string, HTMLElement>,
-// context: RenderChatInputContext,
 Hooks.on("renderChatInput", (app, html, data) => {
     // Foundry VTT v11+: html is an object mapping selectors to elements
     const chatInput = html["#chat-message"];
@@ -29,9 +106,22 @@ Hooks.on("renderChatInput", (app, html, data) => {
     chatInput.parentNode.insertBefore(dash, chatInput);
     CONFIG.ADVREQUESTS.element = dash;
 });
-Hooks.on("userConnected", () => {
-    // if queue, send them the queue
-    // on receiving side, be prepared to reconcile mupliple incoming queues
+Hooks.on("userConnected", (user) => {
+    // Only run this logic if there is more than one user online
+    // load_queue_requests_LOCAL_QUEUE
+    if (game.users?.filter(u => u.active).length > 1) {
+        // Only the first active GM or the first user in the list should send the queue
+        // (to avoid all users sending at once)
+        const activeUsers = game.users.filter(u => u.active);
+        const isFirstUser = activeUsers[0]?.id === game.user.id;
+        const isFirstGM = game.user.isGM && !activeUsers.some(u => u.isGM && u.id < game.user.id);
+        if (isFirstUser || isFirstGM) {
+            // Send the current queue to the new user
+            if (window.advancedRequests && typeof window.advancedRequests.syncQueueToOthers === "function") {
+                window.advancedRequests.syncQueueToOthers();
+            }
+        }
+    }
 });
 Hooks.on("renderSidebarTab", (app, html, data) => {
     debugger
@@ -152,9 +242,8 @@ class AdvancedRequestsManager {
     this.socket.register("activateRequest", this._activateRequest.bind(this));
     this.socket.register("updateRequestQueue", this._updateRequestQueue.bind(this));
     this.socket.register("syncQueue", this._syncQueue.bind(this));
-    // Debug/Hello handlers
+    // Debug handler
     this.socket.register("debugPing", this._debugPing.bind(this));
-    this.socket.register("helloWorldClicked", this._debugPing.bind(this));
   }
 
   _debugPing(senderName) {
@@ -167,12 +256,12 @@ class AdvancedRequestsManager {
 
   _syncQueue(newQueue) {
     log_socket("syncing queue", newQueue);
-    CONFIG.ADVREQUESTS.queue = newQueue;
+    load_queue_requests_LOCAL_QUEUE(newQueue);
     moveAdvRequestsDash();
   }
   _createRequest(newQueue) {
     log_socket("syncing queue", newQueue);
-    CONFIG.ADVREQUESTS.queue = newQueue;
+    load_queue_requests_LOCAL_QUEUE(newQueue);
     moveAdvRequestsDash();
   }
 
@@ -184,12 +273,7 @@ class AdvancedRequestsManager {
   // When THIS CLIENT creates a request locally
   createRequest(requestData) {
     log_socket("creating request locally", requestData);
-    // Update local queue immediately
-    let queue = CONFIG.ADVREQUESTS.queue || [];
-    queue = queue.filter(r => r.userId !== requestData.userId);
-    const index = queue.findLastIndex(item => item.level > requestData.level);
-    queue.splice(index + 1, 0, requestData);
-    CONFIG.ADVREQUESTS.queue = queue;
+    add_new_request_LOCAL_QUEUE(requestData);
     moveAdvRequestsDash();
     // Send to all other clients
     this.socket.executeForOthers("addRequest", requestData);
@@ -198,11 +282,7 @@ class AdvancedRequestsManager {
   // When receiving a request from another client
   _addRequest(requestData) {
     log_socket("receiving request from other client", requestData);
-    let queue = CONFIG.ADVREQUESTS.queue || [];
-    queue = queue.filter(r => r.userId !== requestData.userId);
-    const index = queue.findLastIndex(item => item.level > requestData.level);
-    queue.splice(index + 1, 0, requestData);
-    CONFIG.ADVREQUESTS.queue = queue;
+    add_new_request_LOCAL_QUEUE(requestData);
     moveAdvRequestsDash();
   }
 
@@ -218,10 +298,7 @@ class AdvancedRequestsManager {
       return;
     }
     log_socket("removing request locally", userId);
-    // Update local queue immediately
-    let queue = CONFIG.ADVREQUESTS.queue || [];
-    queue = queue.filter(r => r.userId !== userId);
-    CONFIG.ADVREQUESTS.queue = queue;
+    remove_request_LOCAL_QUEUE(userId);
     moveAdvRequestsDash();
     // Send to all other clients
     this.socket.executeForOthers("removeRequest", userId);
@@ -230,16 +307,14 @@ class AdvancedRequestsManager {
   // When receiving a remove request from another client
   _removeRequest(userId) {
     log_socket("receiving remove request from other client", userId);
-    let queue = CONFIG.ADVREQUESTS.queue || [];
-    queue = queue.filter(r => r.userId !== userId);
-    CONFIG.ADVREQUESTS.queue = queue;
+    remove_request_LOCAL_QUEUE(userId);
     moveAdvRequestsDash();
   }
 
   // Update entire queue (for bulk operations)
   updateRequestQueue(queueData) {
     log_socket("updating entire queue", queueData);
-    CONFIG.ADVREQUESTS.queue = queueData;
+    load_queue_requests_LOCAL_QUEUE(queueData);
     moveAdvRequestsDash();
     this.socket.executeForOthers("updateRequestQueue", queueData);
   }
@@ -247,11 +322,10 @@ class AdvancedRequestsManager {
   // When receiving queue update from another client
   _updateRequestQueue(queueData) {
     log_socket("receiving queue update from other client", queueData);
-    CONFIG.ADVREQUESTS.queue = queueData;
+    load_queue_requests_LOCAL_QUEUE(queueData);
     moveAdvRequestsDash();
   }
 
-  // prompt/ display name of user who 'owns' the request, and remove it from queue
   _activateRequest(userId) {
     log_socket("activating request", userId);
     let queue = CONFIG.ADVREQUESTS.queue || [];
@@ -267,8 +341,7 @@ class AdvancedRequestsManager {
       content: `${req.name} ${game.i18n.localize("advanced-requests.chatMessage.activateRequest2")}`
     });
     // Remove request
-    queue = queue.filter(r => r.userId !== userId);
-    CONFIG.ADVREQUESTS.queue = queue;
+    remove_request_LOCAL_QUEUE(userId);
     moveAdvRequestsDash();
     this.syncQueueToOthers();
   }
@@ -323,37 +396,35 @@ function getRequestElement(item) {
     return containerEl;
 }
 
-const getQueue = () => deepClone(game.settings.get(C.ID, "queue"));
-
-
-function addRequestListener(element, reRender = false) {
-    const elId = element?.dataset?.id
-    if (!game.user.isGM && game.user.id != elId) return
-    element?.addEventListener('contextmenu', async () => {
-        await deleteRequest(elId, reRender)
-    })
-    element?.addEventListener('click', async () => {
-        const isGM = game.user.isGM
-        if (isGM) {
-            const messageActivate = game.settings.get(C.ID, "messageActivate")
-            if (messageActivate) {
-                const _user = game.users.find(u=>u.isGM) || game.user
-                ChatMessage.create({
-                    user: _user.id,
-                    speaker: {alias: _user.name},
-                    content: game.i18n.localize(`${C.ID}.chatMessage.activateRequest1`) + game.users.find(u=>u.id == elId)?.name + game.i18n.localize(`${C.ID}.chatMessage.activateRequest2`) // изменить по типу "Игрок какой-то там сделал заявку"
-                })
-            }
-        }
-        await deleteRequest(elId, reRender, isGM)
-    })
-    if (reRender) AdvancedRequestsApp._render(true)
-}
+// function addRequestListener(element, reRender = false) {
+//     const elId = element?.dataset?.id
+//     if (!game.user.isGM && game.user.id != elId) return
+//     element?.addEventListener('contextmenu', async () => {
+//         await deleteRequest(elId, reRender)
+//     })
+//     element?.addEventListener('click', async () => {
+//         const isGM = game.user.isGM
+//         if (isGM) {
+//             const messageActivate = game.settings.get(C.ID, "messageActivate")
+//             if (messageActivate) {
+//                 const _user = game.users.find(u=>u.isGM) || game.user
+//                 ChatMessage.create({
+//                     user: _user.id,
+//                     speaker: {alias: _user.name},
+//                     content: game.i18n.localize(`${C.ID}.chatMessage.activateRequest1`) + game.users.find(u=>u.id == elId)?.name + game.i18n.localize(`${C.ID}.chatMessage.activateRequest2`) // изменить по типу "Игрок какой-то там сделал заявку"
+//                 })
+//             }
+//         }
+//         await deleteRequest(elId, reRender, isGM)
+//     })
+//     if (reRender) AdvancedRequestsApp._render(true)
+// }
 
 async function addRequest(reqLevel, reRender = false) {
+    debugger
     log_socket("original add request", {reqLevel, reRender})
     const useForRequests = game.settings.get(C.ID, "useForRequests");
-    const data = getRequestData(reqLevel, useForRequests);
+    // const data = getRequestData(reqLevel, useForRequests);
 
     // Check that there is an image for the request
     const defaultUserImg = "icons/svg/mystery-man.svg" // (HOW DO I GET A FUCKING SYSTEM DEFAULT AVATAR?)
@@ -375,58 +446,6 @@ async function addRequest(reqLevel, reRender = false) {
     } else {
         new ImageHelper().render(true)
     }
-}
-
-
-async function deleteRequest(id, reRender = false, playSound = false) {
-    // Use the new manager to remove the request
-    window.advancedRequests.removeRequest(id);
-}
-
-export const getRequestData = (reqLevel = 0, useForRequests) => {
-    let data = {
-        level: reqLevel,
-        id: game.user.id
-    }
-    const _actor = game.actors.get(game.settings.get(C.ID, "selectedActorId"))
-    const _controlled = canvas.tokens.controlled[0]
-    switch (useForRequests) {
-        case "token":
-            data.img = _actor?.prototypeToken?.texture?.src
-            data.name = _actor?.prototypeToken?.name
-            break;
-        case "actor":
-            data.img = _actor?.img
-            data.name = _actor?.name
-            break;
-        case "playerToken":
-            data.img = game.user.character?.prototypeToken?.texture?.src 
-            data.name = game.user.character?.prototypeToken?.name
-            break;
-        case "playerActor":
-            data.img = game.user.character?.img
-            data.name = game.user.character?.name
-            break;
-        case "user":
-            data.img = game.user.avatar
-            data.name = game.user.name
-            break;
-        case "custom":
-            data.img = game.settings.get(C.ID, "customImage")
-            data.name = game.settings.get(C.ID, "customName")
-            break;
-        case "controlled":
-            data.img = _controlled?.document?.texture?.src
-            data.name = _controlled?.document?.name
-            break;
-        default:
-            data.img = game.user.avatar
-            data.name = game.user.name
-            break;
-    }
-    data.img = data.img || ""
-    data.name = data.name || ""
-    return data
 }
 
 // Remove AdvancedRequestsApp and ApplicationV2 usage for now
@@ -454,7 +473,7 @@ function renderAdvRequestsDash() {
     // Queue display
     const queueRow = document.createElement("div");
     queueRow.className = "adv-requests-queue flexrow";
-    for (const req of CONFIG.ADVREQUESTS.queue) {
+    for (const req of get_requests_LOCAL_QUEUE()) {
         const chip = document.createElement("div");
         chip.className = `adv-request-chip level-${req.level}`;
         chip.title = `${req.name} (${["Common", "Important", "Urgent", "test"][req.level]})`;
@@ -463,8 +482,9 @@ function renderAdvRequestsDash() {
         if (game.user.isGM) {
             chip.onclick = (event) => {
                 event.preventDefault();
-                // remove newest and highest priority review, read timestamp?
-                // window.advancedRequests.removeRequest(game.user.id);
+                // GM can pop the oldest, most urgent request
+                pop_request_LOCAL_QUEUE();
+                moveAdvRequestsDash();
             };
         }
         if (req.userId === game.user.id) {
@@ -480,6 +500,18 @@ function renderAdvRequestsDash() {
     // Add request buttons
     const btnRow = document.createElement("div");
     btnRow.className = "adv-requests-buttons flexrow";
+    // GM-only button to pop oldest, most urgent
+    if (game.user.isGM) {
+        const popBtn = document.createElement("button");
+        popBtn.type = "button";
+        popBtn.textContent = "Pop Oldest/Urgent";
+        popBtn.onclick = (event) => {
+            event.preventDefault();
+            pop_request_LOCAL_QUEUE();
+            moveAdvRequestsDash();
+        };
+        btnRow.appendChild(popBtn);
+    }
     ["Common", "Important", "Urgent", "test"].forEach((label, level) => {
         const btn = document.createElement("button");
         btn.type = "button";
