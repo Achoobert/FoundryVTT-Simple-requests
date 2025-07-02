@@ -10,18 +10,29 @@ let log_socket = (str, obj) => {
     console.log({message, data: obj});
 }
 
-userConnected
 // app: ChatLog,
 // elements: Record<string, HTMLElement>,
 // context: RenderChatInputContext,
-Hooks.on("renderChatInput", () => {
-    // move 'renderSidebarTab' logic here
+Hooks.on("renderChatInput", (app, html, data) => {
+    // Foundry VTT v11+: html is an object mapping selectors to elements
+    const chatInput = html["#chat-message"];
+    if (!chatInput) {
+        console.error("Chat input not available");
+        return;
+    }
+    // Remove any existing dash to avoid duplicates
+    chatInput.parentNode.querySelectorAll(".adv-requests-dash").forEach(el => el.remove());
+    // Create the dash
+    const dash = renderAdvRequestsDash();
+    dash.id = "adv-requests-dash";
+    // Insert after the chat input
+    chatInput.parentNode.insertBefore(dash, chatInput.nextSibling);
+    CONFIG.ADVREQUESTS.element = dash;
 });
 Hooks.on("userConnected", () => {
     // if queue, send them the queue
     // on receiving side, be prepared to reconcile mupliple incoming queues
 });
-
 Hooks.on("renderSidebarTab", (app, html, data) => {
     debugger
     if (app.tabName !== "chat") return;
@@ -120,31 +131,15 @@ Hooks.on("renderSidebarTab", (app, html, data) => {
     if (diceTray) diceTray.parentNode.insertBefore(dash, diceTray);
     else html[0].appendChild(dash);
 
-    // --- Injection point update for Foundry v13+ ---
-    let injected = false;
-    // Foundry v13+ uses '.chat-sidebar .chat-controls', older uses '#chat-controls'
-    if (game.release && game.release.generation >= 13) {
+    // Foundry v13+ uses '.chat-sidebar .chat-controls'
+
         // Try to find the new chat controls container
         const chatControls = html[0].querySelector('.chat-sidebar .chat-controls') || html[0].querySelector('.chat-controls');
         if (chatControls) {
             chatControls.prepend(div);
-            injected = true;
         }
-    }
-    if (!injected) {
-        // Fallback for older versions
-        const oldChatControls = html[0].querySelector('#chat-controls');
-        if (oldChatControls) {
-            oldChatControls.prepend(div);
-            injected = true;
-        }
-    }
-    if (!injected) {
-        // As a last resort, prepend to the main html
-        html[0].prepend(div);
-    }
+    
 });
-
 // --- SocketLib integration ---
 
 class AdvancedRequestsManager {
@@ -256,7 +251,7 @@ class AdvancedRequestsManager {
     moveAdvRequestsDash();
   }
 
-  // prompt user who 'owns' the request, and remove it from queue
+  // prompt/ display name of user who 'owns' the request, and remove it from queue
   _activateRequest(userId) {
     log_socket("activating request", userId);
     let queue = CONFIG.ADVREQUESTS.queue || [];
@@ -517,18 +512,17 @@ function renderAdvRequestsDash() {
 function moveAdvRequestsDash() {
     log_socket("moveAdvRequestsDash called by", game.user.name);
     log_socket("current queue", CONFIG.ADVREQUESTS.queue);
-    const inputElement = document.getElementById("chat-message");
-    if (!inputElement) {
+    // Use the same selector as Foundry VTT v11+ for chat input
+    const chatInput = document.querySelector("#chat-message.chat-input");
+    if (!chatInput) {
         if (CONFIG.ADVREQUESTS.element?.parentNode) CONFIG.ADVREQUESTS.element.parentNode.removeChild(CONFIG.ADVREQUESTS.element);
         return;
     }
-    // Remove any existing dash to avoid duplicates
-    document.querySelectorAll(".adv-requests-dash").forEach(el => el.remove());
-    // Always re-render
+    chatInput.parentNode.querySelectorAll(".adv-requests-dash").forEach(el => el.remove());
     const dash = renderAdvRequestsDash();
     dash.id = "adv-requests-dash";
     CONFIG.ADVREQUESTS.element = dash;
-    inputElement.parentNode.insertBefore(dash, inputElement);
+    chatInput.parentNode.insertBefore(dash, chatInput.nextSibling);
 }
 
 Hooks.once("renderChatLog", moveAdvRequestsDash);

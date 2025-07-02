@@ -3,12 +3,16 @@
   "description": "A module that adds a convenient way to use the Requests rule, allowing the GM to more effectively distribute attention between players.",
   "version": "1.0",
   "compatibility": {
-    "minimum": "11",
+    "minimum": "13",
     "verified": "13"
   },
   "authors": [
     {
       "name": "Nazgob",
+      "flags": {}
+    },
+    {
+      "name": "Achoobert",
       "flags": {}
     }
   ],
