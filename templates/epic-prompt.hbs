@@ -1,0 +1,79 @@
+<div id="epic-roll-5e">
+
+    <div class="end-epic-roll {{#unless isGM}}er5e-hidden{{/unless}}">
+        <i class="fa-duotone fa-times"></i>
+    </div>
+    <button class="end-epic-roll-manual er5e-hidden-2">{{localize "epic-rolls-5e.complete-roll"}}</button>
+
+    <div class="epic-roll-container">
+        <h1 class="intro-text">
+            {{introLabel}}
+        </h1>
+
+        <h1 class="outro-text er5e-hidden">
+            {{localize "epic-rolls-5e.success"}}!
+        </h1>
+
+        <div class="actor-cards er5e-hidden">
+            {{#each actors as |actor|}}
+            <div class="actor-card" data-uuid="{{actor.uuid}}">
+                <h3>
+                    {{#if actor.isOwner}}
+                        {{actor.name}}
+                    {{else}}
+                        {{#if ../options.hideNames}}
+                        ???
+                        {{else}}
+                            {{actor.name}}
+                        {{/if}}
+                    {{/if}}
+                </h3>
+                <img src="{{actor.img}}" alt="">
+                <div class="roll-badge">
+                    <span class="dis">DIS</span>
+                    <div class="roll-result">
+                        {{#if actor.isOwner}}
+                        <i class="roll fa-duotone fa-dice-d20"></i>
+                        {{/if}}
+                        <label class="result er5e-hidden"></label>
+                    </div>
+                    <span class="adv">ADV</span>
+                </div>
+            </div>
+            {{/each}}
+            {{#if contestants.length}}
+            <span class="actor-card vs">VS</span>
+            {{/if}}
+            {{#each contestants as |actor|}}
+            <div class="actor-card" data-uuid="{{actor.uuid}}">
+                <h3>
+                    {{#if actor.isOwner}}
+                        {{actor.name}}
+                    {{else}}
+                        {{#if ../options.hideNames}}
+                        ???
+                        {{else}}
+                            {{actor.name}}
+                        {{/if}}
+                    {{/if}}
+                </h3>
+                <img src="{{actor.img}}" alt="">
+                <div class="roll-badge">
+                    <span class="dis">DIS</span>
+                    <div class="roll-result">
+                        {{#if actor.isOwner}}
+                        <i class="roll fa-duotone fa-dice-d20"></i>
+                        {{/if}}
+                        <label class="result er5e-hidden"></label>
+                    </div>
+                    <span class="adv">ADV</span>
+                </div>
+            </div>
+            {{/each}}
+        </div>
+
+    </div>
+
+
+
+</div>

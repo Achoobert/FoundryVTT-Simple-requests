@@ -11,20 +11,26 @@ if (!Array.isArray(CONFIG.ADVREQUESTS.queue)) CONFIG.ADVREQUESTS.queue = [];
  */
 function pop_request_LOCAL_QUEUE() {
    let queue = CONFIG.ADVREQUESTS.queue || [];
-   // Sort by level (descending: urgent first), then by timestamp (descending: newest first)
-   return queue.slice().sort((a, b) => {
+   log_socket("old", queue)
+   // Sort by level (descending: urgent first), then by timestamp ( oldest first )
+   let selected_request = queue.slice().sort((a, b) => {
       if (b.level !== a.level) return b.level - a.level;
-      return b.timestamp - a.timestamp;
+      return a.timestamp - b.timestamp;
    });
-   // TODO remove from queue
-}
+   // remove for GM
+   remove_request_LOCAL_QUEUE(selected_request.userId)
+   log_socket("new", queue)
+   debugger
+   log_socket("pop_request_LOCAL_QUEUE", selected_request)
+   return selected_request
+};
 
 /**
  * Get the current request queue, sorted by urgency (level) and recency (timestamp, newest first)
  */
 function get_requests_LOCAL_QUEUE() {
     let queue = CONFIG.ADVREQUESTS.queue || [];
-    // Sort by level (descending: urgent first), then by timestamp (descending: newest first)
+    // Sort by level (descending: urgent first), then by timestamp ( oldest first )
     return queue.slice().sort((a, b) => {
        if (b.level !== a.level) return b.level - a.level;
        return b.timestamp - a.timestamp;
@@ -61,7 +67,11 @@ function add_new_request_LOCAL_QUEUE(requestData) {
  * Remove a request from the queue. Defaults to removing the newest and most urgent for a user.
  * @param {string} userId
  */
-function remove_request_LOCAL_QUEUE(userId) {
+function remove_request_LOCAL_QUEUE(userId=0) {
+   if (userId = 0){
+    // TODO remove [0]
+    return
+   }
    let queue = CONFIG.ADVREQUESTS.queue || [];
    // Remove the most urgent, newest request for this user
    let idx = queue.findIndex(r => r.userId === userId);
@@ -91,7 +101,6 @@ let log_socket = (str, obj) => {
 }
 
 Hooks.on("renderChatInput", (app, html, data) => {
-    // Foundry VTT v11+: html is an object mapping selectors to elements
     const chatInput = html["#chat-message"];
     if (!chatInput) {
         console.error("Chat input not available");
@@ -124,7 +133,6 @@ Hooks.on("userConnected", (user) => {
     }
 });
 Hooks.on("renderSidebarTab", (app, html, data) => {
-    debugger
     if (app.tabName !== "chat") return;
     const div = document.createElement("div");
     div.classList.add("advanced-requests-chat-body");
@@ -270,6 +278,15 @@ class AdvancedRequestsManager {
     this.socket.executeForOthers("syncQueue", CONFIG.ADVREQUESTS.queue);
   }
 
+  // can only be called by a GM
+  gm_callout_top_request() {
+    const toShow = pop_request_LOCAL_QUEUE()
+    log_socket("sending pop_top_request", toShow);
+    // popup message for all
+    this.socket.executeForOthers("showEpicPrompt", toShow);
+    showEpicPrompt(toShow);
+  }
+
   // When THIS CLIENT creates a request locally
   createRequest(requestData) {
     log_socket("creating request locally", requestData);
@@ -363,6 +380,11 @@ class AdvancedRequestsManager {
 // Initialize manager after SocketLib is ready
 Hooks.once("socketlib.ready", () => {
   window.advancedRequests = new AdvancedRequestsManager();
+    window.advancedRequests.socket.register("showEpicPrompt", (data) => {
+      // TOOD Is this the best way to do this?
+      remove_request_LOCAL_QUEUE(data.userId);
+      showEpicPrompt(data);
+    });
 });
 
 // this is legacy code, but we should use these logic patterns.
@@ -430,7 +452,6 @@ function getRequestElement(item) {
 // }
 
 async function addRequest(reqLevel, reRender = false) {
-    debugger
     log_socket("original add request", {reqLevel, reRender})
     const useForRequests = game.settings.get(C.ID, "useForRequests");
     // const data = getRequestData(reqLevel, useForRequests);
@@ -492,7 +513,7 @@ function renderAdvRequestsDash() {
             chip.onclick = (event) => {
                 event.preventDefault();
                 // GM can pop the oldest, most urgent request
-                pop_request_LOCAL_QUEUE();
+                window.advancedRequests.gm_callout_top_request();
                 moveAdvRequestsDash();
             };
         }
@@ -516,7 +537,7 @@ function renderAdvRequestsDash() {
         popBtn.textContent = "Pop Oldest/Urgent";
         popBtn.onclick = (event) => {
             event.preventDefault();
-            pop_request_LOCAL_QUEUE();
+            window.advancedRequests.gm_callout_top_request();
             moveAdvRequestsDash();
         };
         btnRow.appendChild(popBtn);
@@ -572,4 +593,36 @@ Hooks.on("closeChatLog", moveAdvRequestsDash);
 Hooks.on("activateChatLog", moveAdvRequestsDash);
 Hooks.on("deactivateChatLog", moveAdvRequestsDash);
 Hooks.on("collapseSidebar", moveAdvRequestsDash);
+
+// Utility to show a fullscreen epic prompt
+function showEpicPrompt({name, img}) {
+    // Remove any existing prompt
+    document.querySelectorAll('#ar-epic-prompt').forEach(el => el.remove());
+    // Create overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'ar-epic-prompt';
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100vw';
+    overlay.style.height = '100vh';
+    overlay.style.background = 'rgba(0,0,0,0.85)';
+    overlay.style.zIndex = '99999';
+    overlay.style.display = 'flex';
+    overlay.style.alignItems = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.innerHTML = `
+      <div class="epic-roll-container" style="background: rgba(30,30,30,0.9); border-radius: 2em; padding: 2em; box-shadow: 0 0 40px #000; text-align: center; min-width: 320px;">
+        <img src="${img}" alt="${name}" style="width: 160px; height: 160px; border-radius: 50%; object-fit: cover; margin-bottom: 1em; border: 4px solid #fff; box-shadow: 0 0 20px #000;">
+        <h1 style="color: #fff; font-size: 2.5em; margin: 0;">${name}</h1>
+      </div>
+    `;
+    // Remove on click or after 3 seconds
+    overlay.addEventListener('click', () => overlay.remove());
+    setTimeout(() => overlay.remove(), 3000);
+    document.body.appendChild(overlay);
+}
+
+// Example usage: showEpicPrompt({name: 'Player Name', img: 'path/to/image.png'})
+// TODO: Call this when GM clicks on player name in the request queue
 
