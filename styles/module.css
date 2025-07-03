@@ -101,6 +101,31 @@
   box-shadow: 0 0 6px 5px rgba(255, 0, 0, 0.4901960784), 0 0 4px 2px rgba(255, 0, 0, 0.7098039216);
   animation: fastPulse 1.5s ease-in-out infinite;
 }
+.ar-text-level-0 {
+  color: #fff
+}
+
+.ar-text-level-1 {
+  color: #ff3333
+}
+
+.ar-text-level-2 {
+  animation: chipColorPulse 1.2s infinite alternate
+}
+
+@keyframes chipColorPulse {
+  0% {
+    color: #ff3333;
+  }
+
+  50% {
+    color: #ffa500;
+  }
+
+  100% {
+    color: #ffff00;
+  }
+}
 .ar-request-container-chat .ar-queue-warning,
 .ar-request-container-freeScreen .ar-queue-warning {
   position: absolute;

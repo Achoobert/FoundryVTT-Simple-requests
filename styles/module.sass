@@ -140,6 +140,22 @@
     20%, 40%, 60%, 80%
         transform: translateX(-2px)
 
+
+.ar-text-level-0
+    color: #fff
+.ar-text-level-1
+    color: #ff3333
+.ar-text-level-2
+    animation: chipColorPulse 1.2s infinite alternate
+
+@keyframes chipColorPulse
+    0%
+        color: #ff3333
+    50%
+        color: #ffa500
+    100%
+        color: #ffff00
+
 .ar-queue-warning
     &.ar-level-0
         animation: rotateClockwise 2s infinite alternate
@@ -338,3 +354,11 @@
         justify-self: center
         align-self: center
         line-height: 100% !important
+
+.adv-request-chip
+    &.ar-text-level-0
+        color: #fff
+    &.ar-text-level-1
+        color: #ff3333
+    &.ar-text-level-2
+        animation: chipColorPulse 1.2s infinite alternate
