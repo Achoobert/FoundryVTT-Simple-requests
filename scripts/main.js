@@ -184,7 +184,7 @@ class AdvancedRequestsManager {
             // requestData.level
             playSound (
                 soundVolume,
-                game.settings.get("advanced-requests", "soundCreate")
+                // TODO game.settings.get("advanced-requests", "soundCreate")
             )
          }
       }
@@ -313,24 +313,27 @@ function renderAdvRequestsDash() {
    }
    dash.appendChild(queueRow);
 
-   // Add request buttons
-   const btnRow = document.createElement("div");
-   btnRow.className = "adv-requests-buttons flexrow";
-   // GM-only button to pop oldest, most urgent
-   if (game.user.isGM) {
-      const popBtn = document.createElement("button");
-      popBtn.type = "button";
-      popBtn.textContent = "Pop Oldest/Urgent";
-      popBtn.onclick = (event) => {
-         event.preventDefault();
-         window.advancedRequests.gm_callout_top_request();
-         moveAdvRequestsDash();
-      };
-      btnRow.appendChild(popBtn);
-   }
+   // Add request buttons only if chat is visible and #sidebar-content is expanded
    const chatElement = document.getElementById("chat");
+   const sidebarContent = document.getElementById("sidebar-content");
    const isChatVisible = chatElement && chatElement.offsetParent !== null;
-   if (isChatVisible) {
+   const isSidebarExpanded = sidebarContent && sidebarContent.classList.contains("expanded");
+   if (isChatVisible && isSidebarExpanded) {
+      // Add request buttons
+      const btnRow = document.createElement("div");
+      btnRow.className = "adv-requests-buttons flexrow";
+      // GM-only button to pop oldest & most urgent
+      if (game.user.isGM) {
+         const popBtn = document.createElement("button");
+         popBtn.type = "button";
+         popBtn.textContent = "Pop Oldest/Urgent";
+         popBtn.onclick = (event) => {
+            event.preventDefault();
+            window.advancedRequests.gm_callout_top_request();
+            moveAdvRequestsDash();
+         };
+         btnRow.appendChild(popBtn);
+      }
       ["Common", "Important", "Urgent"].forEach((label, level) => {
          const btn = document.createElement("button");
          btn.type = "button";
@@ -347,8 +350,8 @@ function renderAdvRequestsDash() {
          };
          btnRow.appendChild(btn);
       });
+      dash.appendChild(btnRow);
    }
-   dash.appendChild(btnRow);
 
    return dash;
 }
@@ -397,8 +400,8 @@ function _showEpicPrompt(data) {
    // play sound if messageActivate
    if ( game.settings.get("advanced-requests", "soundCreateVolume") ){
       playSound(
-         (game.settings.get("advanced-requests", "soundCreateVolume") / 100),
-         game.settings.get("advanced-requests", "messageActivate")
+         (game.settings.get("advanced-requests", "soundCreateVolume") / 100)
+         // TODO add custom sound for each level of urgency
       )
    }
    // Remove on click or after 3 seconds
@@ -413,13 +416,13 @@ function removeAllDash() {
    document.querySelectorAll("#adv-requests-dash").forEach(el => el.remove());
 }
 
-function playSound ( soundVolume=50, src="modules/advanced-requests/assets/request0.wav"){
-    if (requestData.userId !== game.user.id && soundCreate) {
+function playSound ( volume=50, src="modules/advanced-requests/assets/request0.wav"){
+
        foundry.audio.AudioHelper.play({
           src,
-          volume: soundVolume,
+          volume,
           autoplay: true,
           loop: false
        });
-    }
+
 }
