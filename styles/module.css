@@ -444,3 +444,21 @@
   width: 100%;
   box-sizing: border-box;
 }
+.epic-prompt-container>img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.ar-epic-prompt-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

@@ -1,11 +1,11 @@
-// Ensure CONFIG.ADVREQUESTS and queue are always initialized
+// Ensure CONFIG.ADV_REQUESTS and queue are always initialized
 if (!window.CONFIG) window.CONFIG = {};
-if (!CONFIG.ADVREQUESTS) CONFIG.ADVREQUESTS = {};
-if (!Array.isArray(CONFIG.ADVREQUESTS.queue)) CONFIG.ADVREQUESTS.queue = [];
+if (!CONFIG.ADV_REQUESTS) CONFIG.ADV_REQUESTS = {};
+if (!Array.isArray(CONFIG.ADV_REQUESTS.queue)) CONFIG.ADV_REQUESTS.queue = [];
 
 // queue logic
 function pop_request_LOCAL_QUEUE() {
-   let queue = CONFIG.ADVREQUESTS.queue || [];
+   let queue = CONFIG.ADV_REQUESTS.queue || [];
    log_socket("old", queue)
    // Sort by level (descending: urgent first), then by timestamp ( oldest first )
    let selected_request = queue.slice().sort((a, b) => {
@@ -16,43 +16,39 @@ function pop_request_LOCAL_QUEUE() {
    // remove for GM
    remove_request_LOCAL_QUEUE(selected_request.userId)
    log_socket("new", queue)
-   debugger
    log_socket("pop_request_LOCAL_QUEUE", selected_request)
    return selected_request
 };
 
 function get_requests_LOCAL_QUEUE() {
-    let queue = CONFIG.ADVREQUESTS.queue || [];
-    // Sort by level (descending: urgent first), then by timestamp ( oldest first )
-    return queue.slice().sort((a, b) => {
-       if (b.level !== a.level) return b.level - a.level;
-       return b.timestamp - a.timestamp;
-    });
- }
+   let queue = CONFIG.ADV_REQUESTS.queue || [];
+   // Sort by level (descending: urgent first), then by timestamp ( oldest first )
+   return queue.slice().sort((a, b) => {
+      if (b.level !== a.level) return b.level - a.level;
+      return a.timestamp - b.timestamp;
+   });
+}
 
 /**
  * Add a new request to the queue, including a timestamp. Insert relative to urgency and recency.
  * @param {Object} requestData - Must include userId, name, img, level
  */
 function add_new_request_LOCAL_QUEUE(requestData) {
-   let queue = CONFIG.ADVREQUESTS.queue || [];
+   let queue = CONFIG.ADV_REQUESTS.queue || [];
    // if user has a request with same urgency
    const existing = queue.find(r => r.userId === requestData.userId);
    if (existing && existing.level === requestData.level) {
       // Do not update 
       return queue;
    }
-   // Add timestamp if not present
    if (!requestData.timestamp) requestData.timestamp = Date.now();
-   // Remove any existing request from this user
    queue = queue.filter(r => r.userId !== requestData.userId);
-   // Insert and sort
    queue.push(requestData);
    queue = queue.sort((a, b) => {
       if (b.level !== a.level) return b.level - a.level;
-      return b.timestamp - a.timestamp;
+      return a.timestamp - b.timestamp;
    });
-   CONFIG.ADVREQUESTS.queue = queue;
+   CONFIG.ADV_REQUESTS.queue = queue;
    return queue;
 }
 
@@ -61,12 +57,15 @@ function add_new_request_LOCAL_QUEUE(requestData) {
  * @param {string} userId
  */
 function remove_request_LOCAL_QUEUE(userId) {
-    // TODO remove request [0] if userId not defined
-   let queue = CONFIG.ADVREQUESTS.queue || [];
-   // Remove the most urgent, newest request for this user
-   let idx = queue.findIndex(r => r.userId === userId);
-   if (idx !== -1) queue.splice(idx, 1);
-   CONFIG.ADVREQUESTS.queue = queue;
+   let queue = CONFIG.ADV_REQUESTS.queue || [];
+   if (typeof userId === 'undefined' || userId === null) {
+      // Remove the first (oldest, most urgent) request
+      if (queue.length > 0) queue.splice(0, 1);
+   } else {
+      // Remove any/all requests for this user
+      queue = queue.filter(r => r.userId !== userId);
+   }
+   CONFIG.ADV_REQUESTS.queue = queue;
    return queue;
 }
 
@@ -78,288 +77,191 @@ function load_queue_requests_LOCAL_QUEUE(newQueue) {
    // Validate and sort, most urgent & oldest
 //    there should only be one request per user
    if (!Array.isArray(newQueue)) return;
-   CONFIG.ADVREQUESTS.queue = newQueue.slice().sort((a, b) => {
+   CONFIG.ADV_REQUESTS.queue = newQueue.slice().sort((a, b) => {
       if (b.level !== a.level) return b.level - a.level;
-      return b.timestamp - a.timestamp;
+      return a.timestamp - b.timestamp;
    });
-   return CONFIG.ADVREQUESTS.queue;
+   return CONFIG.ADV_REQUESTS.queue;
 }
 
 // enable when debugging
 let log_socket = (str, obj) => {
-    // let message = "advanced-requests: " + str;
-    // console.log({message, data: obj});
-    return;
+   let message = "advanced-requests: " + str;
+   console.log({message, data: obj});
+   return;
 }
 
 Hooks.on("userConnected", (user) => {
-    // Only run this logic if there is more than one user online
-    // load_queue_requests_LOCAL_QUEUE
-    if (game.users?.filter(u => u.active).length > 1) {
-        // Only the first active GM or the first user in the list should send the queue
-        // (to avoid all users sending at once)
-        const activeUsers = game.users.filter(u => u.active);
-        const isFirstUser = activeUsers[0]?.id === game.user.id;
-        const isFirstGM = game.user.isGM && !activeUsers.some(u => u.isGM && u.id < game.user.id);
-        if (isFirstUser || isFirstGM) {
-            // Send the current queue to the new user
-            if (window.advancedRequests && typeof window.advancedRequests.syncQueueToOthers === "function") {
-                window.advancedRequests.syncQueueToOthers();
-            }
-        }
-    }
+   // Only run this logic if there is more than one user online
+   // load_queue_requests_LOCAL_QUEUE
+   if (game.users?.filter(u => u.active).length > 1) {
+      // Only the first active GM or the first user in the list should send the queue
+      // (to avoid all users sending at once)
+      const activeUsers = game.users.filter(u => u.active);
+      const isFirstUser = activeUsers[0]?.id === game.user.id;
+      const isFirstGM = game.user.isGM && !activeUsers.some(u => u.isGM && u.id < game.user.id);
+      if (isFirstUser || isFirstGM) {
+         // Send the current queue to the new user
+         if (window.advancedRequests && typeof window.advancedRequests.syncQueueToOthers === "function") {
+            window.advancedRequests.syncQueueToOthers();
+         }
+      }
+   }
 });
-// Hooks.on("renderSidebarTab", (app, html, data) => {
-//     if (app.tabName !== "chat") return;
-//     const div = document.createElement("div");
-//     div.classList.add("advanced-requests-chat-body");
-//     if (game.settings.get(C.ID, "requestsPosition") != "chat") div.style.display = "none";
-//     div.id = "advanced-requests-chat-body";
-//     const height = game.settings.get(C.ID, "chatQueueHeight") + "px";
-//     div.style.minHeight = height
-//     div.style.maxHeight = height
-//     const queueBox = document.createElement("div");
-//     queueBox.classList.add("ar-chat-queue");
-//     queueBox.id = "ar-chat-queue"
-//     const queue = getQueue();
-//     queue.forEach((item) => {
-//         const containerEl = getRequestElement(item)
-//         queueBox.append(containerEl)
-//     })
-//     const requestsMenuButton = document.createElement("div");
-//     requestsMenuButton.classList.add("ar-chat-requests-menu");
-//     requestsMenuButton.innerHTML = `<i class="fas fa-gear"></i>`
-//     requestsMenuButton.dataset.tooltip = game.i18n.localize(`${C.ID}.buttons.requestsMenuTooltip`);
-//     requestsMenuButton.addEventListener("click", () => {
-//         new ImageHelper().render(true)
-//     })
-//     queueBox.append(requestsMenuButton)
-//     const transferButton = document.createElement("div");
-//     transferButton.className = "ar-chat-queue-transfer ar-hidden";
-//     transferButton.innerHTML = `<i class="fas fa-up-right-from-square"></i>`
-//     transferButton.dataset.tooltip = game.i18n.localize(`${C.ID}.buttons.queueTransferTooltip`);
-//     let isElementHovered = false
-//     div.addEventListener("mouseover", (e) => {
-//         isElementHovered = true
-//         if (e.shiftKey) {
-//             transferButton.classList.toggle("ar-hidden", false);
-//             queueBox.querySelectorAll(".ar-request-container-chat").forEach((el) => {
-//                 el.classList.toggle("ar-hidden", true);
-//             })
-//         }
-//     })
-//     div.addEventListener("mouseout", (e) => {
-//         isElementHovered = false
-//         transferButton.classList.toggle("ar-hidden", true);
-//         queueBox.querySelectorAll(".ar-request-container-chat").forEach((el) => {
-//             el.classList.toggle("ar-hidden", false);
-//         })
-//     })
-//     document.addEventListener("keydown", (e) => {
-//         if ((e.code == "ShiftLeft" || e.code == "ShiftRight") && isElementHovered) {
-//             // If shift is held down - create the button to change location
-//             transferButton.classList.toggle("ar-hidden", false);
-//             queueBox.querySelectorAll(".ar-request-container-chat").forEach((el) => {
-//                 el.classList.toggle("ar-hidden", true);
-//             })
-//         }
-//     })
-//     document.addEventListener("keyup", (e) => {
-//         if ((e.code == "ShiftLeft" || e.code == "ShiftRight") && isElementHovered) {
-//             // If shift is held down - create the button to change location
-//             transferButton.classList.toggle("ar-hidden", true);
-//             queueBox.querySelectorAll(".ar-request-container-chat").forEach((el) => {
-//                 el.classList.toggle("ar-hidden", false);
-//             })
-//         }
-//     })
-//     transferButton.addEventListener("click", async () => {
-//         await game.settings.set(C.ID, "requestsPosition", "freeScreen")
-//         AdvancedRequestsApp._render(true)
-//         document.getElementById("advanced-requests-chat-body").style.display = "none"
-//     })
-//     queueBox.append(transferButton);
-//     div.append(queueBox);
-//     const buttonDiv = document.createElement("div");
-//     buttonDiv.classList.add("ar-chat-buttons");
-//     ["first", "second", "third"].forEach((reqLevel, i) => {
-//         if (!game.settings.get(C.ID, `${reqLevel}Request`)) return
-//         const button = document.createElement('div')
-//         button.className = `ar-chat-button ar-level-${i}`
-//         button.innerHTML = `<i class="fa-${i == 0 ? "regular" : "solid"} fa-hand${i == 2 ? "-sparkles" : ""} ar-request-icon"></i>`
-//         button.dataset.tooltip = game.i18n.localize(`${C.ID}.buttons.${reqLevel}RequestTooltip`)
-//         button.addEventListener("click", async () => {
-//             await addRequest(i)
-//         })
-//         buttonDiv.append(button)
-//     })
-//     div.append(buttonDiv);
-
-//     // Create the dash
-//     const dash = document.createElement("section");
-//     dash.className = "adv-requests-dash";
-//     // Insert above dice-tray if present, else at end
-//     const diceTray = html[0].querySelector(".dice-tray");
-//     dash.id = "adv-requests-dash";
-//     if (diceTray) diceTray.parentNode.insertBefore(dash, diceTray);
-//     else html[0].appendChild(dash);
-
-//     // Foundry v13+ uses '.chat-sidebar .chat-controls'
-
-//         // Try to find the new chat controls container
-//         const chatControls = html[0].querySelector('.chat-sidebar .chat-controls') || html[0].querySelector('.chat-controls');
-//         if (chatControls) {
-//             chatControls.prepend(div);
-//         }
-    
-// });
 
 // --- SocketLib integration ---
 
 class AdvancedRequestsManager {
-  constructor() {
-    this.moduleName = "advanced-requests";
-    this.socket = socketlib.registerModule(this.moduleName);
-    this.socket.register("createRequest", this._createRequest.bind(this));
-    this.socket.register("addRequest", this._addRequest.bind(this));
-    this.socket.register("removeRequest", this._removeRequest.bind(this));
-    this.socket.register("activateRequest", this._activateRequest.bind(this));
-    this.socket.register("updateRequestQueue", this._updateRequestQueue.bind(this));
-    this.socket.register("syncQueue", this._syncQueue.bind(this));
-    // Debug handler
-    this.socket.register("debugPing", this._debugPing.bind(this));
-  }
+   constructor() {
+      this.moduleName = "advanced-requests";
+      this.socket = socketlib.registerModule(this.moduleName);
+      this.socket.register("createRequest", this._createRequest.bind(this));
+      this.socket.register("addRequest", this._addRequest.bind(this));
+      this.socket.register("removeRequest", this._removeRequest.bind(this));
+      this.socket.register("activateRequest", this._activateRequest.bind(this));
+      this.socket.register("updateRequestQueue", this._updateRequestQueue.bind(this));
+      this.socket.register("syncQueue", this._syncQueue.bind(this));
+      // Debug handler
+      // this.socket.register("debugPing", this._debugPing.bind(this));
+   }
 
-  _debugPing(senderName) {
-    console.log(`[Advanced Requests] Received debug ping from: ${senderName}`);
-  }
+   //   _debugPing(senderName) {
+   //     console.log(`[Advanced Requests] Received debug ping from: ${senderName}`);
+   //   }
 
-  sendDebugPing() {
-    this.socket.executeForOthers("debugPing", game.user.name);
-  }
+   //   sendDebugPing() {
+   //     this.socket.executeForOthers("debugPing", game.user.name);
+   //   }
 
-  _syncQueue(newQueue) {
-    log_socket("syncing queue", newQueue);
-    load_queue_requests_LOCAL_QUEUE(newQueue);
-    moveAdvRequestsDash();
-  }
-  _createRequest(newQueue) {
-    log_socket("syncing queue", newQueue);
-    load_queue_requests_LOCAL_QUEUE(newQueue);
-    moveAdvRequestsDash();
-  }
+   _syncQueue(newQueue) {
+      log_socket("syncing queue", newQueue);
+      load_queue_requests_LOCAL_QUEUE(newQueue);
+      moveAdvRequestsDash();
+   }
+   _createRequest(newQueue) {
+      log_socket("syncing queue", newQueue);
+      load_queue_requests_LOCAL_QUEUE(newQueue);
+      moveAdvRequestsDash();
+   }
 
-  syncQueueToOthers() {
-    log_socket("sending queue", CONFIG.ADVREQUESTS.queue);
-    this.socket.executeForOthers("syncQueue", CONFIG.ADVREQUESTS.queue);
-  }
+   syncQueueToOthers() {
+      log_socket("sending queue", CONFIG.ADV_REQUESTS.queue);
+      this.socket.executeForOthers("syncQueue", CONFIG.ADV_REQUESTS.queue);
+   }
 
-  // can only be called by a GM
-  gm_callout_top_request() {
-    const toShow = pop_request_LOCAL_QUEUE()
-    log_socket("sending pop_top_request", toShow);
-    // popup message for all
-    this.socket.executeForOthers("showEpicPrompt", toShow);
-    _showEpicPrompt(toShow);
-    moveAdvRequestsDash();
-  }
+   // can only be called by a GM
+   gm_callout_top_request() {
+      const toShow = pop_request_LOCAL_QUEUE()
+      log_socket("sending pop_top_request", toShow);
+      // popup message for all
+      this.socket.executeForOthers("showEpicPrompt", toShow);
+      _showEpicPrompt(toShow);
+      moveAdvRequestsDash();
+   }
 
-  // When THIS CLIENT creates a request locally
-  createRequest(requestData) {
-    log_socket("creating request locally", requestData);
-    add_new_request_LOCAL_QUEUE(requestData);
-    moveAdvRequestsDash();
-    // Send to all other clients
-    this.socket.executeForOthers("addRequest", requestData);
-  }
+   // When THIS CLIENT creates a request locally
+   createRequest(requestData) {
+      log_socket("creating request locally", requestData);
+      add_new_request_LOCAL_QUEUE(requestData);
+      moveAdvRequestsDash();
+      // Send to all other clients
+      this.socket.executeForOthers("addRequest", requestData);
+   }
 
-  // When receiving a request from another client
-  _addRequest(requestData) {
-    log_socket("receiving request from other client", requestData);
-    add_new_request_LOCAL_QUEUE(requestData);
-    // Play sound for new request if not from self
-    if (requestData.userId !== game.user.id) {
-       foundry.audio.AudioHelper.play({
-          src: "modules/advanced-requests/assets/request0.wav",
-          volume: 0.8,
-          autoplay: true,
-          loop: false
-       });
-    }
-    moveAdvRequestsDash();
-  }
+// img: "images/Edmund_Carter.webp"
+// level: 0
+// name: "Player2"
+// timestamp: 1751550901413
+// userId: "T07N5SnoLPF0O5Nj"
 
-  // Check if user is authorized to remove this request
-  isAuthorizedToRemove(userId) {
-    return game.user.isGM || game.user.id === userId;
-  }
+   // When receiving a request from another client
+   _addRequest(requestData) {
+      log_socket("receiving request from other client", requestData);
+      add_new_request_LOCAL_QUEUE(requestData);
+      // Play sound for new request if not from self
+      if (requestData.userId !== game.user.id) {
+         if (game.settings.get("advanced-requests", "soundCreate")) {
+            // requestData.level
+            playSound (
+                soundVolume,
+                game.settings.get("advanced-requests", "soundCreate")
+            )
+         }
+      }
+      moveAdvRequestsDash();
+   }
 
-  // When THIS CLIENT removes a request locally
-  removeRequest(userId) {
-    if (this.isAuthorizedToRemove(userId)) {
-        log_socket("removing request locally", userId);
-        remove_request_LOCAL_QUEUE(userId);
-        moveAdvRequestsDash();
-        // Send to all other clients
-        this.socket.executeForOthers("removeRequest", userId);
-    }
-  }
+   // Check if user is authorized to remove this request
+   isAuthorizedToRemove(userId) {
+      return game.user.isGM || game.user.id === userId;
+   }
 
-  // When receiving a remove request from another client
-  _removeRequest(userId) {
-    log_socket("receiving remove request from other client", userId);
-    remove_request_LOCAL_QUEUE(userId);
-    moveAdvRequestsDash();
-  }
+   // When THIS CLIENT removes a request locally
+   removeRequest(userId) {
+      if (this.isAuthorizedToRemove(userId)) {
+         log_socket("removing request locally", userId);
+         remove_request_LOCAL_QUEUE(userId);
+         moveAdvRequestsDash();
+         // Send to all other clients
+         this.socket.executeForOthers("removeRequest", userId);
+      }
+   }
 
-  // Update entire queue (for bulk operations)
-  updateRequestQueue(queueData) {
-    log_socket("updating entire queue", queueData);
-    load_queue_requests_LOCAL_QUEUE(queueData);
-    moveAdvRequestsDash();
-    this.socket.executeForOthers("updateRequestQueue", queueData);
-  }
+   // When receiving a remove request from another client
+   _removeRequest(userId) {
+      log_socket("receiving remove request from other client", userId);
+      remove_request_LOCAL_QUEUE(userId);
+      moveAdvRequestsDash();
+   }
 
-  // When receiving queue update from another client
-  _updateRequestQueue(queueData) {
-    log_socket("receiving queue update from other client", queueData);
-    load_queue_requests_LOCAL_QUEUE(queueData);
-    moveAdvRequestsDash();
-  }
+   // Update entire queue (for bulk operations)
+   updateRequestQueue(queueData) {
+      log_socket("updating entire queue", queueData);
+      load_queue_requests_LOCAL_QUEUE(queueData);
+      moveAdvRequestsDash();
+      this.socket.executeForOthers("updateRequestQueue", queueData);
+   }
 
-  _activateRequest(userId) {
-    log_socket("activating request", userId);
-    let queue = CONFIG.ADVREQUESTS.queue || [];
-    const req = queue.find(r => r.userId === userId);
-    if (!req) return;
-    // Play sound
-    const sound = game.settings.get(this.moduleName, "reqClickSound") || "modules/advanced-requests/assets/samples/fingerSnapping.wav";
-    foundry.audio.AudioHelper.play({ src: sound, volume: 0.8, autoplay: true, loop: false });
-    // Chat message
-    ChatMessage.create({
-      user: game.user.id,
-      speaker: { alias: game.user.name },
-      content: `${req.name} ${game.i18n.localize("advanced-requests.chatMessage.activateRequest2")}`
-    });
-    // Remove request
-    remove_request_LOCAL_QUEUE(userId);
-    moveAdvRequestsDash();
-    this.syncQueueToOthers();
-  }
+   // When receiving queue update from another client
+   _updateRequestQueue(queueData) {
+      log_socket("receiving queue update from other client", queueData);
+      load_queue_requests_LOCAL_QUEUE(queueData);
+      moveAdvRequestsDash();
+   }
 
-  activateRequest(userId) {
-    this.socket.executeForEveryone("activateRequest", userId);
-  }
+   _activateRequest(userId) {
+      log_socket("activating request", userId);
+      let queue = CONFIG.ADV_REQUESTS.queue || [];
+      const req = queue.find(r => r.userId === userId);
+      if (!req) return;
+      // Play sound
+      const sound = game.settings.get(this.moduleName, "reqClickSound") || "modules/advanced-requests/assets/samples/fingerSnapping.wav";
+      foundry.audio.AudioHelper.play({ src: sound, volume: 0.8, autoplay: true, loop: false });
+      // Chat message
+      ChatMessage.create({
+         user: game.user.id,
+         speaker: { alias: game.user.name },
+         content: `${req.name} ${game.i18n.localize("advanced-requests.chatMessage.activateRequest2")}`
+      });
+      // Remove request
+      remove_request_LOCAL_QUEUE(userId);
+      moveAdvRequestsDash();
+      this.syncQueueToOthers();
+   }
+
+   activateRequest(userId) {
+      this.socket.executeForEveryone("activateRequest", userId);
+   }
 }
 
 // Initialize manager after SocketLib is ready
 Hooks.once("socketlib.ready", () => {
-  window.advancedRequests = new AdvancedRequestsManager();
-    window.advancedRequests.socket.register("showEpicPrompt", (data) => {
+   window.advancedRequests = new AdvancedRequestsManager();
+   window.advancedRequests.socket.register("showEpicPrompt", (data) => {
       // TOOD Is this the best way to do this?
       remove_request_LOCAL_QUEUE(data.userId);
       _showEpicPrompt(data);
-    });
+   });
 });
 
 // Remove AdvancedRequestsApp and ApplicationV2 usage for now
@@ -381,129 +283,143 @@ Hooks.once("socketlib.ready", () => {
 // })
 
 function renderAdvRequestsDash() {
-    const dash = document.createElement("section");
-    dash.className = "adv-requests-dash flexcol";
+   const dash = document.createElement("section");
+   dash.className = "adv-requests-dash flexcol";
 
-    // Queue display
-    const queueRow = document.createElement("div");
-    queueRow.className = "adv-requests-queue flexrow";
-    for (const req of get_requests_LOCAL_QUEUE()) {
-        const chip = document.createElement("div");
-        chip.className = `adv-request-chip ar-text-level-${req.level}`;
-        chip.title = `${req.name} (${["Common", "Important", "Urgent", "test"][req.level]})`;
-        chip.innerHTML = `<img class="ar-queue-warning ar-level-${req.level}" src="${req.img || "icons/svg/mystery-man.svg"}" style="width:24px;height:24px;border-radius:50%;"> ${req.name}`;
-        // Remove on click (if own or GM)
-        if (game.user.isGM) {
-            chip.onclick = (event) => {
-                event.preventDefault();
-                // GM can pop the oldest, most urgent request
-                window.advancedRequests.gm_callout_top_request();
-                moveAdvRequestsDash();
-            };
-        }
-        if (req.userId === game.user.id) {
-            chip.onclick = (event) => {
-                event.preventDefault();
-                window.advancedRequests.removeRequest(game.user.id);
-            };
-        }
-        queueRow.appendChild(chip);
-    }
-    dash.appendChild(queueRow);
-
-    // Add request buttons
-    const btnRow = document.createElement("div");
-    btnRow.className = "adv-requests-buttons flexrow";
-    // GM-only button to pop oldest, most urgent
-    if (game.user.isGM) {
-        const popBtn = document.createElement("button");
-        popBtn.type = "button";
-        popBtn.textContent = "Pop Oldest/Urgent";
-        popBtn.onclick = (event) => {
+   // Queue display
+   const queueRow = document.createElement("div");
+   queueRow.className = "adv-requests-queue flexrow";
+   for (const req of get_requests_LOCAL_QUEUE()) {
+      const chip = document.createElement("div");
+      chip.className = `adv-request-chip ar-text-level-${req.level}`;
+      chip.title = `${req.name} (${["Common", "Important", "Urgent", "test"][req.level]})`;
+      chip.innerHTML = `<img class="ar-queue-warning ar-level-${req.level}" src="${req.img || "icons/svg/mystery-man.svg"}" style="width:24px;height:24px;border-radius:50%;"> ${req.name}`;
+      // Remove on click (if own or GM)
+      if (game.user.isGM) {
+         chip.onclick = (event) => {
             event.preventDefault();
+            // GM can pop the oldest, most urgent request
             window.advancedRequests.gm_callout_top_request();
             moveAdvRequestsDash();
-        };
-        btnRow.appendChild(popBtn);
-    }
-    ["Common", "Important", "Urgent"].forEach((label, level) => {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.textContent = label;
-        btn.onclick = (event) => {
+         };
+      }
+      if (req.userId === game.user.id) {
+         chip.onclick = (event) => {
+            event.preventDefault();
+            window.advancedRequests.removeRequest(game.user.id);
+         };
+      }
+      queueRow.appendChild(chip);
+   }
+   dash.appendChild(queueRow);
+
+   // Add request buttons
+   const btnRow = document.createElement("div");
+   btnRow.className = "adv-requests-buttons flexrow";
+   // GM-only button to pop oldest, most urgent
+   if (game.user.isGM) {
+      const popBtn = document.createElement("button");
+      popBtn.type = "button";
+      popBtn.textContent = "Pop Oldest/Urgent";
+      popBtn.onclick = (event) => {
+         event.preventDefault();
+         window.advancedRequests.gm_callout_top_request();
+         moveAdvRequestsDash();
+      };
+      btnRow.appendChild(popBtn);
+   }
+   const chatElement = document.getElementById("chat");
+   const isChatVisible = chatElement && chatElement.offsetParent !== null;
+   if (isChatVisible) {
+      ["Common", "Important", "Urgent"].forEach((label, level) => {
+         const btn = document.createElement("button");
+         btn.type = "button";
+         btn.textContent = label;
+         btn.onclick = (event) => {
             event.preventDefault();
             const requestData = {
-                userId: game.user.id,
-                name: game.user.name,
-                img: game.user.avatar,
-                level
+               userId: game.user.id,
+               name: game.user.name,
+               img: game.user.avatar,
+               level
             };
             window.advancedRequests.createRequest(requestData);
-        };
-        btnRow.appendChild(btn);
-    });
-    dash.appendChild(btnRow);
+         };
+         btnRow.appendChild(btn);
+      });
+   }
+   dash.appendChild(btnRow);
 
-    return dash;
+   return dash;
 }
 
 function moveAdvRequestsDash() {
-    log_socket("moveAdvRequestsDash called by", game.user.name);
-    log_socket("current queue", CONFIG.ADVREQUESTS.queue);
-    const chatInput = document.querySelector("#chat-message.chat-input");
-    if (!chatInput) {
-        if (CONFIG.ADVREQUESTS.element?.parentNode) CONFIG.ADVREQUESTS.element.parentNode.removeChild(CONFIG.ADVREQUESTS.element);
-        return;
-    }
-    removeAllDash();
-    const dash = renderAdvRequestsDash();
-    dash.id = "adv-requests-dash";
-    CONFIG.ADVREQUESTS.element = dash;
-    // Insert BEFORE the chat input
-    chatInput.parentNode.insertBefore(dash, chatInput);
+   log_socket("moveAdvRequestsDash called by", game.user.name);
+   log_socket("current queue", CONFIG.ADV_REQUESTS.queue);
+   const chatInput = document.querySelector("#chat-message.chat-input");
+   if (!chatInput) {
+      if (CONFIG.ADV_REQUESTS.element?.parentNode) CONFIG.ADV_REQUESTS.element.parentNode.removeChild(CONFIG.ADV_REQUESTS.element);
+      return;
+   }
+   removeAllDash();
+   const dash = renderAdvRequestsDash();
+   dash.id = "adv-requests-dash";
+   CONFIG.ADV_REQUESTS.element = dash;
+   // Insert BEFORE the chat input
+   chatInput.parentNode.insertBefore(dash, chatInput);
 }
 
 Hooks.once("renderChatLog", moveAdvRequestsDash);
 Hooks.on("closeChatLog", moveAdvRequestsDash);
 Hooks.on("activateChatLog", moveAdvRequestsDash);
 Hooks.on("deactivateChatLog", moveAdvRequestsDash);
+// Function collapseSidebar
+// collapseSidebar(sidebar: Sidebar, collapsed: boolean): 
 Hooks.on("collapseSidebar", moveAdvRequestsDash);
 
 // Utility to show a fullscreen epic prompt
 // WIP, should allow themeing per each system! 
 function _showEpicPrompt(data) {
-    const name = data.name || "Player";
-    const img = data.img || "icons/svg/mystery-man.svg";
-    // Remove any existing prompt
-    document.querySelectorAll('#ar-epic-prompt').forEach(el => el.remove());
-    // Create overlay
-    const overlay = document.createElement('div');
-    overlay.id = 'ar-epic-prompt';
-    overlay.style.position = 'fixed';
-    overlay.style.top = '0';
-    overlay.style.left = '0';
-    overlay.style.width = '100vw';
-    overlay.style.height = '100vh';
-    overlay.style.background = 'rgba(0,0,0,0.85)';
-    overlay.style.zIndex = '99999';
-    overlay.style.display = 'flex';
-    overlay.style.alignItems = 'center';
-    overlay.style.justifyContent = 'center';
-    overlay.innerHTML = `
-      <div class="epic-roll-container" style="background: rgba(30,30,30,0.9); border-radius: 2em; padding: 2em; box-shadow: 0 0 40px #000; text-align: center; min-width: 320px;">
+   const name = data.name || "Player";
+   const img = data.img || "icons/svg/mystery-man.svg";
+   // Remove any existing prompt
+   document.querySelectorAll('#ar-epic-prompt').forEach(el => el.remove());
+   // Create overlay
+   const overlay = document.createElement('div');
+   overlay.id = 'ar-epic-prompt';
+   overlay.className = 'ar-epic-prompt-overlay';
+   overlay.innerHTML = `
+      <div class="epic-prompt-container" style="background: rgba(30,30,30,0.9); border-radius: 2em; padding: 2em; box-shadow: 0 0 40px #000; text-align: center; min-width: 320px;">
         <img src="${img}" alt="${name}" style="width: 160px; height: 160px; border-radius: 50%; object-fit: cover; margin-bottom: 1em; border: 4px solid #fff; box-shadow: 0 0 20px #000;">
-        <h1 style="color: #fff; font-size: 2.5em; margin: 0;">${name}</h1>
+        <h1 style="color: #fff; font-size: 2.5em; margin: 0;">${name} has the floor</h1>
       </div>
     `;
-    // Remove on click or after 3 seconds
-    overlay.addEventListener('click', () => overlay.remove());
-    setTimeout(() => overlay.remove(), 30000);
-    document.body.appendChild(overlay);
+   // play sound if messageActivate
+   if ( game.settings.get("advanced-requests", "soundCreateVolume") ){
+      playSound(
+         (game.settings.get("advanced-requests", "soundCreateVolume") / 100),
+         game.settings.get("advanced-requests", "messageActivate")
+      )
+   }
+   // Remove on click or after 3 seconds
+   overlay.addEventListener('click', () => overlay.remove());
+   setTimeout(() => overlay.remove(), 5000);
+   document.body.appendChild(overlay);
 }
 
 // Remove any existing dash to avoid duplicates
 function removeAllDash() {
-    document.querySelectorAll(".adv-requests-dash").forEach(el => el.remove());
-    document.querySelectorAll("#adv-requests-dash").forEach(el => el.remove());
+   document.querySelectorAll(".adv-requests-dash").forEach(el => el.remove());
+   document.querySelectorAll("#adv-requests-dash").forEach(el => el.remove());
 }
 
+function playSound ( soundVolume=50, src="modules/advanced-requests/assets/request0.wav"){
+    if (requestData.userId !== game.user.id && soundCreate) {
+       foundry.audio.AudioHelper.play({
+          src,
+          volume: soundVolume,
+          autoplay: true,
+          loop: false
+       });
+    }
+}
