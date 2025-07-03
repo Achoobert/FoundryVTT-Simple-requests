@@ -17,6 +17,7 @@ function pop_request_LOCAL_QUEUE() {
       if (b.level !== a.level) return b.level - a.level;
       return a.timestamp - b.timestamp;
    });
+   selected_request = selected_request[0] || selected_request;
    // remove for GM
    remove_request_LOCAL_QUEUE(selected_request.userId)
    log_socket("new", queue)
@@ -67,11 +68,11 @@ function add_new_request_LOCAL_QUEUE(requestData) {
  * Remove a request from the queue. Defaults to removing the newest and most urgent for a user.
  * @param {string} userId
  */
-function remove_request_LOCAL_QUEUE(userId=0) {
-   if (userId = 0){
-    // TODO remove [0]
-    return
-   }
+function remove_request_LOCAL_QUEUE(userId) {
+//    if (userId = 0){
+    // TODO remove even if userId not defined
+//     return
+//    }
    let queue = CONFIG.ADVREQUESTS.queue || [];
    // Remove the most urgent, newest request for this user
    let idx = queue.findIndex(r => r.userId === userId);
@@ -284,7 +285,7 @@ class AdvancedRequestsManager {
     log_socket("sending pop_top_request", toShow);
     // popup message for all
     this.socket.executeForOthers("showEpicPrompt", toShow);
-    showEpicPrompt(toShow);
+    _showEpicPrompt(toShow);
   }
 
   // When THIS CLIENT creates a request locally
@@ -383,7 +384,7 @@ Hooks.once("socketlib.ready", () => {
     window.advancedRequests.socket.register("showEpicPrompt", (data) => {
       // TOOD Is this the best way to do this?
       remove_request_LOCAL_QUEUE(data.userId);
-      showEpicPrompt(data);
+      _showEpicPrompt(data);
     });
 });
 
@@ -595,7 +596,9 @@ Hooks.on("deactivateChatLog", moveAdvRequestsDash);
 Hooks.on("collapseSidebar", moveAdvRequestsDash);
 
 // Utility to show a fullscreen epic prompt
-function showEpicPrompt({name, img}) {
+function _showEpicPrompt(data) {
+    const name = data.name || "Player";
+    const img = data.img || "icons/svg/mystery-man.svg";
     // Remove any existing prompt
     document.querySelectorAll('#ar-epic-prompt').forEach(el => el.remove());
     // Create overlay
@@ -619,7 +622,7 @@ function showEpicPrompt({name, img}) {
     `;
     // Remove on click or after 3 seconds
     overlay.addEventListener('click', () => overlay.remove());
-    setTimeout(() => overlay.remove(), 3000);
+    setTimeout(() => overlay.remove(), 30000);
     document.body.appendChild(overlay);
 }
 
