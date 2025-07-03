@@ -1,14 +1,9 @@
-import { Constants as C } from "./const.js";
-
 // Ensure CONFIG.ADVREQUESTS and queue are always initialized
 if (!window.CONFIG) window.CONFIG = {};
 if (!CONFIG.ADVREQUESTS) CONFIG.ADVREQUESTS = {};
 if (!Array.isArray(CONFIG.ADVREQUESTS.queue)) CONFIG.ADVREQUESTS.queue = [];
 
 // queue logic
-/**
- * Get the current request queue, sorted by urgency (level) and recency (timestamp, newest first)
- */
 function pop_request_LOCAL_QUEUE() {
    let queue = CONFIG.ADVREQUESTS.queue || [];
    log_socket("old", queue)
@@ -26,9 +21,6 @@ function pop_request_LOCAL_QUEUE() {
    return selected_request
 };
 
-/**
- * Get the current request queue, sorted by urgency (level) and recency (timestamp, newest first)
- */
 function get_requests_LOCAL_QUEUE() {
     let queue = CONFIG.ADVREQUESTS.queue || [];
     // Sort by level (descending: urgent first), then by timestamp ( oldest first )
@@ -69,10 +61,7 @@ function add_new_request_LOCAL_QUEUE(requestData) {
  * @param {string} userId
  */
 function remove_request_LOCAL_QUEUE(userId) {
-//    if (userId = 0){
-    // TODO remove even if userId not defined
-//     return
-//    }
+    // TODO remove request [0] if userId not defined
    let queue = CONFIG.ADVREQUESTS.queue || [];
    // Remove the most urgent, newest request for this user
    let idx = queue.findIndex(r => r.userId === userId);
@@ -86,7 +75,7 @@ function remove_request_LOCAL_QUEUE(userId) {
  * @param {Array} newQueue
  */
 function load_queue_requests_LOCAL_QUEUE(newQueue) {
-   // Validate and sort, most urgent + oldest
+   // Validate and sort, most urgent & oldest
 //    there should only be one request per user
    if (!Array.isArray(newQueue)) return;
    CONFIG.ADVREQUESTS.queue = newQueue.slice().sort((a, b) => {
@@ -96,26 +85,13 @@ function load_queue_requests_LOCAL_QUEUE(newQueue) {
    return CONFIG.ADVREQUESTS.queue;
 }
 
+// enable when debugging
 let log_socket = (str, obj) => {
-    let message = "advanced-requests: " + str;
-    console.log({message, data: obj});
+    // let message = "advanced-requests: " + str;
+    // console.log({message, data: obj});
+    return;
 }
 
-Hooks.on("renderChatInput", (app, html, data) => {
-    const chatInput = html["#chat-message"];
-    if (!chatInput) {
-        console.error("Chat input not available");
-        return;
-    }
-    // Remove any existing dash to avoid duplicates
-    chatInput.parentNode.querySelectorAll(".adv-requests-dash").forEach(el => el.remove());
-    // Create the dash
-    const dash = renderAdvRequestsDash();
-    dash.id = "adv-requests-dash";
-    // Insert BEFORE the chat input
-    chatInput.parentNode.insertBefore(dash, chatInput);
-    CONFIG.ADVREQUESTS.element = dash;
-});
 Hooks.on("userConnected", (user) => {
     // Only run this logic if there is more than one user online
     // load_queue_requests_LOCAL_QUEUE
@@ -133,112 +109,111 @@ Hooks.on("userConnected", (user) => {
         }
     }
 });
-Hooks.on("renderSidebarTab", (app, html, data) => {
-    if (app.tabName !== "chat") return;
-    const div = document.createElement("div");
-    div.classList.add("advanced-requests-chat-body");
-    if (game.settings.get(C.ID, "requestsPosition") != "chat") div.style.display = "none";
-    div.id = "advanced-requests-chat-body";
-    const height = game.settings.get(C.ID, "chatQueueHeight") + "px";
-    div.style.minHeight = height
-    div.style.maxHeight = height
-    const queueBox = document.createElement("div");
-    queueBox.classList.add("ar-chat-queue");
-    queueBox.id = "ar-chat-queue"
-    const queue = getQueue();
-    queue.forEach((item) => {
-        const containerEl = getRequestElement(item)
-        queueBox.append(containerEl)
-    })
-    const requestsMenuButton = document.createElement("div");
-    requestsMenuButton.classList.add("ar-chat-requests-menu");
-    requestsMenuButton.innerHTML = `<i class="fas fa-gear"></i>`
-    requestsMenuButton.dataset.tooltip = game.i18n.localize(`${C.ID}.buttons.requestsMenuTooltip`);
-    requestsMenuButton.addEventListener("click", () => {
-        new ImageHelper().render(true)
-    })
-    queueBox.append(requestsMenuButton)
-    const transferButton = document.createElement("div");
-    transferButton.className = "ar-chat-queue-transfer ar-hidden";
-    transferButton.innerHTML = `<i class="fas fa-up-right-from-square"></i>`
-    transferButton.dataset.tooltip = game.i18n.localize(`${C.ID}.buttons.queueTransferTooltip`);
-    let isElementHovered = false
-    div.addEventListener("mouseover", (e) => {
-        isElementHovered = true
-        if (e.shiftKey) {
-            transferButton.classList.toggle("ar-hidden", false);
-            queueBox.querySelectorAll(".ar-request-container-chat").forEach((el) => {
-                el.classList.toggle("ar-hidden", true);
-            })
-        }
-    })
-    div.addEventListener("mouseout", (e) => {
-        isElementHovered = false
-        transferButton.classList.toggle("ar-hidden", true);
-        queueBox.querySelectorAll(".ar-request-container-chat").forEach((el) => {
-            el.classList.toggle("ar-hidden", false);
-        })
-    })
-    document.addEventListener("keydown", (e) => {
-        if ((e.code == "ShiftLeft" || e.code == "ShiftRight") && isElementHovered) {
-            // If shift is held down - create the button to change location
-            transferButton.classList.toggle("ar-hidden", false);
-            queueBox.querySelectorAll(".ar-request-container-chat").forEach((el) => {
-                el.classList.toggle("ar-hidden", true);
-            })
-        }
-    })
-    document.addEventListener("keyup", (e) => {
-        if ((e.code == "ShiftLeft" || e.code == "ShiftRight") && isElementHovered) {
-            // If shift is held down - create the button to change location
-            transferButton.classList.toggle("ar-hidden", true);
-            queueBox.querySelectorAll(".ar-request-container-chat").forEach((el) => {
-                el.classList.toggle("ar-hidden", false);
-            })
-        }
-    })
-    transferButton.addEventListener("click", async () => {
-        await game.settings.set(C.ID, "requestsPosition", "freeScreen")
-        AdvancedRequestsApp._render(true)
-        document.getElementById("advanced-requests-chat-body").style.display = "none"
-    })
-    queueBox.append(transferButton);
-    div.append(queueBox);
-    const buttonDiv = document.createElement("div");
-    buttonDiv.classList.add("ar-chat-buttons");
-    ["first", "second", "third"].forEach((reqLevel, i) => {
-        if (!game.settings.get(C.ID, `${reqLevel}Request`)) return
-        const button = document.createElement('div')
-        button.className = `ar-chat-button ar-level-${i}`
-        button.innerHTML = `<i class="fa-${i == 0 ? "regular" : "solid"} fa-hand${i == 2 ? "-sparkles" : ""} ar-request-icon"></i>`
-        button.dataset.tooltip = game.i18n.localize(`${C.ID}.buttons.${reqLevel}RequestTooltip`)
-        button.addEventListener("click", async () => {
-            await addRequest(i)
-        })
-        buttonDiv.append(button)
-    })
-    div.append(buttonDiv);
+// Hooks.on("renderSidebarTab", (app, html, data) => {
+//     if (app.tabName !== "chat") return;
+//     const div = document.createElement("div");
+//     div.classList.add("advanced-requests-chat-body");
+//     if (game.settings.get(C.ID, "requestsPosition") != "chat") div.style.display = "none";
+//     div.id = "advanced-requests-chat-body";
+//     const height = game.settings.get(C.ID, "chatQueueHeight") + "px";
+//     div.style.minHeight = height
+//     div.style.maxHeight = height
+//     const queueBox = document.createElement("div");
+//     queueBox.classList.add("ar-chat-queue");
+//     queueBox.id = "ar-chat-queue"
+//     const queue = getQueue();
+//     queue.forEach((item) => {
+//         const containerEl = getRequestElement(item)
+//         queueBox.append(containerEl)
+//     })
+//     const requestsMenuButton = document.createElement("div");
+//     requestsMenuButton.classList.add("ar-chat-requests-menu");
+//     requestsMenuButton.innerHTML = `<i class="fas fa-gear"></i>`
+//     requestsMenuButton.dataset.tooltip = game.i18n.localize(`${C.ID}.buttons.requestsMenuTooltip`);
+//     requestsMenuButton.addEventListener("click", () => {
+//         new ImageHelper().render(true)
+//     })
+//     queueBox.append(requestsMenuButton)
+//     const transferButton = document.createElement("div");
+//     transferButton.className = "ar-chat-queue-transfer ar-hidden";
+//     transferButton.innerHTML = `<i class="fas fa-up-right-from-square"></i>`
+//     transferButton.dataset.tooltip = game.i18n.localize(`${C.ID}.buttons.queueTransferTooltip`);
+//     let isElementHovered = false
+//     div.addEventListener("mouseover", (e) => {
+//         isElementHovered = true
+//         if (e.shiftKey) {
+//             transferButton.classList.toggle("ar-hidden", false);
+//             queueBox.querySelectorAll(".ar-request-container-chat").forEach((el) => {
+//                 el.classList.toggle("ar-hidden", true);
+//             })
+//         }
+//     })
+//     div.addEventListener("mouseout", (e) => {
+//         isElementHovered = false
+//         transferButton.classList.toggle("ar-hidden", true);
+//         queueBox.querySelectorAll(".ar-request-container-chat").forEach((el) => {
+//             el.classList.toggle("ar-hidden", false);
+//         })
+//     })
+//     document.addEventListener("keydown", (e) => {
+//         if ((e.code == "ShiftLeft" || e.code == "ShiftRight") && isElementHovered) {
+//             // If shift is held down - create the button to change location
+//             transferButton.classList.toggle("ar-hidden", false);
+//             queueBox.querySelectorAll(".ar-request-container-chat").forEach((el) => {
+//                 el.classList.toggle("ar-hidden", true);
+//             })
+//         }
+//     })
+//     document.addEventListener("keyup", (e) => {
+//         if ((e.code == "ShiftLeft" || e.code == "ShiftRight") && isElementHovered) {
+//             // If shift is held down - create the button to change location
+//             transferButton.classList.toggle("ar-hidden", true);
+//             queueBox.querySelectorAll(".ar-request-container-chat").forEach((el) => {
+//                 el.classList.toggle("ar-hidden", false);
+//             })
+//         }
+//     })
+//     transferButton.addEventListener("click", async () => {
+//         await game.settings.set(C.ID, "requestsPosition", "freeScreen")
+//         AdvancedRequestsApp._render(true)
+//         document.getElementById("advanced-requests-chat-body").style.display = "none"
+//     })
+//     queueBox.append(transferButton);
+//     div.append(queueBox);
+//     const buttonDiv = document.createElement("div");
+//     buttonDiv.classList.add("ar-chat-buttons");
+//     ["first", "second", "third"].forEach((reqLevel, i) => {
+//         if (!game.settings.get(C.ID, `${reqLevel}Request`)) return
+//         const button = document.createElement('div')
+//         button.className = `ar-chat-button ar-level-${i}`
+//         button.innerHTML = `<i class="fa-${i == 0 ? "regular" : "solid"} fa-hand${i == 2 ? "-sparkles" : ""} ar-request-icon"></i>`
+//         button.dataset.tooltip = game.i18n.localize(`${C.ID}.buttons.${reqLevel}RequestTooltip`)
+//         button.addEventListener("click", async () => {
+//             await addRequest(i)
+//         })
+//         buttonDiv.append(button)
+//     })
+//     div.append(buttonDiv);
 
-    // Remove any existing dash to avoid duplicates
-    document.querySelectorAll(".adv-requests-dash").forEach(el => el.remove());
-    document.querySelectorAll("#adv-requests-dash").forEach(el => el.remove());
-    // Create the dash
-    const dash = document.createElement("section");
-    dash.className = "adv-requests-dash";
-    // Insert above dice-tray if present, else at end
-    const diceTray = html[0].querySelector(".dice-tray");
-    if (diceTray) diceTray.parentNode.insertBefore(dash, diceTray);
-    else html[0].appendChild(dash);
+//     // Create the dash
+//     const dash = document.createElement("section");
+//     dash.className = "adv-requests-dash";
+//     // Insert above dice-tray if present, else at end
+//     const diceTray = html[0].querySelector(".dice-tray");
+//     dash.id = "adv-requests-dash";
+//     if (diceTray) diceTray.parentNode.insertBefore(dash, diceTray);
+//     else html[0].appendChild(dash);
 
-    // Foundry v13+ uses '.chat-sidebar .chat-controls'
+//     // Foundry v13+ uses '.chat-sidebar .chat-controls'
 
-        // Try to find the new chat controls container
-        const chatControls = html[0].querySelector('.chat-sidebar .chat-controls') || html[0].querySelector('.chat-controls');
-        if (chatControls) {
-            chatControls.prepend(div);
-        }
+//         // Try to find the new chat controls container
+//         const chatControls = html[0].querySelector('.chat-sidebar .chat-controls') || html[0].querySelector('.chat-controls');
+//         if (chatControls) {
+//             chatControls.prepend(div);
+//         }
     
-});
+// });
+
 // --- SocketLib integration ---
 
 class AdvancedRequestsManager {
@@ -286,6 +261,7 @@ class AdvancedRequestsManager {
     // popup message for all
     this.socket.executeForOthers("showEpicPrompt", toShow);
     _showEpicPrompt(toShow);
+    moveAdvRequestsDash();
   }
 
   // When THIS CLIENT creates a request locally
@@ -320,15 +296,13 @@ class AdvancedRequestsManager {
 
   // When THIS CLIENT removes a request locally
   removeRequest(userId) {
-    if (!this.isAuthorizedToRemove(userId)) {
-      log_socket("unauthorized remove attempt", { userId, user: game.user.id, isGM: game.user.isGM });
-      return;
+    if (this.isAuthorizedToRemove(userId)) {
+        log_socket("removing request locally", userId);
+        remove_request_LOCAL_QUEUE(userId);
+        moveAdvRequestsDash();
+        // Send to all other clients
+        this.socket.executeForOthers("removeRequest", userId);
     }
-    log_socket("removing request locally", userId);
-    remove_request_LOCAL_QUEUE(userId);
-    moveAdvRequestsDash();
-    // Send to all other clients
-    this.socket.executeForOthers("removeRequest", userId);
   }
 
   // When receiving a remove request from another client
@@ -387,97 +361,6 @@ Hooks.once("socketlib.ready", () => {
       _showEpicPrompt(data);
     });
 });
-
-// this is legacy code, but we should use these logic patterns.
-function getRequestElement(item) {
-    // Container
-    console.error("rendering element")
-    const containerEl = document.createElement('div');
-    containerEl.className = `ar-request-container-chat ar-level-${item.level}`;
-    containerEl.dataset.id = item.userId;
-    containerEl.dataset.tooltip = item.name;
-    // Image
-    const tokenImgEl = document.createElement('img');
-    tokenImgEl.src = item.img;
-    containerEl.append(tokenImgEl);
-    // Warning sign
-    const warningEl = document.createElement('div');
-    warningEl.className = `ar-queue-warning ar-level-${item.level}`;
-    warningEl.innerHTML = `<img src="modules/${C.ID}/assets/request${item.level}.webp"/>`;
-    containerEl.append(warningEl);
-
-    // Event listeners for request management
-    containerEl.addEventListener('click', async (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        if (game.user.isGM && game.user.id !== item.userId) {
-            window.advancedRequests.activateRequest(item.userId);
-        } else if (game.user.id === item.userId) {
-            window.advancedRequests.removeRequest(item.userId);
-        }
-    });
-    containerEl.addEventListener('contextmenu', async (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        if (game.user.isGM) {
-            window.advancedRequests.removeRequest(item.userId);
-        } else if (game.user.id === item.userId) {
-            window.advancedRequests.removeRequest(item.userId);
-        }
-    });
-    return containerEl;
-}
-
-// function addRequestListener(element, reRender = false) {
-//     const elId = element?.dataset?.id
-//     if (!game.user.isGM && game.user.id != elId) return
-//     element?.addEventListener('contextmenu', async () => {
-//         await deleteRequest(elId, reRender)
-//     })
-//     element?.addEventListener('click', async () => {
-//         const isGM = game.user.isGM
-//         if (isGM) {
-//             const messageActivate = game.settings.get(C.ID, "messageActivate")
-//             if (messageActivate) {
-//                 const _user = game.users.find(u=>u.isGM) || game.user
-//                 ChatMessage.create({
-//                     user: _user.id,
-//                     speaker: {alias: _user.name},
-//                     content: game.i18n.localize(`${C.ID}.chatMessage.activateRequest1`) + game.users.find(u=>u.id == elId)?.name + game.i18n.localize(`${C.ID}.chatMessage.activateRequest2`) // изменить по типу "Игрок какой-то там сделал заявку"
-//                 })
-//             }
-//         }
-//         await deleteRequest(elId, reRender, isGM)
-//     })
-//     if (reRender) AdvancedRequestsApp._render(true)
-// }
-
-async function addRequest(reqLevel, reRender = false) {
-    log_socket("original add request", {reqLevel, reRender})
-    const useForRequests = game.settings.get(C.ID, "useForRequests");
-    // const data = getRequestData(reqLevel, useForRequests);
-
-    // Check that there is an image for the request
-    const defaultUserImg = "icons/svg/mystery-man.svg" // (HOW DO I GET A FUCKING SYSTEM DEFAULT AVATAR?)
-    const defaultImg = useForRequests == "user" ? defaultUserImg : Actor.implementation.getDefaultArtwork({type: "someActorType"}).img;
-    
-    const hasImage = (data.img && data.img != defaultImg && await srcExists(defaultImg))
-    
-    if (hasImage) {
-        // Use the new manager to create the request
-        const requestData = {
-            userId: data.id,
-            name: data.name,
-            img: data.img,
-            level: reqLevel
-        };
-        window.advancedRequests.createRequest(requestData);
-    } else if (useForRequests == "controlled") {
-        ui.notifications.warn(game.i18n.localize(`${C.ID}.errors.noControlledTokens`));
-    } else {
-        new ImageHelper().render(true)
-    }
-}
 
 // Remove AdvancedRequestsApp and ApplicationV2 usage for now
 // let AdvancedRequestsApp;
@@ -543,28 +426,20 @@ function renderAdvRequestsDash() {
         };
         btnRow.appendChild(popBtn);
     }
-    ["Common", "Important", "Urgent", "test"].forEach((label, level) => {
+    ["Common", "Important", "Urgent"].forEach((label, level) => {
         const btn = document.createElement("button");
         btn.type = "button";
         btn.textContent = label;
-        if (label === "test") {
-            btn.onclick = (event) => {
-                event.preventDefault();
-                window.advancedRequests.sendDebugPing();
-                console.log("[Advanced Requests] Sent Hello World to all other users from test button.");
+        btn.onclick = (event) => {
+            event.preventDefault();
+            const requestData = {
+                userId: game.user.id,
+                name: game.user.name,
+                img: game.user.avatar,
+                level
             };
-        } else {
-            btn.onclick = (event) => {
-                event.preventDefault();
-                const requestData = {
-                    userId: game.user.id,
-                    name: game.user.name,
-                    img: game.user.avatar,
-                    level
-                };
-                window.advancedRequests.createRequest(requestData);
-            };
-        }
+            window.advancedRequests.createRequest(requestData);
+        };
         btnRow.appendChild(btn);
     });
     dash.appendChild(btnRow);
@@ -580,7 +455,7 @@ function moveAdvRequestsDash() {
         if (CONFIG.ADVREQUESTS.element?.parentNode) CONFIG.ADVREQUESTS.element.parentNode.removeChild(CONFIG.ADVREQUESTS.element);
         return;
     }
-    chatInput.parentNode.querySelectorAll(".adv-requests-dash").forEach(el => el.remove());
+    removeAllDash();
     const dash = renderAdvRequestsDash();
     dash.id = "adv-requests-dash";
     CONFIG.ADVREQUESTS.element = dash;
@@ -589,13 +464,13 @@ function moveAdvRequestsDash() {
 }
 
 Hooks.once("renderChatLog", moveAdvRequestsDash);
-Hooks.on("renderChatLog", moveAdvRequestsDash);
 Hooks.on("closeChatLog", moveAdvRequestsDash);
 Hooks.on("activateChatLog", moveAdvRequestsDash);
 Hooks.on("deactivateChatLog", moveAdvRequestsDash);
 Hooks.on("collapseSidebar", moveAdvRequestsDash);
 
 // Utility to show a fullscreen epic prompt
+// WIP, should allow themeing per each system! 
 function _showEpicPrompt(data) {
     const name = data.name || "Player";
     const img = data.img || "icons/svg/mystery-man.svg";
@@ -626,6 +501,9 @@ function _showEpicPrompt(data) {
     document.body.appendChild(overlay);
 }
 
-// Example usage: showEpicPrompt({name: 'Player Name', img: 'path/to/image.png'})
-// TODO: Call this when GM clicks on player name in the request queue
+// Remove any existing dash to avoid duplicates
+function removeAllDash() {
+    document.querySelectorAll(".adv-requests-dash").forEach(el => el.remove());
+    document.querySelectorAll("#adv-requests-dash").forEach(el => el.remove());
+}
 
