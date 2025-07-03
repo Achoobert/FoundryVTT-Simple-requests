@@ -211,8 +211,8 @@ Hooks.on("renderSidebarTab", (app, html, data) => {
     div.append(buttonDiv);
 
     // Remove any existing dash to avoid duplicates
-    console.error("Removing existing dash");
-    html[0].querySelectorAll(".adv-requests-dash").forEach(el => el.remove());
+    document.querySelectorAll(".adv-requests-dash").forEach(el => el.remove());
+    document.querySelectorAll("#adv-requests-dash").forEach(el => el.remove());
     // Create the dash
     const dash = document.createElement("section");
     dash.className = "adv-requests-dash";
