@@ -27,22 +27,18 @@
     "scripts/settings.js"
   ],
   "styles": [
-    {
-      "src": "styles/module.css"
-    }
+    "styles/module.css"
   ],
   "languages": [
     {
       "lang": "ru",
       "name": "Russian",
-      "path": "language/ru.json",
-      "flags": {}
+      "path": "language/ru.json"
     },
     {
       "lang": "en",
       "name": "English",
-      "path": "language/en.json",
-      "flags": {}
+      "path": "language/en.json"
     }
   ],
   "id": "advanced-requests",
