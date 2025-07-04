@@ -59,29 +59,20 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
 
-      # Extract version embedded in the tag.
-      # This step expects the tag to be one of the following formats:
-      #   - "v<major>.<minor>.<patch>" (e.g., "v1.2.3")
-      #   - "<major>.<minor>.<patch>"  (e.g., "1.2.3")
-      #
-      # The version will be used by later steps to fill in the value for the
-      # "version" key required for a valid module manifest.
-      - name: Extract Version From Tag
-        id: get_version
-        uses: battila7/get-version-action@v2
-
-      - name: Set Default Version if No Tag
+      # Extract version or set default
+      - name: Extract Version or Set Default
         id: set_version
         run: |
-          if [ -z "${{ steps.get_version.outputs.version-without-v }}" ]; then
-            echo "No tag found, using default version 0.0.0-manual"
-            echo "version=0.0.0-manual" >> $GITHUB_OUTPUT
+          ref="${GITHUB_REF##*/}"
+          if [[ "$ref" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            version="${ref#v}"
           else
-            echo "version=${{ steps.get_version.outputs.version-without-v }}" >> $GITHUB_OUTPUT
+            version="0.0.0-manual"
           fi
+          echo "version=$version" >> $GITHUB_OUTPUT
 
 
       # Modify "module.json" with values specific to the release.
