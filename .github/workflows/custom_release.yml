@@ -86,19 +86,16 @@ jobs:
           MANIFEST: ${{ env.latest_manifest_url }}
           DOWNLOAD: ${{ env.release_module_url }}
 
+      - name: Prepare Module Directory
+        run: |
+          mkdir -p ./advanced-requests
+          cp -r module.json README.md LICENSE templates scripts styles packs language assets ./advanced-requests/
+
       - name: Create Module Archive
         run: |
-          zip --recurse-paths ./module.zip \
-            module.json \
-            README.md \
-            LICENSE \
-            templates \
-            scripts/ \
-            styles/ \
-            packs/ \
-            language/ \
-            assets/ \
-            lang/
+          cd ./advanced-requests
+          zip --recurse-paths ../module.zip ./*
+          cd ..
 
       - name: Update Release With Files
         id: create_version_release
