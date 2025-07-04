@@ -183,8 +183,8 @@ class AdvancedRequestsManager {
          if (game.settings.get("advanced-requests", "soundCreate")) {
             // requestData.level
             playSound (
-                soundVolume,
-                // TODO game.settings.get("advanced-requests", "soundCreate")
+               soundVolume,
+               // TODO game.settings.get("advanced-requests", "soundCreate")
             )
          }
       }
@@ -258,8 +258,9 @@ class AdvancedRequestsManager {
 Hooks.once("socketlib.ready", () => {
    window.advancedRequests = new AdvancedRequestsManager();
    window.advancedRequests.socket.register("showEpicPrompt", (data) => {
-      // TOOD Is this the best way to do this?
       remove_request_LOCAL_QUEUE(data.userId);
+      // update UI
+      moveAdvRequestsDash();
       _showEpicPrompt(data);
    });
 });
@@ -404,7 +405,7 @@ function _showEpicPrompt(data) {
          // TODO add custom sound for each level of urgency
       )
    }
-   // Remove on click or after 3 seconds
+   // Remove on click or after 5 seconds
    overlay.addEventListener('click', () => overlay.remove());
    setTimeout(() => overlay.remove(), 5000);
    document.body.appendChild(overlay);
@@ -417,12 +418,10 @@ function removeAllDash() {
 }
 
 function playSound ( volume=50, src="modules/advanced-requests/assets/request0.wav"){
-
        foundry.audio.AudioHelper.play({
           src,
           volume,
           autoplay: true,
           loop: false
        });
-
 }

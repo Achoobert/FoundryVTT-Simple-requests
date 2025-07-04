@@ -58,12 +58,16 @@ Hooks.once('init', function() {
    //    registerSettings("freeScreenZIndex", "client", true, Number, 10, null, reRender)
 
    // DISPLAY REQUESTS:
-   // - 1st level requests
+   // - 1st level requests (0 in button array)
    registerSettings("firstRequest", "world", true, Boolean, true, null, updateChatRequestButtons)
+   registerSettings("firstRequestSound", "client", true, String, "modules/advanced-requests/assets/request0.wav", "audio")
+   // TODO custom string name instead of
    // - 2nd level requests
    registerSettings("secondRequest", "world", true, Boolean, true, null, updateChatRequestButtons)
+   registerSettings("secondRequestSound", "client", true, String, "modules/advanced-requests/assets/request1.wav", "audio")
    // - 3rd level requests
    registerSettings("thirdRequest", "world", true, Boolean, true, null, updateChatRequestButtons)
+   registerSettings("secondRequestSound", "client", true, String, "modules/advanced-requests/assets/request2.wav", "audio")
 
    // HIDDEN
    // Request queue

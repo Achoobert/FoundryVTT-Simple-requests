@@ -31,6 +31,7 @@
             "freeScreenZIndex": "Z-index of the Requests window",
             "freeScreenZIndexHint": "zIndex of the Requests Window when the \"Free on screen\" option is selected in the \"Requests window position\" setting",
             "firstRequest": "First request",
+            "firstRequestSound": "First Request Sound",
             "firstRequestHint": "Show the 'First request' button (common)",
             "secondRequest": "Second request",
             "secondRequestHint": "Show the 'Second request' button (important)",
