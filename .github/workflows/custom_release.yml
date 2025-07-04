@@ -97,6 +97,7 @@ jobs:
             styles/ \
             packs/ \
             language/ \
+            assets/ \
             lang/
 
       - name: Update Release With Files
