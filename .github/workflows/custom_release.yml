@@ -45,11 +45,17 @@ env:
 
   # The URL to the module archive associated with the module release being
   # processed by this workflow.
-  release_module_url: "https://github.com/${{github.repository}}/releases/download/${{github.event.release.tag_name}}/module.zip"
+  release_module_url: https://github.com/Achoobert/FoundryVTT-Advanced-requests/releases/download/${{ env.release_tag }}/module.zip
+
+  release_tag: ${{ github.event.release.tag_name || inputs.tag_name }}
 
 
 on:
   workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release tag (e.g. v1.2.3)'
+        required: true
 
 jobs:
   build:
@@ -130,5 +136,12 @@ jobs:
           prerelease: ${{ github.event.release.prerelease }}
           token: ${{ secrets.GITHUB_TOKEN }}
           artifacts: './module.json, ./module.zip'
-          tag: ${{ github.event.release.tag_name }}
+          tag: ${{ env.release_tag }}
           body: ${{ github.event.release.body }}
+
+      - name: Ensure Tag Exists
+        run: |
+          if [ -z "${{ github.event.release.tag_name }}" ] && [ -z "${{ inputs.tag_name }}" ]; then
+            echo "No tag found! You must provide a tag when running manually."
+            exit 1
+          fi
