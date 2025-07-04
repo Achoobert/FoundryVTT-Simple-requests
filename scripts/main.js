@@ -320,8 +320,7 @@ function renderAdvRequestsDash() {
             event.preventDefault();
             window.advancedRequests.removeRequest(req.userId);
          };
-      }
-      if (req.userId === game.user.id) {
+      } else if (req.userId === game.user.id) {
          chip.onclick = (event) => {
             event.preventDefault();
             window.advancedRequests.removeRequest(game.user.id);
@@ -431,7 +430,7 @@ function removeAllDash() {
    document.querySelectorAll("#adv-requests-dash").forEach(el => el.remove());
 }
 
-function playSound ( volume=50, src="modules/advanced-requests/assets/request0.ogg"){
+function playSound(volume = 0.8, src = "modules/advanced-requests/assets/request0.ogg") {
    foundry.audio.AudioHelper.play({
       src,
       volume,
