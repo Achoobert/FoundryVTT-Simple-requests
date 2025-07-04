@@ -89,7 +89,15 @@ jobs:
       - name: Prepare Module Directory
         run: |
           mkdir -p ./advanced-requests
-          cp -r module.json README.md LICENSE templates scripts styles packs language assets ./advanced-requests/
+          cp module.json ./advanced-requests/
+          [ -f README.md ] && cp README.md ./advanced-requests/
+          [ -f LICENSE ] && cp LICENSE ./advanced-requests/
+          [ -d templates ] && cp -r templates ./advanced-requests/
+          [ -d scripts ] && cp -r scripts ./advanced-requests/
+          [ -d styles ] && cp -r styles ./advanced-requests/
+          [ -d packs ] && cp -r packs ./advanced-requests/
+          [ -d language ] && cp -r language ./advanced-requests/
+          [ -d assets ] && cp -r assets ./advanced-requests/
 
       - name: Create Module Archive
         run: |
