@@ -18,3 +18,48 @@ Macro to call out top request
 ```
 window.advancedRequests.gm_callout_top_request();
 ```
+
+Macro to clear all requests
+```
+window.advancedRequests.load_queue_requests_LOCAL_QUEUE([]);
+```
+
+# TODOS:
+
+Already working: advanced-requests page in GM settings
+Implementation Notes:
+- Use the same UI look, DOM placement and CSS structure as dice-calculator for the default (above chat message input) position.
+- Use a single source of truth for the queue (e.g., a setting or in-memory object, synchronized via SocketLib). Copy `raise-my-hand`'s Implementation
+- Modularize the code so the queue UI and logic can be reused regardless of UI state:  both docked and floating modes. 
+- add options to match notification features of `raise-my-hand`
+
+BASIC
+5. Synchronization
+   x All requests and queue changes should be synchronized across all clients (using SocketLib).
+
+6. Accessibility
+   - Ensure the UI is accessible and visually clear for all users.
+   x GM should be able to customise an audio sound for each category of request.
+
+1. Player Request Queue UI
+   x Render a queue UI below (or above) the chat input, inside the chat sidebar.
+   x Each request in the queue should display:
+     x The player's name and image (configurable: token, avatar, etc.)
+     x The request's importance level (Common, Important, Urgent), visually distinct.
+   x Provide buttons for players to add a request at any level.
+
+2. Request Management
+   x Players can remove their own requests by clicking (LMB or RMB).
+   x: GMs can remove any request with RMB, or "activate" a request with LMB (triggers a sound and chat message).
+
+
+ADVANDED
+3. Custom Images
+   - Allow players to choose the image used for their request (token, avatar, etc.) via settings.
+   - If no image is found, prompt the user to set one.
+4. Movable/Detachable Window
+   - Allow the request queue to be moved from under the chat to a free position on the screen (via settings or Shift+LMB).
+   - Provide a button to return the queue to its default position.
+   - Allow resizing the queue window via settings.
+
+7. add playbook e2e tests

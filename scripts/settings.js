@@ -32,7 +32,7 @@ Hooks.once('init', function() {
    // Width of the request field in FreeScreen window depends on the number of requests
    //    registerSettings("widthDependOnQueue", "client", true, Boolean, false, null, reRender)
    // Request sound (file path)
-   registerSettings("reqClickSound", "client", true, String, "modules/advanced-requests/assets/samples/fingerSnapping.wav", "audio")
+   registerSettings("reqClickSound", "client", true, String, "modules/advanced-requests/assets/samples/fingerSnapping.ogg", "audio")
    // What to use for requests
 //    const ufrChooseList = {
 //       "playerToken": game.i18n.localize(`${C.ID}.settings.ufrPlayerToken`),
@@ -60,14 +60,14 @@ Hooks.once('init', function() {
    // DISPLAY REQUESTS:
    // - 1st level requests (0 in button array)
    registerSettings("firstRequest", "world", true, Boolean, true, null, updateChatRequestButtons)
-   registerSettings("firstRequestSound", "client", true, String, "modules/advanced-requests/assets/request0.wav", "audio")
-   // TODO custom string name instead of
+   registerSettings("firstRequestSound", "client", true, String, "modules/advanced-requests/assets/request0.ogg", "audio")
+   // TODO custom string name 
    // - 2nd level requests
    registerSettings("secondRequest", "world", true, Boolean, true, null, updateChatRequestButtons)
-   registerSettings("secondRequestSound", "client", true, String, "modules/advanced-requests/assets/request1.wav", "audio")
+   registerSettings("secondRequestSound", "client", true, String, "modules/advanced-requests/assets/request1.ogg", "audio")
    // - 3rd level requests
    registerSettings("thirdRequest", "world", true, Boolean, true, null, updateChatRequestButtons)
-   registerSettings("secondRequestSound", "client", true, String, "modules/advanced-requests/assets/request2.wav", "audio")
+   registerSettings("thirdRequestSound", "client", true, String, "modules/advanced-requests/assets/request2.ogg", "audio")
 
    // HIDDEN
    // Request queue

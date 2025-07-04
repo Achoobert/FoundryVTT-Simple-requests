@@ -168,27 +168,40 @@ class AdvancedRequestsManager {
       this.socket.executeForOthers("addRequest", requestData);
    }
 
-// img: "images/Edmund_Carter.webp"
-// level: 0
-// name: "Player2"
-// timestamp: 1751550901413
-// userId: "T07N5SnoLPF0O5Nj"
+   // img: "images/Edmund_Carter.webp"
+   // level: 0
+   // name: "Player2"
+   // timestamp: 1751550901413
+   // userId: "T07N5SnoLPF0O5Nj"
 
    // When receiving a request from another client
    _addRequest(requestData) {
       log_socket("receiving request from other client", requestData);
       add_new_request_LOCAL_QUEUE(requestData);
+      moveAdvRequestsDash();
       // Play sound for new request if not from self
       if (requestData.userId !== game.user.id) {
-         if (game.settings.get("advanced-requests", "soundCreate")) {
-            // requestData.level
-            playSound (
-               soundVolume,
-               // TODO game.settings.get("advanced-requests", "soundCreate")
-            )
+         const soundCreate = game.settings.get("advanced-requests", "soundCreate");
+         const soundVolume = (game.settings.get("advanced-requests", "soundCreateVolume") || 100) / 100;
+         if (soundCreate) {
+            let soundSettingKey;
+            switch (requestData.level) {
+            case 0:
+               soundSettingKey = "firstRequestSound";
+               break;
+            case 1:
+               soundSettingKey = "secondRequestSound";
+               break;
+            case 2:
+               soundSettingKey = "thirdRequestSound";
+               break;
+            default:
+               soundSettingKey = "firstRequestSound";
+            }
+            const soundSrc = game.settings.get("advanced-requests", soundSettingKey) || "modules/advanced-requests/assets/request0.ogg";
+            playSound(soundVolume, soundSrc);
          }
       }
-      moveAdvRequestsDash();
    }
 
    // Check if user is authorized to remove this request
@@ -235,7 +248,7 @@ class AdvancedRequestsManager {
       const req = queue.find(r => r.userId === userId);
       if (!req) return;
       // Play sound
-      const sound = game.settings.get(this.moduleName, "reqClickSound") || "modules/advanced-requests/assets/samples/fingerSnapping.wav";
+      const sound = game.settings.get(this.moduleName, "reqClickSound") || "modules/advanced-requests/assets/samples/fingerSnapping.ogg";
       foundry.audio.AudioHelper.play({ src: sound, volume: 0.8, autoplay: true, loop: false });
       // Chat message
       ChatMessage.create({
@@ -302,6 +315,10 @@ function renderAdvRequestsDash() {
             // GM can pop the oldest, most urgent request
             window.advancedRequests.gm_callout_top_request();
             moveAdvRequestsDash();
+         };
+         chip.oncontextmenu = (event) => {
+            event.preventDefault();
+            window.advancedRequests.removeRequest(req.userId);
          };
       }
       if (req.userId === game.user.id) {
@@ -386,25 +403,22 @@ Hooks.on("collapseSidebar", moveAdvRequestsDash);
 function _showEpicPrompt(data) {
    const name = data.name || "Player";
    const img = data.img || "icons/svg/mystery-man.svg";
+   const level = typeof data.level === "number" ? data.level : 0;
    // Remove any existing prompt
    document.querySelectorAll('#ar-epic-prompt').forEach(el => el.remove());
    // Create overlay
    const overlay = document.createElement('div');
    overlay.id = 'ar-epic-prompt';
    overlay.className = 'ar-epic-prompt-overlay';
+   // Overlay image for request level
+   const overlayImgSrc = `modules/advanced-requests/assets/request${level}.webp`;
    overlay.innerHTML = `
-      <div class="epic-prompt-container" style="background: rgba(30,30,30,0.9); border-radius: 2em; padding: 2em; box-shadow: 0 0 40px #000; text-align: center; min-width: 320px;">
-        <img src="${img}" alt="${name}" style="width: 160px; height: 160px; border-radius: 50%; object-fit: cover; margin-bottom: 1em; border: 4px solid #fff; box-shadow: 0 0 20px #000;">
-        <h1 style="color: #fff; font-size: 2.5em; margin: 0;">${name} has the floor</h1>
+      <div class="epic-prompt-container" style="background: rgba(30,30,30,0.9); border-radius: 2em; padding: 2em; box-shadow: 0 0 40px #000; text-align: center; min-width: 320px; position: relative;">
+         <img src="${img}" alt="${name}" style="width: 160px; height: 160px; border-radius: 50%; object-fit: cover; margin-bottom: 1em; border: 4px solid #fff; box-shadow: 0 0 20px #000;">
+         <img src="${overlayImgSrc}" alt="Request Level" style="position: absolute; top: 30px; left: 50%; transform: translateX(-50%); width: 80px; height: 80px; pointer-events: none; opacity: 0.85;">
+         <h1 style="color: #fff; font-size: 2.5em; margin: 0;">${name} has the floor</h1>
       </div>
-    `;
-   // play sound if messageActivate
-   if ( game.settings.get("advanced-requests", "soundCreateVolume") ){
-      playSound(
-         (game.settings.get("advanced-requests", "soundCreateVolume") / 100)
-         // TODO add custom sound for each level of urgency
-      )
-   }
+   `;
    // Remove on click or after 5 seconds
    overlay.addEventListener('click', () => overlay.remove());
    setTimeout(() => overlay.remove(), 5000);
@@ -417,11 +431,11 @@ function removeAllDash() {
    document.querySelectorAll("#adv-requests-dash").forEach(el => el.remove());
 }
 
-function playSound ( volume=50, src="modules/advanced-requests/assets/request0.wav"){
-       foundry.audio.AudioHelper.play({
-          src,
-          volume,
-          autoplay: true,
-          loop: false
-       });
+function playSound ( volume=50, src="modules/advanced-requests/assets/request0.ogg"){
+   foundry.audio.AudioHelper.play({
+      src,
+      volume,
+      autoplay: true,
+      loop: false
+   });
 }
