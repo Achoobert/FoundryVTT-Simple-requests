@@ -73,6 +73,16 @@ jobs:
         id: get_version
         uses: battila7/get-version-action@v2
 
+      - name: Set Default Version if No Tag
+        id: set_version
+        run: |
+          if [ -z "${{ steps.get_version.outputs.version-without-v }}" ]; then
+            echo "No tag found, using default version 0.0.0-manual"
+            echo "version=0.0.0-manual" >> $GITHUB_OUTPUT
+          else
+            echo "version=${{ steps.get_version.outputs.version-without-v }}" >> $GITHUB_OUTPUT
+          fi
+
 
       # Modify "module.json" with values specific to the release.
       # Since the values for the "version" and "url" keys aren't known ahead of
@@ -86,7 +96,7 @@ jobs:
         with:
           files: 'module.json'
         env:
-          VERSION: ${{steps.get_version.outputs.version-without-v}}
+          VERSION: ${{ steps.set_version.outputs.version }}
           URL: ${{ env.project_url }}
           MANIFEST: ${{ env.latest_manifest_url }}
           DOWNLOAD: ${{ env.release_module_url }}
