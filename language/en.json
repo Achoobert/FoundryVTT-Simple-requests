@@ -1,5 +1,5 @@
 {
-    "advanced-requests": {
+    "simple-requests": {
         "settings": {
             "soundCreate": "Sound on request creation",
             "soundCreateHint": "Play a sound when creating a request (button click)",
@@ -69,20 +69,6 @@
             "thirdRequestTooltip": "Urgent request!",
             "queueTransferTooltip": "Change the position of the requests window to Free",
             "requestsMenuTooltip": "Open the requests settings menu"
-        },
-        "imageHelper": {
-            "title1": "The image for Request is not set",
-            "title2": "Please make sure all crossmarks are checked",
-            "useForRequests": "Use for requests:",
-            "choosenActor": "Selected actor",
-            "userChar": "User character",
-            "actorDropArea": "Drag-and-drop actor here",
-            "imagePath": "Path to image:",
-            "imagePathPlaceholder": "For example: icons/svg/mystery-man.svg",
-            "imageName": "Name:",
-            "notCustom": "You can set your own Path to the image and Name only if you select the \"Custom\" option in the first item",
-            "choosenActorTooltip": "Right-click to clear the actor selection",
-            "imageDoesntExistTooltip": "The file at the specified path was not found"
         }
     }
 }

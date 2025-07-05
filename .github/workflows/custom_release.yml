@@ -30,49 +30,46 @@
 #   - Has the module's entry on FoundryVTT's module administration site
 #     (https://foundryvtt.com/admin) been updated?
 #
-name: Force GitHub Release
+name: Auto Release on Main/Master
 
 on:
-  release:
-    types: [published, created, edited]
+  push:
+    branches:
+      - main
+      - master
   workflow_dispatch:
-    inputs:
-      tag_name:
-        description: 'Release tag (e.g. v1.2.3)'
-        required: true
-
-env:
-  project_url: "https://github.com/${{ github.repository }}"
-  latest_manifest_url: "https://github.com/${{ github.repository }}/releases/latest/download/module.json"
 
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    env:
-      release_tag: ${{ github.event.release.tag_name || github.event.inputs.tag_name }}
-      release_module_url: "https://github.com/${{ github.repository }}/releases/download/${{ github.event.release.tag_name || github.event.inputs.tag_name }}/module.zip"
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Ensure Tag Exists
+      - name: Get Latest Release Tag
+        id: get_latest_tag
         run: |
-          if [ -z "${{ env.release_tag }}" ]; then
-            echo "No tag found! You must provide a tag when running manually."
-            exit 1
+          latest_tag=$(git tag --sort=-v:refname | grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
+          if [ -z "$latest_tag" ]; then
+            echo "No release found, starting at v1.0.0"
+            echo "tag=v1.0.0" >> $GITHUB_OUTPUT
+          else
+            echo "Latest tag: $latest_tag"
+            version=${latest_tag#v}
+            IFS='.' read -r major minor patch <<< "$version"
+            patch=$((patch + 1))
+            new_tag="v$major.$minor.$patch"
+            echo "tag=$new_tag" >> $GITHUB_OUTPUT
           fi
 
-      - name: Extract Version or Set Default
+      - name: Set Version
         id: set_version
         run: |
-          if [[ "$release_tag" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            version="${release_tag#v}"
-          else
-            version="0.0.0-manual"
-          fi
+          version=${{ steps.get_latest_tag.outputs.tag }}
+          version=${version#v}
           echo "version=$version" >> $GITHUB_OUTPUT
 
       - name: Modify Module Manifest With Release-Specific Values
@@ -82,38 +79,34 @@ jobs:
           files: 'module.json'
         env:
           VERSION: ${{ steps.set_version.outputs.version }}
-          URL: ${{ env.project_url }}
-          MANIFEST: ${{ env.latest_manifest_url }}
-          DOWNLOAD: ${{ env.release_module_url }}
+          URL: ${{ github.server_url }}/${{ github.repository }}
+          MANIFEST: ${{ github.server_url }}/${{ github.repository }}/releases/latest/download/module.json
+          DOWNLOAD: ${{ github.server_url }}/${{ github.repository }}/releases/download/${{ steps.get_latest_tag.outputs.tag }}/module.zip
 
       - name: Prepare Module Directory
         run: |
-          mkdir -p ./advanced-requests
-          cp module.json ./advanced-requests/
-          [ -f README.md ] && cp README.md ./advanced-requests/
-          [ -f LICENSE ] && cp LICENSE ./advanced-requests/
-          [ -d templates ] && cp -r templates ./advanced-requests/
-          [ -d scripts ] && cp -r scripts ./advanced-requests/
-          [ -d styles ] && cp -r styles ./advanced-requests/
-          [ -d packs ] && cp -r packs ./advanced-requests/
-          [ -d language ] && cp -r language ./advanced-requests/
-          [ -d assets ] && cp -r assets ./advanced-requests/
+          mkdir -p ./simple-requests
+          cp module.json ./simple-requests/
+          [ -f README.md ] && cp README.md ./simple-requests/
+          [ -f LICENSE ] && cp LICENSE ./simple-requests/
+          [ -d templates ] && cp -r templates ./simple-requests/
+          [ -d scripts ] && cp -r scripts ./simple-requests/
+          [ -d styles ] && cp -r styles ./simple-requests/
+          [ -d packs ] && cp -r packs ./simple-requests/
+          [ -d language ] && cp -r language ./simple-requests/
+          [ -d assets ] && cp -r assets ./simple-requests/
 
       - name: Create Module Archive
         run: |
-          cd ./advanced-requests
+          cd ./simple-requests
           zip --recurse-paths ../module.zip ./*
           cd ..
 
-      - name: Update Release With Files
-        id: create_version_release
+      - name: Create or Update Release
         uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
-          name: ${{ github.event.release.name || env.release_tag }}
-          draft: ${{ github.event.release.unpublished || false }}
-          prerelease: ${{ github.event.release.prerelease || false }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          name: ${{ steps.get_latest_tag.outputs.tag }}
+          tag: ${{ steps.get_latest_tag.outputs.tag }}
           artifacts: './module.json, ./module.zip'
-          tag: ${{ env.release_tag }}
-          body: ${{ github.event.release.body || 'Automated release' }}
+          token: ${{ secrets.GITHUB_TOKEN }}

@@ -32,7 +32,7 @@ Hooks.once('init', function() {
    // Width of the request field in FreeScreen window depends on the number of requests
    //    registerSettings("widthDependOnQueue", "client", true, Boolean, false, null, reRender)
    // Request sound (file path)
-   registerSettings("reqClickSound", "client", true, String, "modules/advanced-requests/assets/samples/fingerSnapping.ogg", "audio")
+   registerSettings("reqClickSound", "client", true, String, "modules/simple-requests/assets/samples/fingerSnapping.ogg", "audio")
    // What to use for requests
 //    const ufrChooseList = {
 //       "playerToken": game.i18n.localize(`${C.ID}.settings.ufrPlayerToken`),
@@ -60,14 +60,14 @@ Hooks.once('init', function() {
    // DISPLAY REQUESTS:
    // - 1st level requests (0 in button array)
    registerSettings("firstRequest", "world", true, Boolean, true, null, updateChatRequestButtons)
-   registerSettings("firstRequestSound", "client", true, String, "modules/advanced-requests/assets/request0.ogg", "audio")
+   registerSettings("firstRequestSound", "client", true, String, "modules/simple-requests/assets/request0.ogg", "audio")
    // TODO custom string name 
    // - 2nd level requests
    registerSettings("secondRequest", "world", true, Boolean, true, null, updateChatRequestButtons)
-   registerSettings("secondRequestSound", "client", true, String, "modules/advanced-requests/assets/request1.ogg", "audio")
+   registerSettings("secondRequestSound", "client", true, String, "modules/simple-requests/assets/request1.ogg", "audio")
    // - 3rd level requests
    registerSettings("thirdRequest", "world", true, Boolean, true, null, updateChatRequestButtons)
-   registerSettings("thirdRequestSound", "client", true, String, "modules/advanced-requests/assets/request2.ogg", "audio")
+   registerSettings("thirdRequestSound", "client", true, String, "modules/simple-requests/assets/request2.ogg", "audio")
 
    // HIDDEN
    // Request queue
@@ -77,7 +77,7 @@ Hooks.once('init', function() {
 });
 
 // function changeChatQueueHeight() {
-//    const chatQueueEl = document.getElementById("advanced-requests-chat-body");
+//    const chatQueueEl = document.getElementById("simple-requests-chat-body");
 //    if (chatQueueEl) {
 //       const elHeight = game.settings.get(C.ID, "chatQueueHeight")
 //       chatQueueEl.style.minHeight = `${elHeight}px`
@@ -86,7 +86,7 @@ Hooks.once('init', function() {
 // }
 
 function updateChatRequestButtons() {
-   const buttonsBoxEl = document.getElementById("advanced-requests-chat-body")?.querySelector(".ar-chat-buttons")
+   const buttonsBoxEl = document.getElementById("simple-requests-chat-body")?.querySelector(".ar-chat-buttons")
    if (buttonsBoxEl) {
       buttonsBoxEl.innerHTML = "";
       ["first", "second", "third"].forEach((reqLevel, i) => {
@@ -101,14 +101,14 @@ function updateChatRequestButtons() {
          buttonsBoxEl.append(button)
       })
    }
-   AdvancedRequestsApp._render()
+   SimpleRequestsApp._render()
 }
 
 function reRender() {
-   AdvancedRequestsApp._render()
+   SimpleRequestsApp._render()
 }
 
 function updatePosition(value) {
-   AdvancedRequestsApp._render();
-   document.getElementById("advanced-requests-chat-body").style.display = (value == "chat" ? null : "none")
+   SimpleRequestsApp._render();
+   document.getElementById("simple-requests-chat-body").style.display = (value == "chat" ? null : "none")
 }

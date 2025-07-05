@@ -1,7 +1,7 @@
-<h1>Advanced requests</h1>
+<h1>Simple requests</h1>
 install
 ```
-https://github.com/achoobert/FoundryVTT-Advanced-requests/releases/latest/download/module.json
+https://github.com/achoobert/FoundryVTT-Simple-requests/releases/latest/download/module.json
 ```
 
 <h2>EN</h2>
@@ -21,17 +21,17 @@ https://github.com/achoobert/FoundryVTT-Advanced-requests/releases/latest/downlo
 
 Macro to call out top request
 ```
-window.advancedRequests.gm_callout_top_request();
+window.simpleRequests.gm_callout_top_request();
 ```
 
 Macro to clear all requests
 ```
-window.advancedRequests.load_queue_requests_LOCAL_QUEUE([]);
+window.simpleRequests.load_queue_requests_LOCAL_QUEUE([]);
 ```
 
 # TODOS:
 
-Already working: advanced-requests page in GM settings
+Already working: simple-requests page in GM settings
 Implementation Notes:
 - Use the same UI look, DOM placement and CSS structure as dice-calculator for the default (above chat message input) position.
 - Use a single source of truth for the queue (e.g., a setting or in-memory object, synchronized via SocketLib). Copy `raise-my-hand`'s Implementation

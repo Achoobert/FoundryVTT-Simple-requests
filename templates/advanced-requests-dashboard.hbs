@@ -1,0 +1,22 @@
+<section class="adv-requests-dash flexcol">
+    <!-- Queue display -->
+    <div class="adv-requests-queue flexrow">
+        {{#each queue}}
+            <div class="adv-request-chip ar-text-level-{{level}}" title="{{name}} ({{getLevelName level}})" data-user-id="{{userId}}">
+                <img class="ar-queue-warning ar-level-{{level}}" src="{{img}}" style="width:24px;height:24px;border-radius:50%;"> {{name}}
+            </div>
+        {{/each}}
+    </div>
+    
+    <!-- Add request buttons (only if chat is visible and sidebar is expanded) -->
+    {{#if showButtons}}
+        <div class="adv-requests-buttons flexrow">
+            {{#if isGM}}
+                <button type="button" class="pop-oldest-btn">Pop Oldest/Urgent</button>
+            {{/if}}
+            <button type="button" class="request-btn" data-level="0">Common</button>
+            <button type="button" class="request-btn" data-level="1">Important</button>
+            <button type="button" class="request-btn" data-level="2">Urgent</button>
+        </div>
+    {{/if}}
+</section> 

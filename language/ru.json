@@ -1,5 +1,5 @@
 {
-    "advanced-requests": {
+    "simple-requests": {
         "settings": {
             "soundCreate": "Звук создания заявок",
             "soundCreateHint": "Воспроизводить звук при создании заявок (нажатии на кнопку)",
@@ -64,20 +64,6 @@
             "thirdRequestTooltip": "Немедленная заявка!",
             "queueTransferTooltip": "Изменить положение окна заявок на Свободное",
             "requestsMenuTooltip": "Открыть меню настройки заявок"
-        },
-        "imageHelper": {
-            "title1": "Изображение для Заявки не установлено",
-            "title2": "Пожалуйста, убедитесь что все пункты установлены верно",
-            "useForRequests": "Использовать для заявок:",
-            "choosenActor": "Выбранный актёр",
-            "userChar": "Персонаж игрока",
-            "actorDropArea": "Перенесите сюда Актёра",
-            "imagePath": "Путь к изображению:",
-            "imagePathPlaceholder": "Например: icons/svg/mystery-man.svg",
-            "imageName": "Имя:",
-            "notCustom": "Вы можете устанавливать свой Путь к изображению и Имя только при выбранном варианте \"Своё\" в первом пункте",
-            "choosenActorTooltip": "Нажмите \"ПКМ\" чтобы очистить выбор актёра",
-            "imageDoesntExistTooltip": "Файл по указанному пути не найден"
         }
     }
 }

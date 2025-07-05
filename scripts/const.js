@@ -1,5 +1,5 @@
 export const Constants = {
-    ID: "advanced-requests"
+    ID: "simple-requests"
 }
 
 export const visualNoverIsActive = () => {
