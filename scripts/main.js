@@ -102,7 +102,7 @@ function remove_request_LOCAL_QUEUE(userId) {
  */
 function load_queue_requests_LOCAL_QUEUE(newQueue) {
    // Validate and sort, most urgent & oldest
-//    there should only be one request per user
+   // there should only be one request per user
    if (!Array.isArray(newQueue)) return;
    CONFIG.ADV_REQUESTS.queue = newQueue.slice().sort((a, b) => {
       if (b.level !== a.level) return b.level - a.level;
@@ -166,7 +166,7 @@ class SimpleRequestsManager {
       await moveAdvRequestsDash();
    }
    async _createRequest(newQueue) {
-      debugger
+      // debugger
       log_socket("syncing queue", newQueue);
       load_queue_requests_LOCAL_QUEUE(newQueue);
       await moveAdvRequestsDash();
@@ -189,7 +189,7 @@ class SimpleRequestsManager {
 
    // When THIS CLIENT creates a request locally
    async createRequest(requestData) {
-      debugger
+      // debugger
       log_socket("creating request locally", requestData);
       add_new_request_LOCAL_QUEUE(requestData);
       // Send to all other clients
@@ -386,48 +386,46 @@ async function renderAdvRequestsDash() {
    return dash;
 }
 async function renderSimpleRequestsQueue() {
-   debugger
-   // Get or create the main container div
-   let div = document.getElementById("simple-requests-chat-body");
-   if (!div) {
-      // return;
-      div = document.createElement("div");
-      div.classList.add("simple-requests-chat-body");
-      div.id = "simple-requests-chat-body";
-   }
+   // Get the chat controls container
+   const chatControls = document.querySelector("#chat-controls");
+   if (!chatControls) return;
 
-   // Get or create the queue box
-   let queueBox = div.querySelector("#ar-chat-queue");
-   if (!queueBox) {
-      queueBox = document.createElement("div");
-      queueBox.classList.add("ar-chat-queue");
-      queueBox.id = "ar-chat-queue";
-      div.append(queueBox);
-   }
+   // Remove any existing instance of the requests UI
+   const oldDiv = document.getElementById("simple-requests-chat-body");
+   if (oldDiv && oldDiv.parentNode) oldDiv.parentNode.removeChild(oldDiv);
 
-   // Clear the queue box before re-rendering
-   queueBox.innerHTML = "";
+   // Create the main container div
+   const new_request_element = document.createElement("div");
+   new_request_element.classList.add("simple-requests-chat-body");
+   new_request_element.id = "simple-requests-chat-body";
 
-   // Render the current queue
+   // Queue display
+   const queueBox = document.createElement("div");
+   queueBox.classList.add("ar-chat-queue");
+   queueBox.id = "ar-chat-queue";
    const queue = get_requests_LOCAL_QUEUE();
    queue.forEach((item) => {
       const containerEl = getV12RequestElement(item);
       queueBox.append(containerEl);
    });
 
-   // Transfer button logic (as before)
-   let transferButton = div.querySelector(".ar-chat-queue-transfer");
-   if (!transferButton) {
-      transferButton = document.createElement("div");
-      transferButton.className = "ar-chat-queue-transfer ar-hidden";
-      transferButton.innerHTML = `<i class="fas fa-up-right-from-square"></i>`;
-      transferButton.dataset.tooltip = game.i18n.localize(`${C.ID}.buttons.queueTransferTooltip`);
-      queueBox.append(transferButton);
-   }
+   // Requests menu button
+   const requestsMenuButton = document.createElement("div");
+   requestsMenuButton.classList.add("ar-chat-requests-menu");
+   requestsMenuButton.innerHTML = `<i class="fas fa-gear"></i>`;
+   requestsMenuButton.dataset.tooltip = game.i18n.localize(`${C.ID}.buttons.requestsMenuTooltip`);
+   queueBox.append(requestsMenuButton);
+
+   // Transfer button
+   const transferButton = document.createElement("div");
+   transferButton.className = "ar-chat-queue-transfer ar-hidden";
+   transferButton.innerHTML = `<i class="fas fa-up-right-from-square"></i>`;
+   transferButton.dataset.tooltip = game.i18n.localize(`${C.ID}.buttons.queueTransferTooltip`);
+   queueBox.append(transferButton);
 
    // (Event listeners for hover, shift, etc. remain unchanged)
    let isElementHovered = false;
-   div.addEventListener("mouseover", (e) => {
+   new_request_element.addEventListener("mouseover", (e) => {
       isElementHovered = true;
       if (e.shiftKey) {
          transferButton.classList.toggle("ar-hidden", false);
@@ -436,15 +434,13 @@ async function renderSimpleRequestsQueue() {
          });
       }
    });
-   
-   div.addEventListener("mouseout", (e) => {
+   new_request_element.addEventListener("mouseout", (e) => {
       isElementHovered = false;
       transferButton.classList.toggle("ar-hidden", true);
       queueBox.querySelectorAll(".ar-request-container-chat").forEach((el) => {
          el.classList.toggle("ar-hidden", false);
       });
    });
-   
    document.addEventListener("keydown", (e) => {
       if ((e.code == "ShiftLeft" || e.code == "ShiftRight") && isElementHovered) {
          transferButton.classList.toggle("ar-hidden", false);
@@ -453,7 +449,6 @@ async function renderSimpleRequestsQueue() {
          });
       }
    });
-   
    document.addEventListener("keyup", (e) => {
       if ((e.code == "ShiftLeft" || e.code == "ShiftRight") && isElementHovered) {
          transferButton.classList.toggle("ar-hidden", true);
@@ -462,94 +457,116 @@ async function renderSimpleRequestsQueue() {
          });
       }
    });
-   
    transferButton.addEventListener("click", async () => {
-      // await game.settings.set(C.ID, "requestsPosition", "freeScreen");
       if (window.SimpleRequestsApp) {
          window.SimpleRequestsApp._render(true);
       }
       document.getElementById("simple-requests-chat-body").style.display = "none";
    });
-   
-   return div;
+
+   new_request_element.append(queueBox);
+
+   // Request buttons
+   const buttonDiv = document.createElement("div");
+   buttonDiv.classList.add("ar-chat-buttons");
+   ["first", "second", "third"].forEach((reqLevel, i) => {
+      const button = document.createElement('div');
+      button.className = `ar-chat-button ar-level-${i}`;
+      button.innerHTML = `<i class="fa-${i == 0 ? "regular" : "solid"} fa-hand${i == 2 ? "-sparkles" : ""} ar-request-icon"></i>`;
+      button.dataset.tooltip = game.i18n.localize(`${C.ID}.buttons.${reqLevel}RequestTooltip`);
+      button.addEventListener("click", async (event) => {
+         event.preventDefault();
+         const requestData = {
+            userId: game.user.id,
+            name: game.user.name,
+            img: game.user.avatar,
+            level: i
+         };
+         await window.simpleRequests.createRequest(requestData);
+      });
+      buttonDiv.append(button);
+   });
+   new_request_element.append(buttonDiv);
+
+   return new_request_element;
 }
 // Fallback function for manual DOM creation if template fails
-function renderAdvRequestsDashFallback() {
-   const dash = document.createElement("section");
-   dash.className = "adv-requests-dash flexcol";
+// function renderAdvRequestsDashFallback() {
+//    const dash = document.createElement("section");
+//    dash.className = "adv-requests-dash flexcol";
 
-   // Queue display
-   const queueRow = document.createElement("div");
-   queueRow.className = "adv-requests-queue flexrow";
-   for (const req of get_requests_LOCAL_QUEUE()) {
-      const chip = document.createElement("div");
-      chip.className = `adv-request-chip ar-text-level-${req.level}`;
-      chip.title = `${req.name} (${["Common", "Important", "Urgent", "test"][req.level]})`;
-      chip.innerHTML = `<img class="ar-queue-warning ar-level-${req.level}" src="${req.img || "icons/svg/mystery-man.svg"}" style="width:24px;height:24px;border-radius:50%;"> ${req.name}`;
-      // Remove on click (if own or GM)
-      if (game.user.isGM) {
-         chip.onclick = async (event) => {
-            event.preventDefault();
-            // GM can pop the oldest, most urgent request
-            await window.simpleRequests.gm_callout_top_request();
-            await moveAdvRequestsDash();
-         };
-         chip.oncontextmenu = async (event) => {
-            event.preventDefault();
-            await window.simpleRequests.removeRequest(req.userId);
-         };
-      } else if (req.userId === game.user.id) {
-         chip.onclick = async (event) => {
-            event.preventDefault();
-            await window.simpleRequests.removeRequest(game.user.id);
-         };
-      }
-      queueRow.appendChild(chip);
-   }
-   dash.appendChild(queueRow);
+//    // Queue display
+//    const queueRow = document.createElement("div");
+//    queueRow.className = "adv-requests-queue flexrow";
+//    for (const req of get_requests_LOCAL_QUEUE()) {
+//       const chip = document.createElement("div");
+//       chip.className = `adv-request-chip ar-text-level-${req.level}`;
+//       chip.title = `${req.name} (${["Common", "Important", "Urgent", "test"][req.level]})`;
+//       chip.innerHTML = `<img class="ar-queue-warning ar-level-${req.level}" src="${req.img || "icons/svg/mystery-man.svg"}" style="width:24px;height:24px;border-radius:50%;"> ${req.name}`;
+//       // Remove on click (if own or GM)
+//       if (game.user.isGM) {
+//          chip.onclick = async (event) => {
+//             event.preventDefault();
+//             // GM can pop the oldest, most urgent request
+//             await window.simpleRequests.gm_callout_top_request();
+//             await moveAdvRequestsDash();
+//          };
+//          chip.oncontextmenu = async (event) => {
+//             event.preventDefault();
+//             await window.simpleRequests.removeRequest(req.userId);
+//          };
+//       } else if (req.userId === game.user.id) {
+//          chip.onclick = async (event) => {
+//             event.preventDefault();
+//             await window.simpleRequests.removeRequest(game.user.id);
+//          };
+//       }
+//       queueRow.appendChild(chip);
+//    }
+//    dash.appendChild(queueRow);
 
-   // Add request buttons only if chat is visible and #sidebar-content is expanded
-   const chatElement = document.getElementById("chat");
-   // const sidebarContent = document.getElementById("sidebar-content"); // doesn't exist in v12
-   const isChatVisible = chatElement && chatElement.offsetParent !== null;
-   // const isSidebarExpanded = sidebarContent && sidebarContent.classList.contains("expanded");
-   if (isChatVisible ) { // && isSidebarExpanded) {
-      // Add request buttons
-      const btnRow = document.createElement("div");
-      btnRow.className = "adv-requests-buttons flexrow";
-      // GM-only button to pop oldest & most urgent
-      if (game.user.isGM) {
-         const popBtn = document.createElement("button");
-         popBtn.type = "button";
-         popBtn.textContent = "Pop Oldest/Urgent";
-         popBtn.onclick = async (event) => {
-            event.preventDefault();
-            await window.simpleRequests.gm_callout_top_request();
-            await moveAdvRequestsDash();
-         };
-         btnRow.appendChild(popBtn);
-      }
-      ["Common", "Important", "Urgent"].forEach((label, level) => {
-         const btn = document.createElement("button");
-         btn.type = "button";
-         btn.textContent = label;
-         btn.onclick = async (event) => {
-            event.preventDefault();
-            const requestData = {
-               userId: game.user.id,
-               name: game.user.name,
-               img: game.user.avatar,
-               level
-            };
-            await window.simpleRequests.createRequest(requestData);
-         };
-         btnRow.appendChild(btn);
-      });
-      dash.appendChild(btnRow);
-   }
+//    // Add request buttons only if chat is visible and #sidebar-content is expanded
+//    const chatElement = document.getElementById("chat");
+//    // const sidebarContent = document.getElementById("sidebar-content"); // doesn't exist in v12
+//    const isChatVisible = chatElement && chatElement.offsetParent !== null;
+//    // const isSidebarExpanded = sidebarContent && sidebarContent.classList.contains("expanded");
+//    if (isChatVisible ) { // && isSidebarExpanded) {
+//       // Add request buttons
+//       const btnRow = document.createElement("div");
+//       btnRow.className = "adv-requests-buttons flexrow";
+//       // GM-only button to pop oldest & most urgent
+//       if (game.user.isGM) {
+//          const popBtn = document.createElement("button");
+//          popBtn.type = "button";
+//          popBtn.textContent = "Pop Oldest/Urgent";
+//          popBtn.onclick = async (event) => {
+//             event.preventDefault();
+//             await window.simpleRequests.gm_callout_top_request();
+//             await moveAdvRequestsDash();
+//          };
+//          btnRow.appendChild(popBtn);
+//       }
+//       ["Common", "Important", "Urgent"].forEach((label, level) => {
+//          const btn = document.createElement("button");
+//          btn.type = "button";
+//          btn.textContent = label;
+//          btn.onclick = async (event) => {
+//             event.preventDefault();
+//             const requestData = {
+//                userId: game.user.id,
+//                name: game.user.name,
+//                img: game.user.avatar,
+//                level
+//             };
+//             await window.simpleRequests.createRequest(requestData);
+//          };
+//          btnRow.appendChild(btn);
+//       });
+//       dash.appendChild(btnRow);
+//    }
 
-   return dash;
-}
+//    return dash;
+// }
 
 async function moveAdvRequestsDash() {
    log_socket("moveAdvRequestsDash called by", game.user.name);
@@ -571,7 +588,7 @@ async function moveAdvRequestsDash() {
          if (CONFIG.ADV_REQUESTS.element?.parentNode) CONFIG.ADV_REQUESTS.element.parentNode.removeChild(CONFIG.ADV_REQUESTS.element);
          return;
       }
-      html[0].querySelector("#chat-controls").prepend(div);
+      chatInput.prepend(dash);
       return;
    }
 
@@ -637,107 +654,10 @@ function playSound(volume = 0.8, src = "modules/simple-requests/assets/request0.
 // Version 12 hooks initialization
 function initV12Hooks() {
    // Render requests in chat sidebar (v12 style)
-   Hooks.on("renderSidebarTab", (app, html, data) => {
-      if (app.tabName !== "chat") return;
-      const div = document.createElement("div");
-      div.classList.add("simple-requests-chat-body");
-      div.id = "simple-requests-chat-body";
-
-      // Queue display
-      const queueBox = document.createElement("div");
-      queueBox.classList.add("ar-chat-queue");
-      queueBox.id = "ar-chat-queue";
-      const queue = get_requests_LOCAL_QUEUE();
-      queue.forEach((item) => {
-         const containerEl = getV12RequestElement(item);
-         queueBox.append(containerEl);
-      });
-      
-      // Requests menu button
-      const requestsMenuButton = document.createElement("div");
-      requestsMenuButton.classList.add("ar-chat-requests-menu");
-      requestsMenuButton.innerHTML = `<i class="fas fa-gear"></i>`;
-      requestsMenuButton.dataset.tooltip = game.i18n.localize(`${C.ID}.buttons.requestsMenuTooltip`);
-      queueBox.append(requestsMenuButton);
-      
-      // Transfer button
-      const transferButton = document.createElement("div");
-      transferButton.className = "ar-chat-queue-transfer ar-hidden";
-      transferButton.innerHTML = `<i class="fas fa-up-right-from-square"></i>`;
-      transferButton.dataset.tooltip = game.i18n.localize(`${C.ID}.buttons.queueTransferTooltip`);
-      
-      let isElementHovered = false;
-      div.addEventListener("mouseover", (e) => {
-         isElementHovered = true;
-         if (e.shiftKey) {
-            transferButton.classList.toggle("ar-hidden", false);
-            queueBox.querySelectorAll(".ar-request-container-chat").forEach((el) => {
-               el.classList.toggle("ar-hidden", true);
-            });
-         }
-      });
-      
-      div.addEventListener("mouseout", (e) => {
-         isElementHovered = false;
-         transferButton.classList.toggle("ar-hidden", true);
-         queueBox.querySelectorAll(".ar-request-container-chat").forEach((el) => {
-            el.classList.toggle("ar-hidden", false);
-         });
-      });
-      
-      document.addEventListener("keydown", (e) => {
-         if ((e.code == "ShiftLeft" || e.code == "ShiftRight") && isElementHovered) {
-            transferButton.classList.toggle("ar-hidden", false);
-            queueBox.querySelectorAll(".ar-request-container-chat").forEach((el) => {
-               el.classList.toggle("ar-hidden", true);
-            });
-         }
-      });
-      
-      document.addEventListener("keyup", (e) => {
-         if ((e.code == "ShiftLeft" || e.code == "ShiftRight") && isElementHovered) {
-            transferButton.classList.toggle("ar-hidden", true);
-            queueBox.querySelectorAll(".ar-request-container-chat").forEach((el) => {
-               el.classList.toggle("ar-hidden", false);
-            });
-         }
-      });
-      
-      transferButton.addEventListener("click", async () => {
-         // await game.settings.set(C.ID, "requestsPosition", "freeScreen");
-         if (window.SimpleRequestsApp) {
-            window.SimpleRequestsApp._render(true);
-         }
-         document.getElementById("simple-requests-chat-body").style.display = "none";
-      });
-      
-      queueBox.append(transferButton);
-      div.append(queueBox);
-      
-      // Request buttons
-      const buttonDiv = document.createElement("div");
-      buttonDiv.classList.add("ar-chat-buttons");
-      ["first", "second", "third"].forEach((reqLevel, i) => {
-
-         const button = document.createElement('div');
-         button.className = `ar-chat-button ar-level-${i}`;
-         button.innerHTML = `<i class="fa-${i == 0 ? "regular" : "solid"} fa-hand${i == 2 ? "-sparkles" : ""} ar-request-icon"></i>`;
-         button.dataset.tooltip = game.i18n.localize(`${C.ID}.buttons.${reqLevel}RequestTooltip`);
-         button.addEventListener("click", async (event) => {
-            event.preventDefault();
-            const requestData = {
-               userId: game.user.id,
-               name: game.user.name,
-               img: game.user.avatar,
-               level: i
-            };
-            await window.simpleRequests.createRequest(requestData);
-         });
-         buttonDiv.append(button);
-      });
-      div.append(buttonDiv);
-      html[0].querySelector("#chat-controls").prepend(div);
-   });
+   // Hooks.on("renderSidebarTab", (app, html, data) => {
+   //    if (app.tabName !== "chat") return;
+   //    moveAdvRequestsDash();
+   // });
 
    // Settings update hook for v12
    Hooks.on("updateSetting", async (setting, value, options, userId) => {
@@ -802,22 +722,22 @@ function initV12Hooks() {
       }
    });
 
-   // Socket setup for v12
-   Hooks.on('setup', () => {
-      game.socket.on(`module.${C.ID}`, async ({ type, settingData, options }) => {
-         if (game.user.isGM) {
-            switch (type) {
-            case 'queue':
-               if (window.simpleRequests && typeof window.simpleRequests.updateRequestQueue === "function") {
-                  window.simpleRequests.updateRequestQueue(settingData);
-               }
-               break;
-            default:
-               break;
-            }
-         }
-      });
-   });
+   // // Socket setup for v12
+   // Hooks.on('setup', () => {
+   //    game.socket.on(`module.${C.ID}`, async ({ type, settingData, options }) => {
+   //       if (game.user.isGM) {
+   //          switch (type) {
+   //          case 'queue':
+   //             if (window.simpleRequests && typeof window.simpleRequests.updateRequestQueue === "function") {
+   //                window.simpleRequests.updateRequestQueue(settingData);
+   //             }
+   //             break;
+   //          default:
+   //             break;
+   //          }
+   //       }
+   //    });
+   // });
 }
 
 // Version 12 helper functions

@@ -2,7 +2,7 @@ describe('Simple Requests Module Functionality', () => {
    beforeEach(() => {
       cy.visit('/')
       // Wait for page to load
-      cy.wait(3000)
+      cy.get('select[name="userid"] option').should("be.visible")
       // TODO use login
       cy.loginAsGM()
    })
@@ -22,6 +22,11 @@ describe('Simple Requests Module Functionality', () => {
 
       // id="ar-chat-queue"
       cy.get("#ar-chat-queue").should("be.visible").click();
+
+      // click on
+      cy.get('.ar-request-container-chat.ar-level-0').click();
+
+      cy.get("#ar-chat-queue").should("be.visible");
 
 
       // cy.get('body').then(($body) => {
