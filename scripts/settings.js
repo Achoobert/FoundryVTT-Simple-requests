@@ -30,32 +30,32 @@ Hooks.once('init', function() {
    // sound when activating requests
    registerSettings("messageActivate", "client", true, Boolean, true)
    // Width of the request field in FreeScreen window depends on the number of requests
-   //    registerSettings("widthDependOnQueue", "client", true, Boolean, false, null, reRender)
+      registerSettings("widthDependOnQueue", "client", true, Boolean, false, null, reRender)
    // Request sound (file path)
    registerSettings("reqClickSound", "client", true, String, "modules/simple-requests/assets/samples/fingerSnapping.ogg", "audio")
    // What to use for requests
-//    const ufrChooseList = {
-//       "playerToken": game.i18n.localize(`${C.ID}.settings.ufrPlayerToken`),
-//       "playerActor": game.i18n.localize(`${C.ID}.settings.ufrPlayerActor`),
-//       "token": game.i18n.localize(`${C.ID}.settings.ufrToken`), 
-//       "actor": game.i18n.localize(`${C.ID}.settings.ufrActor`), 
-//       "user": game.i18n.localize(`${C.ID}.settings.ufrUser`), 
-//       "controlled": game.i18n.localize(`${C.ID}.settings.ufrControlled`), 
-//       "custom": game.i18n.localize(`${C.ID}.settings.ufrCustom`)
-//    };
+   const ufrChooseList = {
+      "playerToken": game.i18n.localize(`${C.ID}.settings.ufrPlayerToken`),
+      "playerActor": game.i18n.localize(`${C.ID}.settings.ufrPlayerActor`),
+      "token": game.i18n.localize(`${C.ID}.settings.ufrToken`), 
+      "actor": game.i18n.localize(`${C.ID}.settings.ufrActor`), 
+      "user": game.i18n.localize(`${C.ID}.settings.ufrUser`), 
+      "controlled": game.i18n.localize(`${C.ID}.settings.ufrControlled`), 
+      "custom": game.i18n.localize(`${C.ID}.settings.ufrCustom`)
+   };
 //    registerSettings("useForRequests", "client", true, String, "playerToken", null, false, ufrChooseList)
    // ID of the actor selected by the player
-   //    registerSettings("selectedActorId", "client", true, String, "")
+      registerSettings("selectedActorId", "client", true, String, "")
    // Custom image for requests
-   //    registerSettings("customImage", "client", true, String, "", "image")
+      registerSettings("customImage", "client", true, String, "", "image")
    // Custom name for requests
-   //    registerSettings("customName", "client", true, String, "")
+      registerSettings("customName", "client", true, String, "")
    // Height of the request list under the chat
-   //    registerSettings("chatQueueHeight", "client", true, Number, 60, null, changeChatQueueHeight)
+      registerSettings("chatQueueHeight", "client", true, Number, 60, null, changeChatQueueHeight)
    // Position of the requests window
-   //    registerSettings("requestsPosition", "client", true, String, "chat", null, updatePosition, {"chat": game.i18n.localize(`${C.ID}.settings.qpChat`), "freeScreen": game.i18n.localize(`${C.ID}.settings.qpFreeScreen`)})
+      registerSettings("requestsPosition", "client", true, String, "chat", null, updatePosition, {"chat": game.i18n.localize(`${C.ID}.settings.qpChat`), "freeScreen": game.i18n.localize(`${C.ID}.settings.qpFreeScreen`)})
    // zIndex of the requests window
-   //    registerSettings("freeScreenZIndex", "client", true, Number, 10, null, reRender)
+      registerSettings("freeScreenZIndex", "client", true, Number, 10, null, reRender)
 
    // DISPLAY REQUESTS:
    // - 1st level requests (0 in button array)
@@ -76,14 +76,14 @@ Hooks.once('init', function() {
    registerSettings("freeScreenData", "client", false, Object, {})
 });
 
-// function changeChatQueueHeight() {
-//    const chatQueueEl = document.getElementById("simple-requests-chat-body");
-//    if (chatQueueEl) {
-//       const elHeight = game.settings.get(C.ID, "chatQueueHeight")
-//       chatQueueEl.style.minHeight = `${elHeight}px`
-//       chatQueueEl.style.maxHeight = `${elHeight}px`
-//    }
-// }
+function changeChatQueueHeight() {
+   const chatQueueEl = document.getElementById("simple-requests-chat-body");
+   if (chatQueueEl) {
+      const elHeight = game.settings.get(C.ID, "chatQueueHeight")
+      chatQueueEl.style.minHeight = `${elHeight}px`
+      chatQueueEl.style.maxHeight = `${elHeight}px`
+   }
+}
 
 function updateChatRequestButtons() {
    const buttonsBoxEl = document.getElementById("simple-requests-chat-body")?.querySelector(".ar-chat-buttons")

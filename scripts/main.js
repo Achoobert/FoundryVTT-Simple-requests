@@ -13,21 +13,21 @@ let init = () => {
 };
 
 // Check if we're in version 12 (older Foundry)
-if (game.version && game.version.startsWith("12")) {
+// if (game.version && game.version.startsWith("12")) {
+if (true) {
    init = () => {
       // initialize things for version 12
-      console.log("Simple Requests: Initializing for Foundry VTT v12");
+      console.error("Simple Requests: Initializing for Foundry VTT v12");
       initV12();
    };
 }
-
 init();
 
 // Version 12 specific functionality
 function initV12() {
    // Initialize version 12 specific hooks and functionality
    initV12Hooks();
-   initV12App();
+   // initV12App();
 }
 
 // queue logic
@@ -142,7 +142,7 @@ class SimpleRequestsManager {
    constructor() {
       this.moduleName = "simple-requests";
       this.socket = socketlib.registerModule(this.moduleName);
-      this.socket.register("createRequest", this._createRequest.bind(this));
+      // this.socket.register("createRequest", this._createRequest.bind(this));
       this.socket.register("addRequest", this._addRequest.bind(this));
       this.socket.register("removeRequest", this._removeRequest.bind(this));
       this.socket.register("activateRequest", this._activateRequest.bind(this));
@@ -166,6 +166,7 @@ class SimpleRequestsManager {
       await moveAdvRequestsDash();
    }
    async _createRequest(newQueue) {
+      debugger
       log_socket("syncing queue", newQueue);
       load_queue_requests_LOCAL_QUEUE(newQueue);
       await moveAdvRequestsDash();
@@ -188,11 +189,12 @@ class SimpleRequestsManager {
 
    // When THIS CLIENT creates a request locally
    async createRequest(requestData) {
+      debugger
       log_socket("creating request locally", requestData);
       add_new_request_LOCAL_QUEUE(requestData);
-      await moveAdvRequestsDash();
       // Send to all other clients
       this.socket.executeForOthers("addRequest", requestData);
+      await moveAdvRequestsDash();
    }
 
    // img: "images/Edmund_Carter.webp"
@@ -305,24 +307,6 @@ Hooks.once("socketlib.ready", () => {
    });
 });
 
-// Remove SimpleRequestsApp and ApplicationV2 usage for now
-// let SimpleRequestsApp;
-// Hooks.once('init', function() {
-//   SimpleRequestsApp = class SimpleRequestsApp extends ApplicationV2 {
-//     ...
-//   }
-//   window.SimpleRequestsApp = SimpleRequestsApp;
-//   Hooks.once('ready', () => {
-//     SimpleRequestsApp.activate();
-//   });
-// });
-
-// Hooks.on("updateSetting", async (setting, value, _options, userId) => {
-//     if (setting.key == `visual-novel-dialogues.simpleRequestsSync`) {
-//         await game.settings.set(C.ID, 'visualNovelSync', value.key)
-//     }
-// })
-
 async function renderAdvRequestsDash() {
    // Prepare data for template
    const queue = get_requests_LOCAL_QUEUE();
@@ -345,7 +329,8 @@ async function renderAdvRequestsDash() {
    } catch (error) {
       console.warn("Simple Requests: Template not found, falling back to manual DOM creation", error);
       // Fallback to manual DOM creation
-      return renderAdvRequestsDashFallback();
+      // return renderAdvRequestsDashFallback();
+      return renderSimpleRequestsQueue();
    }
    const tempDiv = document.createElement('div');
    tempDiv.innerHTML = template;
@@ -354,7 +339,7 @@ async function renderAdvRequestsDash() {
    // Add event listeners
    dash.querySelectorAll('.adv-request-chip').forEach(chip => {
       const userId = chip.dataset.userId;
-      const req = queue.find(r => r.userId === userId);
+      const req = queue.find(r => r.userId === userId); // ? unused
       
       if (game.user.isGM) {
          chip.onclick = async (event) => {
@@ -400,7 +385,94 @@ async function renderAdvRequestsDash() {
    
    return dash;
 }
+async function renderSimpleRequestsQueue() {
+   debugger
+   // Get or create the main container div
+   let div = document.getElementById("simple-requests-chat-body");
+   if (!div) {
+      // return;
+      div = document.createElement("div");
+      div.classList.add("simple-requests-chat-body");
+      div.id = "simple-requests-chat-body";
+   }
 
+   // Get or create the queue box
+   let queueBox = div.querySelector("#ar-chat-queue");
+   if (!queueBox) {
+      queueBox = document.createElement("div");
+      queueBox.classList.add("ar-chat-queue");
+      queueBox.id = "ar-chat-queue";
+      div.append(queueBox);
+   }
+
+   // Clear the queue box before re-rendering
+   queueBox.innerHTML = "";
+
+   // Render the current queue
+   const queue = get_requests_LOCAL_QUEUE();
+   queue.forEach((item) => {
+      const containerEl = getV12RequestElement(item);
+      queueBox.append(containerEl);
+   });
+
+   // Transfer button logic (as before)
+   let transferButton = div.querySelector(".ar-chat-queue-transfer");
+   if (!transferButton) {
+      transferButton = document.createElement("div");
+      transferButton.className = "ar-chat-queue-transfer ar-hidden";
+      transferButton.innerHTML = `<i class="fas fa-up-right-from-square"></i>`;
+      transferButton.dataset.tooltip = game.i18n.localize(`${C.ID}.buttons.queueTransferTooltip`);
+      queueBox.append(transferButton);
+   }
+
+   // (Event listeners for hover, shift, etc. remain unchanged)
+   let isElementHovered = false;
+   div.addEventListener("mouseover", (e) => {
+      isElementHovered = true;
+      if (e.shiftKey) {
+         transferButton.classList.toggle("ar-hidden", false);
+         queueBox.querySelectorAll(".ar-request-container-chat").forEach((el) => {
+            el.classList.toggle("ar-hidden", true);
+         });
+      }
+   });
+   
+   div.addEventListener("mouseout", (e) => {
+      isElementHovered = false;
+      transferButton.classList.toggle("ar-hidden", true);
+      queueBox.querySelectorAll(".ar-request-container-chat").forEach((el) => {
+         el.classList.toggle("ar-hidden", false);
+      });
+   });
+   
+   document.addEventListener("keydown", (e) => {
+      if ((e.code == "ShiftLeft" || e.code == "ShiftRight") && isElementHovered) {
+         transferButton.classList.toggle("ar-hidden", false);
+         queueBox.querySelectorAll(".ar-request-container-chat").forEach((el) => {
+            el.classList.toggle("ar-hidden", true);
+         });
+      }
+   });
+   
+   document.addEventListener("keyup", (e) => {
+      if ((e.code == "ShiftLeft" || e.code == "ShiftRight") && isElementHovered) {
+         transferButton.classList.toggle("ar-hidden", true);
+         queueBox.querySelectorAll(".ar-request-container-chat").forEach((el) => {
+            el.classList.toggle("ar-hidden", false);
+         });
+      }
+   });
+   
+   transferButton.addEventListener("click", async () => {
+      // await game.settings.set(C.ID, "requestsPosition", "freeScreen");
+      if (window.SimpleRequestsApp) {
+         window.SimpleRequestsApp._render(true);
+      }
+      document.getElementById("simple-requests-chat-body").style.display = "none";
+   });
+   
+   return div;
+}
 // Fallback function for manual DOM creation if template fails
 function renderAdvRequestsDashFallback() {
    const dash = document.createElement("section");
@@ -438,10 +510,10 @@ function renderAdvRequestsDashFallback() {
 
    // Add request buttons only if chat is visible and #sidebar-content is expanded
    const chatElement = document.getElementById("chat");
-   const sidebarContent = document.getElementById("sidebar-content");
+   // const sidebarContent = document.getElementById("sidebar-content"); // doesn't exist in v12
    const isChatVisible = chatElement && chatElement.offsetParent !== null;
-   const isSidebarExpanded = sidebarContent && sidebarContent.classList.contains("expanded");
-   if (isChatVisible && isSidebarExpanded) {
+   // const isSidebarExpanded = sidebarContent && sidebarContent.classList.contains("expanded");
+   if (isChatVisible ) { // && isSidebarExpanded) {
       // Add request buttons
       const btnRow = document.createElement("div");
       btnRow.className = "adv-requests-buttons flexrow";
@@ -482,15 +554,27 @@ function renderAdvRequestsDashFallback() {
 async function moveAdvRequestsDash() {
    log_socket("moveAdvRequestsDash called by", game.user.name);
    log_socket("current queue", CONFIG.ADV_REQUESTS.queue);
-   const chatInput = document.querySelector("#chat-message.chat-input");
-   if (!chatInput) {
-      if (CONFIG.ADV_REQUESTS.element?.parentNode) CONFIG.ADV_REQUESTS.element.parentNode.removeChild(CONFIG.ADV_REQUESTS.element);
-      return;
-   }
+   let chatInput = document.querySelector("#chat-message.chat-input");
+
+   // TODO don't render if chat is closed
    removeAllDash();
-   const dash = await renderAdvRequestsDash();
+   // const dash = await renderAdvRequestsDash();
+   const dash = await renderSimpleRequestsQueue();
    dash.id = "adv-requests-dash";
    CONFIG.ADV_REQUESTS.element = dash;
+
+   if (!chatInput) {
+      // we may be on v12
+      // class="simple-requests-chat-body"
+      chatInput = document.querySelector("#chat-controls")
+      if(!chatInput){
+         if (CONFIG.ADV_REQUESTS.element?.parentNode) CONFIG.ADV_REQUESTS.element.parentNode.removeChild(CONFIG.ADV_REQUESTS.element);
+         return;
+      }
+      html[0].querySelector("#chat-controls").prepend(div);
+      return;
+   }
+
    // Insert BEFORE the chat input
    chatInput.parentNode.insertBefore(dash, chatInput);
 }
@@ -557,17 +641,13 @@ function initV12Hooks() {
       if (app.tabName !== "chat") return;
       const div = document.createElement("div");
       div.classList.add("simple-requests-chat-body");
-      if (game.settings.get(C.ID, "requestsPosition") != "chat") div.style.display = "none";
       div.id = "simple-requests-chat-body";
-      const height = game.settings.get(C.ID, "chatQueueHeight") + "px";
-      div.style.minHeight = height;
-      div.style.maxHeight = height;
-      
+
       // Queue display
       const queueBox = document.createElement("div");
       queueBox.classList.add("ar-chat-queue");
       queueBox.id = "ar-chat-queue";
-      const queue = getV12Queue();
+      const queue = get_requests_LOCAL_QUEUE();
       queue.forEach((item) => {
          const containerEl = getV12RequestElement(item);
          queueBox.append(containerEl);
@@ -624,7 +704,7 @@ function initV12Hooks() {
       });
       
       transferButton.addEventListener("click", async () => {
-         await game.settings.set(C.ID, "requestsPosition", "freeScreen");
+         // await game.settings.set(C.ID, "requestsPosition", "freeScreen");
          if (window.SimpleRequestsApp) {
             window.SimpleRequestsApp._render(true);
          }
@@ -638,13 +718,20 @@ function initV12Hooks() {
       const buttonDiv = document.createElement("div");
       buttonDiv.classList.add("ar-chat-buttons");
       ["first", "second", "third"].forEach((reqLevel, i) => {
-         if (!game.settings.get(C.ID, `${reqLevel}Request`)) return;
+
          const button = document.createElement('div');
          button.className = `ar-chat-button ar-level-${i}`;
          button.innerHTML = `<i class="fa-${i == 0 ? "regular" : "solid"} fa-hand${i == 2 ? "-sparkles" : ""} ar-request-icon"></i>`;
          button.dataset.tooltip = game.i18n.localize(`${C.ID}.buttons.${reqLevel}RequestTooltip`);
-         button.addEventListener("click", async () => {
-            await addV12Request(i);
+         button.addEventListener("click", async (event) => {
+            event.preventDefault();
+            const requestData = {
+               userId: game.user.id,
+               name: game.user.name,
+               img: game.user.avatar,
+               level: i
+            };
+            await window.simpleRequests.createRequest(requestData);
          });
          buttonDiv.append(button);
       });
@@ -720,11 +807,13 @@ function initV12Hooks() {
       game.socket.on(`module.${C.ID}`, async ({ type, settingData, options }) => {
          if (game.user.isGM) {
             switch (type) {
-               case 'queue':
-                  await game.settings.set(C.ID, 'queue', settingData, options);
-                  break;
-               default:
-                  break;
+            case 'queue':
+               if (window.simpleRequests && typeof window.simpleRequests.updateRequestQueue === "function") {
+                  window.simpleRequests.updateRequestQueue(settingData);
+               }
+               break;
+            default:
+               break;
             }
          }
       });
@@ -751,114 +840,22 @@ function getV12RequestElement(item) {
    return containerEl;
 }
 
-function getV12Queue() {
-   return foundry.utils.deepClone(game.settings.get(C.ID, "queue") || []);
-}
-
 function addV12RequestListener(element, reRender = false) {
    const elId = element?.dataset?.id;
    if (!game.user.isGM && game.user.id != elId) return;
    
    element?.addEventListener('contextmenu', async () => {
-      await deleteV12Request(elId, reRender);
+      window.simpleRequests.removeRequest(element?.dataset?.id);
    });
    
    element?.addEventListener('click', async () => {
       const isGM = game.user.isGM;
       if (isGM) {
-         const messageActivate = game.settings.get(C.ID, "messageActivate");
-         if (messageActivate) {
-            const _user = game.users.find(u=>u.isGM) || game.user;
-            ChatMessage.create({
-               user: _user.id,
-               speaker: {alias: _user.name},
-               content: game.i18n.localize(`${C.ID}.chatMessage.activateRequest1`) + 
-                       game.users.find(u=>u.id == elId)?.name + 
-                       game.i18n.localize(`${C.ID}.chatMessage.activateRequest2`)
-            });
-         }
+         // TODO modify gm_callout_top_request allow calling out non-top requiest if one passed in
+         window.simpleRequests.gm_callout_top_request();
       }
-      await deleteV12Request(elId, reRender, isGM);
    });
    
-   if (reRender && window.SimpleRequestsApp) {
-      window.SimpleRequestsApp._render(true);
-   }
-}
-
-async function addV12Request(reqLevel, reRender = false) {
-   const useForRequests = game.settings.get(C.ID, "useForRequests");
-   const data = getV12RequestData(reqLevel, useForRequests);
-
-   const defaultUserImg = "icons/svg/mystery-man.svg";
-   const defaultImg = useForRequests == "user" ? defaultUserImg : 
-                     Actor.implementation.getDefaultArtwork({type: "someActorType"}).img;
-
-   const hasImage = (data.img && data.img != defaultImg && await srcExists(defaultImg));
-
-   if (hasImage) {
-      const queue = getV12Queue();
-      if (queue.some(item=>item.id == data.id)) {
-         queue.splice(queue.findIndex(item => item.id === data.id), 1);
-      }
-      const index = queue.findLastIndex((item) => item.level > reqLevel);
-      queue.splice(index + 1, 0, data);
-   
-      const options = {changes: ['addRequest', 'playSound'], reqId: data.id};
-      if (game.user.isGM) {
-         await game.settings.set(C.ID, 'queue', queue, options);
-      } else {
-         game.socket.emit(`module.${C.ID}`, {
-            type: 'queue',
-            settingData: queue,
-            options
-         });
-      }
-      if (reRender && window.SimpleRequestsApp) {
-         window.SimpleRequestsApp._render(true);
-      }
-   } else if (useForRequests == "controlled") {
-      ui.notifications.warn(game.i18n.localize(`${C.ID}.errors.noControlledTokens`));
-   } else {
-      // use default image when no valid image is found
-      const queue = getV12Queue();
-      if (queue.some(item=>item.id == data.id)) {
-         queue.splice(queue.findIndex(item => item.id === data.id), 1);
-      }
-      const index = queue.findLastIndex((item) => item.level > reqLevel);
-      queue.splice(index + 1, 0, data);
-   
-      const options = {changes: ['addRequest', 'playSound'], reqId: data.id};
-      if (game.user.isGM) {
-         await game.settings.set(C.ID, 'queue', queue, options);
-      } else {
-         game.socket.emit(`module.${C.ID}`, {
-            type: 'queue',
-            settingData: queue,
-            options
-         });
-      }
-      if (reRender && window.SimpleRequestsApp) {
-         window.SimpleRequestsApp._render(true);
-      }
-   }
-}
-
-async function deleteV12Request(id, reRender = false, playSound = false) {
-   const queue = getV12Queue();
-   queue.splice(queue.findIndex(item => item.id === id), 1);
-   const options = {changes: ['deleteRequest'], reqId: id};
-   if (playSound) options.changes.push("playSound");
-   
-   if (game.user.isGM) {
-      await game.settings.set(C.ID, 'queue', queue, options);
-   } else {
-      game.socket.emit(`module.${C.ID}`, {
-         type: 'queue',
-         settingData: queue,
-         options
-      });
-   }
    if (reRender && window.SimpleRequestsApp) {
       window.SimpleRequestsApp._render(true);
    }
@@ -874,254 +871,43 @@ function getV12RequestData(reqLevel = 0, useForRequests) {
    const _controlled = canvas.tokens.controlled[0];
    
    switch (useForRequests) {
-      case "token":
-         data.img = _actor?.prototypeToken?.texture?.src;
-         data.name = _actor?.prototypeToken?.name;
-         break;
-      case "actor":
-         data.img = _actor?.img;
-         data.name = _actor?.name;
-         break;
-      case "playerToken":
-         data.img = game.user.character?.prototypeToken?.texture?.src;
-         data.name = game.user.character?.prototypeToken?.name;
-         break;
-      case "playerActor":
-         data.img = game.user.character?.img;
-         data.name = game.user.character?.name;
-         break;
-      case "user":
-         data.img = game.user.avatar;
-         data.name = game.user.name;
-         break;
-      case "custom":
-         data.img = game.settings.get(C.ID, "customImage");
-         data.name = game.settings.get(C.ID, "customName");
-         break;
-      case "controlled":
-         data.img = _controlled?.document?.texture?.src;
-         data.name = _controlled?.document?.name;
-         break;
-      default:
-         data.img = game.user.avatar;
-         data.name = game.user.name;
-         break;
+   case "token":
+      data.img = _actor?.prototypeToken?.texture?.src;
+      data.name = _actor?.prototypeToken?.name;
+      break;
+   case "actor":
+      data.img = _actor?.img;
+      data.name = _actor?.name;
+      break;
+   case "playerToken":
+      data.img = game.user.character?.prototypeToken?.texture?.src;
+      data.name = game.user.character?.prototypeToken?.name;
+      break;
+   case "playerActor":
+      data.img = game.user.character?.img;
+      data.name = game.user.character?.name;
+      break;
+   case "user":
+      data.img = game.user.avatar;
+      data.name = game.user.name;
+      break;
+   case "custom":
+      data.img = game.settings.get(C.ID, "customImage");
+      data.name = game.settings.get(C.ID, "customName");
+      break;
+   case "controlled":
+      data.img = _controlled?.document?.texture?.src;
+      data.name = _controlled?.document?.name;
+      break;
+   default:
+      data.img = game.user.avatar;
+      data.name = game.user.name;
+      break;
    }
    
    data.img = data.img || default_img;
    data.name = data.name || "";
    return data;
-}
-
-// Version 12 App initialization
-function initV12App() {
-   // Initialize the SimpleRequestsApp for v12
-   if (typeof FormApplication !== 'undefined') {
-      window.SimpleRequestsApp = class SimpleRequestsApp extends FormApplication {
-         static instance = null;
-         
-         constructor() {
-            super();
-         }
-         
-         static get defaultOptions() {
-            const defaults = super.defaultOptions;
-            const overrides = {
-               popOut: false,
-               classes: ['simple-requests-app'],
-               width: '100%',
-               height: '100%',
-               resizable: false,
-               editable: false,
-               id: "SimpleRequestsApp",
-               template: `modules/${C.ID}/templates/simple-requests.hbs`,
-               title: `Simple Requests`,
-               userId: game.userId,
-               closeOnSubmit: false,
-               submitOnChange: false,
-            };
-            return foundry.utils.mergeObject(defaults, overrides);
-         }
-
-         getData(options) {
-            const data = {
-               queue: game.settings.get(C.ID, "queue"),
-               show: (game.settings.get(C.ID, "requestsPosition") == "freeScreen"),
-               firstRequest: game.settings.get(C.ID, "firstRequest"),
-               secondRequest: game.settings.get(C.ID, "secondRequest"),
-               thirdRequest: game.settings.get(C.ID, "thirdRequest"),
-               widthDependOnQueue: game.settings.get(C.ID, "widthDependOnQueue"),
-            };
-
-            let freeScreenData = game.settings.get(C.ID, "freeScreenData");
-            const freeScreenDataTemplate = {
-               _x: 30, 
-               _y: 10, 
-               _w: 250, 
-               _h: game.settings.get(C.ID, "chatQueueHeight"), 
-               _z: game.settings.get(C.ID, "freeScreenZIndex")
-            };
-            freeScreenData = foundry.utils.mergeObject(freeScreenData, freeScreenDataTemplate, {overwrite: false});
-            freeScreenData._w = data.widthDependOnQueue ? "fit-content" : `${freeScreenData._w}px`;
-            
-            return { ...data, ...freeScreenData };
-         }
-
-         static activate() {
-            this.instance = new SimpleRequestsApp();
-            this.instance.render(true);
-         }
-
-         static _render() {
-            if (this.instance) {
-               this.instance.render(true);
-            }
-         }
-
-         activateListeners(html) {
-            super.activateListeners(html);
-
-            // Move functionality
-            const grabEl = html[0].querySelector(".ar-freeScreen-mover");
-            const requestsWindow = html[0];
-            let isDragging = false;
-            let startX, startY, initialX, initialY;
-            
-            if (grabEl) {
-               grabEl.addEventListener('mousedown', (e) => {
-                  isDragging = true;
-                  startX = e.clientX;
-                  startY = e.clientY;
-                  initialX = parseFloat(requestsWindow.style.right) || 0;
-                  initialY = parseFloat(requestsWindow.style.top) || 0;
-                  grabEl.style.cursor = 'grabbing';
-
-                  document.addEventListener('mousemove', onMouseMove);
-                  document.addEventListener('mouseup', onMouseUp);
-               });
-            }
-
-            function onMouseMove(e) {
-               if (!isDragging) return;
-               const dx = (e.clientX - startX) / window.innerWidth * 100;
-               const dy = (e.clientY - startY) / window.innerHeight * 100;
-               const shiftPressed = e.shiftKey;
-               
-               if (shiftPressed) {
-                  if (Math.abs(dx) > Math.abs(dy)) {
-                     requestsWindow.style.right = `${(initialX - dx)}%`;
-                     requestsWindow.style.top = `${initialY}%`;
-                  } else {
-                     requestsWindow.style.top = `${initialY + dy}%`;
-                     requestsWindow.style.right = `${(initialX)}%`;
-                  }
-               } else {
-                  requestsWindow.style.top = `${initialY + dy}%`;
-                  requestsWindow.style.right = `${(initialX - dx)}%`;
-               }
-            }
-
-            async function onMouseUp() {
-               isDragging = false;
-               if (grabEl) grabEl.style.cursor = 'grab';
-               document.removeEventListener('mousemove', onMouseMove);
-               document.removeEventListener('mouseup', onMouseUp);
-               
-               let _data = game.settings.get(C.ID, "freeScreenData");
-               _data._x = parseFloat(requestsWindow.style.right) || 0;
-               _data._y = parseFloat(requestsWindow.style.top) || 0;
-               await game.settings.set(C.ID, "freeScreenData", _data);
-            }
-
-            // Transfer to chat button
-            const transferToChatBtn = html[0].querySelector(".ar-window-to-chat");
-            if (transferToChatBtn) {
-               transferToChatBtn.addEventListener("click", async () => {
-                  await game.settings.set(C.ID, "requestsPosition", "chat");
-                  SimpleRequestsApp._render();
-                  const chatBody = document.getElementById("simple-requests-chat-body");
-                  if (chatBody) chatBody.style.display = null;
-               });
-            }
-
-            // Request elements
-            const requestEls = html[0].querySelectorAll(".ar-request-container-freeScreen");
-            requestEls.forEach((el) => {
-               addV12RequestListener(el, true);
-            });
-
-            // Add request buttons
-            const addReqButtons = html[0].querySelectorAll(".ar-freeScreen-button");
-            addReqButtons.forEach((el) => {
-               el.addEventListener("click", async () => {
-                  await addV12Request(parseInt(el.dataset.level), true);
-               });
-            });
-
-            // Resize functionality
-            const resizeEl = html[0].querySelector(".ar-resizable-handle");
-            const queueEl = requestsWindow.querySelector(".ar-freeScreen-queue");
-            
-            if (resizeEl && queueEl) {
-               let isResizing = false;
-               let startW, startH, initialW, initialH;
-               let widthDependOnQueue;
-               
-               resizeEl.addEventListener('mousedown', (e) => {
-                  isResizing = true;
-                  startW = e.clientX;
-                  startH = e.clientY;
-                  widthDependOnQueue = game.settings.get(C.ID, "widthDependOnQueue");
-                  initialW = parseInt(queueEl.style.width) || 0;
-                  initialH = parseInt(requestsWindow.style.height) || 0;
-
-                  document.addEventListener('mousemove', onMouseMoveResize);
-                  document.addEventListener('mouseup', onMouseUpResize);
-               });
-
-               function onMouseMoveResize(e) {
-                  if (!isResizing) return;
-                  const dw = (e.clientX - startW);
-                  const dh = (e.clientY - startH);
-                  const shiftPressed = e.shiftKey;
-                  
-                  if (shiftPressed) {
-                     if (Math.abs(dw) > Math.abs(dh)) {
-                        queueEl.style.width = widthDependOnQueue ? "fit-content" : (`${Math.max(initialW - dw, initialH)}px`);
-                        requestsWindow.style.height = `${Math.max(initialH, 55)}px`;
-                     } else {
-                        requestsWindow.style.height = `${Math.max(initialH + dh, 55)}px`;
-                        queueEl.style.width = widthDependOnQueue ? "fit-content" : (`${initialW}px`);
-                     }
-                  } else {
-                     requestsWindow.style.height = `${Math.max(initialH + dh, 55)}px`;
-                     queueEl.style.width = widthDependOnQueue ? "fit-content" : (`${(Math.max(initialW - dw, initialH + dh))}px`);
-                  }
-               }
-
-               async function onMouseUpResize() {
-                  isResizing = false;
-                  document.removeEventListener('mousemove', onMouseMoveResize);
-                  document.removeEventListener('mouseup', onMouseUpResize);
-                  
-                  let _data = game.settings.get(C.ID, "freeScreenData");
-                  _data._w = parseInt(queueEl.style.width) || 0;
-                  _data._h = parseInt(requestsWindow.style.height) || 0;
-                  await game.settings.set(C.ID, "freeScreenData", _data);
-               }
-            }
-         }
-
-         async _updateObject(event, formData) {
-            // No form submission needed
-         }
-      };
-
-      // Activate the app
-      Hooks.once('ready', () => {
-         SimpleRequestsApp.activate();
-      });
-   }
 }
 
 // Helper function to check if source exists (for v12 compatibility)
@@ -1145,38 +931,38 @@ export function getRequestData(reqLevel = 0, useForRequests) {
    const _controlled = canvas.tokens.controlled[0];
    
    switch (useForRequests) {
-      case "token":
-         data.img = _actor?.prototypeToken?.texture?.src;
-         data.name = _actor?.prototypeToken?.name;
-         break;
-      case "actor":
-         data.img = _actor?.img;
-         data.name = _actor?.name;
-         break;
-      case "playerToken":
-         data.img = game.user.character?.prototypeToken?.texture?.src;
-         data.name = game.user.character?.prototypeToken?.name;
-         break;
-      case "playerActor":
-         data.img = game.user.character?.img;
-         data.name = game.user.character?.name;
-         break;
-      case "user":
-         data.img = game.user.avatar;
-         data.name = game.user.name;
-         break;
-      case "custom":
-         data.img = game.settings.get(C.ID, "customImage");
-         data.name = game.settings.get(C.ID, "customName");
-         break;
-      case "controlled":
-         data.img = _controlled?.document?.texture?.src;
-         data.name = _controlled?.document?.name;
-         break;
-      default:
-         data.img = game.user.avatar;
-         data.name = game.user.name;
-         break;
+   case "token":
+      data.img = _actor?.prototypeToken?.texture?.src;
+      data.name = _actor?.prototypeToken?.name;
+      break;
+   case "actor":
+      data.img = _actor?.img;
+      data.name = _actor?.name;
+      break;
+   case "playerToken":
+      data.img = game.user.character?.prototypeToken?.texture?.src;
+      data.name = game.user.character?.prototypeToken?.name;
+      break;
+   case "playerActor":
+      data.img = game.user.character?.img;
+      data.name = game.user.character?.name;
+      break;
+   case "user":
+      data.img = game.user.avatar;
+      data.name = game.user.name;
+      break;
+   case "custom":
+      data.img = game.settings.get(C.ID, "customImage");
+      data.name = game.settings.get(C.ID, "customName");
+      break;
+   case "controlled":
+      data.img = _controlled?.document?.texture?.src;
+      data.name = _controlled?.document?.name;
+      break;
+   default:
+      data.img = game.user.avatar;
+      data.name = game.user.name;
+      break;
    }
    
    data.img = data.img || default_img;
