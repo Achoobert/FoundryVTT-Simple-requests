@@ -27,7 +27,6 @@ init();
 function initV12() {
    // Initialize version 12 specific hooks and functionality
    initV12Hooks();
-   // initV12App();
 }
 
 // queue logic
@@ -166,7 +165,7 @@ class SimpleRequestsManager {
       await moveAdvRequestsDash();
    }
    async _createRequest(newQueue) {
-      // debugger
+      
       log_socket("syncing queue", newQueue);
       load_queue_requests_LOCAL_QUEUE(newQueue);
       await moveAdvRequestsDash();
@@ -189,7 +188,7 @@ class SimpleRequestsManager {
 
    // When THIS CLIENT creates a request locally
    async createRequest(requestData) {
-      // debugger
+      
       log_socket("creating request locally", requestData);
       add_new_request_LOCAL_QUEUE(requestData);
       // Send to all other clients
@@ -307,84 +306,84 @@ Hooks.once("socketlib.ready", () => {
    });
 });
 
-async function renderAdvRequestsDash() {
-   // Prepare data for template
-   const queue = get_requests_LOCAL_QUEUE();
-   const chatElement = document.getElementById("chat");
-   const sidebarContent = document.getElementById("sidebar-content");
-   const isChatVisible = chatElement && chatElement.offsetParent !== null;
-   const isSidebarExpanded = sidebarContent && sidebarContent.classList.contains("expanded");
+// async function renderAdvRequestsDash() {
+//    // // Prepare data for template
+//    // const queue = get_requests_LOCAL_QUEUE();
+//    // const chatElement = document.getElementById("chat");
+//    // const sidebarContent = document.getElementById("sidebar-content");
+//    // const isChatVisible = chatElement && chatElement.offsetParent !== null;
+//    // const isSidebarExpanded = sidebarContent && sidebarContent.classList.contains("expanded");
    
-   const templateData = {
-      queue: queue,
-      showButtons: isChatVisible && isSidebarExpanded,
-      isGM: game.user.isGM,
-      getLevelName: (level) => ["Common", "Important", "Urgent", "test"][level] || "Unknown"
-   };
+//    // const templateData = {
+//    //    queue: queue,
+//    //    showButtons: isChatVisible && isSidebarExpanded,
+//    //    isGM: game.user.isGM,
+//    //    getLevelName: (level) => ["Common", "Important", "Urgent", "test"][level] || "Unknown"
+//    // };
    
-   // Render template
-   let template;
-   try {
-      template = await renderTemplate(`modules/${C.ID}/templates/simple-requests-dashboard.hbs`, templateData);
-   } catch (error) {
-      console.warn("Simple Requests: Template not found, falling back to manual DOM creation", error);
-      // Fallback to manual DOM creation
-      // return renderAdvRequestsDashFallback();
-      return renderSimpleRequestsQueue();
-   }
-   const tempDiv = document.createElement('div');
-   tempDiv.innerHTML = template;
-   const dash = tempDiv.firstElementChild;
+//    // Render template
+//    let template;
+//    try {
+//       template = await renderTemplate(`modules/${C.ID}/templates/simple-requests-dashboard.hbs`, templateData);
+//    } catch (error) {
+//       console.warn("Simple Requests: Template not found, falling back to manual DOM creation", error);
+//       // Fallback to manual DOM creation
+//       // return renderAdvRequestsDashFallback();
+//       return renderSimpleRequestsQueue();
+//    }
+//    const tempDiv = document.createElement('div');
+//    tempDiv.innerHTML = template;
+//    const dash = tempDiv.firstElementChild;
    
-   // Add event listeners
-   dash.querySelectorAll('.adv-request-chip').forEach(chip => {
-      const userId = chip.dataset.userId;
-      const req = queue.find(r => r.userId === userId); // ? unused
+//    // Add event listeners
+//    dash.querySelectorAll('.adv-request-chip').forEach(chip => {
+//       const userId = chip.dataset.userId;
+//       const req = queue.find(r => r.userId === userId); // ? unused
       
-      if (game.user.isGM) {
-         chip.onclick = async (event) => {
-            event.preventDefault();
-            // GM can pop the oldest, most urgent request
-            await window.simpleRequests.gm_callout_top_request();
-            await moveAdvRequestsDash();
-         };
-         chip.oncontextmenu = async (event) => {
-            event.preventDefault();
-            await window.simpleRequests.removeRequest(userId);
-         };
-      } else if (userId === game.user.id) {
-         chip.onclick = async (event) => {
-            event.preventDefault();
-            await window.simpleRequests.removeRequest(game.user.id);
-         };
-      }
-   });
+//       if (game.user.isGM) {
+//          chip.onclick = async (event) => {
+//             event.preventDefault();
+//             // GM can pop the oldest, most urgent request
+//             await window.simpleRequests.gm_callout_top_request();
+//             await moveAdvRequestsDash();
+//          };
+//          chip.oncontextmenu = async (event) => {
+//             event.preventDefault();
+//             await window.simpleRequests.removeRequest(userId);
+//          };
+//       } else if (userId === game.user.id) {
+//          chip.onclick = async (event) => {
+//             event.preventDefault();
+//             await window.simpleRequests.removeRequest(game.user.id);
+//          };
+//       }
+//    });
    
-   // Add button event listeners
-   dash.querySelectorAll('.pop-oldest-btn').forEach(btn => {
-      btn.onclick = async (event) => {
-         event.preventDefault();
-         await window.simpleRequests.gm_callout_top_request();
-         await moveAdvRequestsDash();
-      };
-   });
+//    // Add button event listeners
+//    dash.querySelectorAll('.pop-oldest-btn').forEach(btn => {
+//       btn.onclick = async (event) => {
+//          event.preventDefault();
+//          await window.simpleRequests.gm_callout_top_request();
+//          await moveAdvRequestsDash();
+//       };
+//    });
    
-   dash.querySelectorAll('.request-btn').forEach(btn => {
-      btn.onclick = async (event) => {
-         event.preventDefault();
-         const level = parseInt(btn.dataset.level);
-         const requestData = {
-            userId: game.user.id,
-            name: game.user.name,
-            img: game.user.avatar,
-            level
-         };
-         await window.simpleRequests.createRequest(requestData);
-      };
-   });
+//    // dash.querySelectorAll('.request-btn').forEach(btn => {
+//    //    btn.onclick = async (event) => {
+//    //       event.preventDefault();
+//    //       const level = parseInt(btn.dataset.level);
+//    //       const requestData = {
+//    //          userId: game.user.id,
+//    //          name: game.user.name,
+//    //          img: game.user.avatar,
+//    //          level
+//    //       };
+//    //       await window.simpleRequests.createRequest(requestData);
+//    //    };
+//    // });
    
-   return dash;
-}
+//    return dash;
+// }
 async function renderSimpleRequestsQueue() {
    // Get the chat controls container
    const chatControls = document.querySelector("#chat-controls");
@@ -474,7 +473,8 @@ async function renderSimpleRequestsQueue() {
       button.className = `ar-chat-button ar-level-${i}`;
       button.innerHTML = `<i class="fa-${i == 0 ? "regular" : "solid"} fa-hand${i == 2 ? "-sparkles" : ""} ar-request-icon"></i>`;
       button.dataset.tooltip = game.i18n.localize(`${C.ID}.buttons.${reqLevel}RequestTooltip`);
-      button.addEventListener("click", async (event) => {
+      
+      button.onclick = async (event) => {
          event.preventDefault();
          const requestData = {
             userId: game.user.id,
@@ -483,92 +483,16 @@ async function renderSimpleRequestsQueue() {
             level: i
          };
          await window.simpleRequests.createRequest(requestData);
-      });
+      };
       buttonDiv.append(button);
    });
    new_request_element.append(buttonDiv);
 
    return new_request_element;
 }
-// Fallback function for manual DOM creation if template fails
-// function renderAdvRequestsDashFallback() {
-//    const dash = document.createElement("section");
-//    dash.className = "adv-requests-dash flexcol";
 
-//    // Queue display
-//    const queueRow = document.createElement("div");
-//    queueRow.className = "adv-requests-queue flexrow";
-//    for (const req of get_requests_LOCAL_QUEUE()) {
-//       const chip = document.createElement("div");
-//       chip.className = `adv-request-chip ar-text-level-${req.level}`;
-//       chip.title = `${req.name} (${["Common", "Important", "Urgent", "test"][req.level]})`;
-//       chip.innerHTML = `<img class="ar-queue-warning ar-level-${req.level}" src="${req.img || "icons/svg/mystery-man.svg"}" style="width:24px;height:24px;border-radius:50%;"> ${req.name}`;
-//       // Remove on click (if own or GM)
-//       if (game.user.isGM) {
-//          chip.onclick = async (event) => {
-//             event.preventDefault();
-//             // GM can pop the oldest, most urgent request
-//             await window.simpleRequests.gm_callout_top_request();
-//             await moveAdvRequestsDash();
-//          };
-//          chip.oncontextmenu = async (event) => {
-//             event.preventDefault();
-//             await window.simpleRequests.removeRequest(req.userId);
-//          };
-//       } else if (req.userId === game.user.id) {
-//          chip.onclick = async (event) => {
-//             event.preventDefault();
-//             await window.simpleRequests.removeRequest(game.user.id);
-//          };
-//       }
-//       queueRow.appendChild(chip);
-//    }
-//    dash.appendChild(queueRow);
-
-//    // Add request buttons only if chat is visible and #sidebar-content is expanded
-//    const chatElement = document.getElementById("chat");
-//    // const sidebarContent = document.getElementById("sidebar-content"); // doesn't exist in v12
-//    const isChatVisible = chatElement && chatElement.offsetParent !== null;
-//    // const isSidebarExpanded = sidebarContent && sidebarContent.classList.contains("expanded");
-//    if (isChatVisible ) { // && isSidebarExpanded) {
-//       // Add request buttons
-//       const btnRow = document.createElement("div");
-//       btnRow.className = "adv-requests-buttons flexrow";
-//       // GM-only button to pop oldest & most urgent
-//       if (game.user.isGM) {
-//          const popBtn = document.createElement("button");
-//          popBtn.type = "button";
-//          popBtn.textContent = "Pop Oldest/Urgent";
-//          popBtn.onclick = async (event) => {
-//             event.preventDefault();
-//             await window.simpleRequests.gm_callout_top_request();
-//             await moveAdvRequestsDash();
-//          };
-//          btnRow.appendChild(popBtn);
-//       }
-//       ["Common", "Important", "Urgent"].forEach((label, level) => {
-//          const btn = document.createElement("button");
-//          btn.type = "button";
-//          btn.textContent = label;
-//          btn.onclick = async (event) => {
-//             event.preventDefault();
-//             const requestData = {
-//                userId: game.user.id,
-//                name: game.user.name,
-//                img: game.user.avatar,
-//                level
-//             };
-//             await window.simpleRequests.createRequest(requestData);
-//          };
-//          btnRow.appendChild(btn);
-//       });
-//       dash.appendChild(btnRow);
-//    }
-
-//    return dash;
-// }
-
-async function moveAdvRequestsDash() {
+let moveAdvRequestsDashTimeout;
+async function moveAdvRequestsDashImpl() {
    log_socket("moveAdvRequestsDash called by", game.user.name);
    log_socket("current queue", CONFIG.ADV_REQUESTS.queue);
    let chatInput = document.querySelector("#chat-message.chat-input");
@@ -593,7 +517,15 @@ async function moveAdvRequestsDash() {
    }
 
    // Insert BEFORE the chat input
+   // Insert BEFORE the chat input
    chatInput.parentNode.insertBefore(dash, chatInput);
+}
+
+function moveAdvRequestsDash(...args) {
+   if (moveAdvRequestsDashTimeout) clearTimeout(moveAdvRequestsDashTimeout);
+   moveAdvRequestsDashTimeout = setTimeout(() => {
+      moveAdvRequestsDashImpl.apply(this, args);
+   }, 500);
 }
 
 // Wrapper functions for async moveAdvRequestsDash in hooks
@@ -624,13 +556,13 @@ function _showEpicPrompt(data) {
    overlay.innerHTML = `
       <div class="epic-prompt-container" style="background: rgba(30,30,30,0.9); border-radius: 2em; padding: 2em; box-shadow: 0 0 40px #000; text-align: center; min-width: 320px; position: relative;">
          <img src="${img}" alt="${name}" style="width: 160px; height: 160px; border-radius: 50%; object-fit: cover; margin-bottom: 1em; border: 4px solid #fff; box-shadow: 0 0 20px #000;">
-         <img src="${overlayImgSrc}" alt="Request Level" style="position: absolute; top: 30px; left: 50%; transform: translateX(-50%); width: 80px; height: 80px; pointer-events: none; opacity: 0.85;">
+         <img class="simple-requests-img ar-level-${data.level}" src="${overlayImgSrc}" alt="Request Level" style="position: absolute; top: 30px; left: 40%; transform: translateX(-50%); width: 80px; height: 80px; pointer-events: none; opacity: 0.85;">
          <h1 style="color: #fff; font-size: 2.5em; margin: 0;">${name} has the floor</h1>
       </div>
    `;
    // Remove on click or after 5 seconds
    overlay.addEventListener('click', () => overlay.remove());
-   setTimeout(() => overlay.remove(), 5000);
+   setTimeout(() => overlay.remove(), 50000);
    document.body.appendChild(overlay);
 }
 
@@ -653,12 +585,6 @@ function playSound(volume = 0.8, src = "modules/simple-requests/assets/request0.
 
 // Version 12 hooks initialization
 function initV12Hooks() {
-   // Render requests in chat sidebar (v12 style)
-   // Hooks.on("renderSidebarTab", (app, html, data) => {
-   //    if (app.tabName !== "chat") return;
-   //    moveAdvRequestsDash();
-   // });
-
    // Settings update hook for v12
    Hooks.on("updateSetting", async (setting, value, options, userId) => {
       if (setting.key !== `${C.ID}.queue`) return;
@@ -721,23 +647,6 @@ function initV12Hooks() {
          window.SimpleRequestsApp._render();
       }
    });
-
-   // // Socket setup for v12
-   // Hooks.on('setup', () => {
-   //    game.socket.on(`module.${C.ID}`, async ({ type, settingData, options }) => {
-   //       if (game.user.isGM) {
-   //          switch (type) {
-   //          case 'queue':
-   //             if (window.simpleRequests && typeof window.simpleRequests.updateRequestQueue === "function") {
-   //                window.simpleRequests.updateRequestQueue(settingData);
-   //             }
-   //             break;
-   //          default:
-   //             break;
-   //          }
-   //       }
-   //    });
-   // });
 }
 
 // Version 12 helper functions

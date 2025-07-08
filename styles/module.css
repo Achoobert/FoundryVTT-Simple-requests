@@ -535,3 +535,6 @@
   align-items: center;
   justify-content: center;
 }
+.simple-requests-img {
+  border: none !important;
+}
