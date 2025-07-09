@@ -2,7 +2,14 @@
   min-width: 100%;
   display: flex;
   padding: 2px 0;
-  order: -1;
+  /* Override the column-reverse flex direction */
+    /* order: 999; */
+    min-height: 15px;
+    width: 100%;
+    box-sizing: border-box;
+    /* Force it to be at the bottom of the flex container */
+    align-self: flex-end;
+    margin-top: auto;
 }
 
 .ar-chat-buttons {
@@ -256,22 +263,25 @@
   }
 }
 
-ar-level-0 {
+.ar-level-0 {
   animation: rotateClockwise 2s infinite alternate;
   animation: rotateCounterClockwise 2s infinite alternate;
   animation: slowPulse 2.5s ease-in-out infinite;
+  border: none !important;
 }
 
-ar-level-1 {
+.ar-level-1 {
   animation: rotateClockwise 1s infinite alternate, rotateCounterClockwise 1s infinite alternate, shake 0.8s infinite;
   animation: fastPulse 1.5s ease-in-out infinite;
+  border: none !important;
 }
 
-ar-level-2 {
+.ar-level-2 {
   animation: rotateClockwise 1s infinite alternate;
   animation: rotateCounterClockwise 1s infinite alternate;
   animation: strong-shake 0.3s infinite;
   animation: fastPulse 1.5s ease-in-out infinite;
+  border: none !important;
 }
 
 .simple-requests-freeScreen-body {
@@ -519,13 +529,6 @@ ar-level-2 {
   line-height: 100% !important;
 }
 
-.adv-requests-dash {
-  display: flex;
-  flex-direction: column;
-  min-height: 15px;
-  width: 100%;
-  box-sizing: border-box;
-}
 
 .epic-prompt-container>img {
   display: block;

@@ -388,17 +388,14 @@ Hooks.once("socketlib.ready", () => {
 // }
 async function renderSimpleRequestsQueue() {
    // Get the chat controls container
+   // ? why? 
    const chatControls = getChatControlsContainer();
    if (!chatControls) return;
 
-   // Remove any existing instance of the requests UI
-   const oldDiv = document.getElementById("simple-requests-chat-body");
-   if (oldDiv && oldDiv.parentNode) oldDiv.parentNode.removeChild(oldDiv);
-
-   // Create the main container div
-   const new_request_element = document.createElement("div");
-   new_request_element.classList.add("simple-requests-chat-body");
+   // Create the main container section
+   const new_request_element = document.createElement("section");
    new_request_element.id = "simple-requests-chat-body";
+   new_request_element.classList.add("simple-requests-chat-body");
 
    // Queue display
    const queueBox = document.createElement("div");
@@ -499,12 +496,11 @@ async function moveAdvRequestsDashImpl() {
    log_socket("current queue", CONFIG.ADV_REQUESTS.queue);
    let chatInput = getChatInput();
 
-   // TODO don't render if chat is closed
+   // TODO don't render if chat is closed on v12
    removeAllDash();
    // const dash = await renderAdvRequestsDash();
    const dash = await renderSimpleRequestsQueue();
-   if (!dash) return; // Prevent errors if dash is undefined
-   dash.id = "adv-requests-dash";
+   if (!dash) return; // Prevent errors if simple-requests-chat-body is undefined
    CONFIG.ADV_REQUESTS.element = dash;
 
    if (!chatInput) {
@@ -519,6 +515,7 @@ async function moveAdvRequestsDashImpl() {
       return;
    }
 
+   // probibally v13: detect sidebar state: 
    // Insert BEFORE the chat input
    chatInput.parentNode.insertBefore(dash, chatInput);
 }
@@ -527,7 +524,7 @@ function moveAdvRequestsDash(...args) {
    if (moveAdvRequestsDashTimeout) clearTimeout(moveAdvRequestsDashTimeout);
    moveAdvRequestsDashTimeout = setTimeout(() => {
       moveAdvRequestsDashImpl.apply(this, args);
-   }, 500);
+   }, 100);
 }
 
 // Wrapper functions for async moveAdvRequestsDash in hooks
@@ -570,8 +567,8 @@ function _showEpicPrompt(data) {
 
 // Remove any existing dash to avoid duplicates
 function removeAllDash() {
-   document.querySelectorAll(".adv-requests-dash").forEach(el => el.remove());
-   document.querySelectorAll("#adv-requests-dash").forEach(el => el.remove());
+   document.querySelectorAll(".simple-requests-chat-body").forEach(el => el.remove());
+   document.querySelectorAll("#simple-requests-chat-body").forEach(el => el.remove());
 }
 
 function playSound(volume = 0.8, src = "modules/simple-requests/assets/request0.ogg") {
@@ -810,9 +807,10 @@ function getChatControlsContainer() {
 }
 
 function getChatInput() {
-   // Try v13+ selector first
-   let el = document.querySelector('.chat-message-form');
-   if (el) return el;
-   // Fallback to v12 selector
-   return document.querySelector('#chat-message.chat-input');
+   // Try v12+ selector first
+   // let el = document.querySelector('.chat-message-form');
+   // if (el) return el;
+   // Fallback to v13 selector
+   const chatInput = document.querySelector("#chat-message.chat-input");
+   return chatInput
 }
