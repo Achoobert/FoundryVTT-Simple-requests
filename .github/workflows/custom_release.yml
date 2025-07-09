@@ -49,28 +49,35 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Get Latest Release Tag
-        id: get_latest_tag
+      - name: Get Version from module.json
+        id: get_version_from_manifest
         run: |
-          latest_tag=$(git tag --sort=-v:refname | grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
-          if [ -z "$latest_tag" ]; then
-            echo "No release found, starting at v1.0.0"
-            echo "tag=v1.0.0" >> $GITHUB_OUTPUT
-          else
-            echo "Latest tag: $latest_tag"
-            version=${latest_tag#v}
-            IFS='.' read -r major minor patch <<< "$version"
-            patch=$((patch + 1))
-            new_tag="v$major.$minor.$patch"
-            echo "tag=$new_tag" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Set Version
-        id: set_version
-        run: |
-          version=${{ steps.get_latest_tag.outputs.tag }}
-          version=${version#v}
+          version=$(jq -r .version module.json)
           echo "version=$version" >> $GITHUB_OUTPUT
+          echo "tag=v$version" >> $GITHUB_OUTPUT
+
+      # - name: Get Latest Release Tag
+      #   id: get_latest_tag
+      #   run: |
+      #     latest_tag=$(git tag --sort=-v:refname | grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
+      #     if [ -z "$latest_tag" ]; then
+      #       echo "No release found, starting at v1.0.0"
+      #       echo "tag=v1.0.0" >> $GITHUB_OUTPUT
+      #     else
+      #       echo "Latest tag: $latest_tag"
+      #       version=${latest_tag#v}
+      #       IFS='.' read -r major minor patch <<< "$version"
+      #       patch=$((patch + 1))
+      #       new_tag="v$major.$minor.$patch"
+      #       echo "tag=$new_tag" >> $GITHUB_OUTPUT
+      #     fi
+
+      # - name: Set Version
+      #   id: set_version
+      #   run: |
+      #     version=${{ steps.get_latest_tag.outputs.tag }}
+      #     version=${version#v}
+      #     echo "version=$version" >> $GITHUB_OUTPUT
 
       - name: Modify Module Manifest With Release-Specific Values
         id: sub_manifest_link_version
@@ -78,10 +85,10 @@ jobs:
         with:
           files: 'module.json'
         env:
-          VERSION: ${{ steps.set_version.outputs.version }}
+          VERSION: ${{ steps.get_version_from_manifest.outputs.version }}
           URL: ${{ github.server_url }}/${{ github.repository }}
           MANIFEST: ${{ github.server_url }}/${{ github.repository }}/releases/latest/download/module.json
-          DOWNLOAD: ${{ github.server_url }}/${{ github.repository }}/releases/download/${{ steps.get_latest_tag.outputs.tag }}/module.zip
+          DOWNLOAD: ${{ github.server_url }}/${{ github.repository }}/releases/download/v${{ steps.get_version_from_manifest.outputs.version }}/module.zip
 
       - name: Prepare Module Directory
         run: |
@@ -106,7 +113,7 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
-          name: ${{ steps.get_latest_tag.outputs.tag }}
-          tag: ${{ steps.get_latest_tag.outputs.tag }}
+          name: v${{ steps.get_version_from_manifest.outputs.version }}
+          tag: v${{ steps.get_version_from_manifest.outputs.version }}
           artifacts: './module.json, ./module.zip'
           token: ${{ secrets.GITHUB_TOKEN }}
