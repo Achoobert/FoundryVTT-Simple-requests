@@ -1,7 +1,7 @@
 {
   "title": "Simple Requests",
   "description": "A module that adds a convenient way to use the Requests rule, allowing the GM to more effectively distribute attention between players.",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "compatibility": {
     "minimum": "12",
     "verified": "13"
@@ -31,14 +31,44 @@
   ],
   "languages": [
     {
+      "lang": "en",
+      "name": "English",
+      "path": "language/en.json"
+    },
+    {
+      "lang": "de",
+      "name": "German",
+      "path": "language/de.json"
+    },
+    {
+      "lang": "es",
+      "name": "Spanish",
+      "path": "language/es.json"
+    },
+    {
+      "lang": "fr",
+      "name": "French",
+      "path": "language/fr.json"
+    },
+    {
+      "lang": "ja",
+      "name": "Japanese",
+      "path": "language/ja.json"
+    },
+    {
+      "lang": "pt",
+      "name": "Portuguese",
+      "path": "language/pt.json"
+    },
+    {
       "lang": "ru",
       "name": "Russian",
       "path": "language/ru.json"
     },
     {
-      "lang": "en",
-      "name": "English",
-      "path": "language/en.json"
+      "lang": "th",
+      "name": "Thai",
+      "path": "language/th.json"
     }
   ],
   "id": "simple-requests",
