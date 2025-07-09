@@ -14,7 +14,7 @@ let init = () => {
 
 // Check if we're in version 12 (older Foundry)
 // if (game.version && game.version.startsWith("12")) {
-if (true) {
+if (false) {
    init = () => {
       // initialize things for version 12
       console.error("Simple Requests: Initializing for Foundry VTT v12");
@@ -28,6 +28,8 @@ function initV12() {
    // Initialize version 12 specific hooks and functionality
    initV12Hooks();
 }
+initV12Hooks();
+
 
 // queue logic
 function pop_request_LOCAL_QUEUE() {
@@ -386,7 +388,7 @@ Hooks.once("socketlib.ready", () => {
 // }
 async function renderSimpleRequestsQueue() {
    // Get the chat controls container
-   const chatControls = document.querySelector("#chat-controls");
+   const chatControls = getChatControlsContainer();
    if (!chatControls) return;
 
    // Remove any existing instance of the requests UI
@@ -495,28 +497,28 @@ let moveAdvRequestsDashTimeout;
 async function moveAdvRequestsDashImpl() {
    log_socket("moveAdvRequestsDash called by", game.user.name);
    log_socket("current queue", CONFIG.ADV_REQUESTS.queue);
-   let chatInput = document.querySelector("#chat-message.chat-input");
+   let chatInput = getChatInput();
 
    // TODO don't render if chat is closed
    removeAllDash();
    // const dash = await renderAdvRequestsDash();
    const dash = await renderSimpleRequestsQueue();
+   if (!dash) return; // Prevent errors if dash is undefined
    dash.id = "adv-requests-dash";
    CONFIG.ADV_REQUESTS.element = dash;
 
    if (!chatInput) {
       // we may be on v12
       // class="simple-requests-chat-body"
-      chatInput = document.querySelector("#chat-controls")
-      if(!chatInput){
+      const chatControls = getChatControlsContainer();
+      if(!chatControls){
          if (CONFIG.ADV_REQUESTS.element?.parentNode) CONFIG.ADV_REQUESTS.element.parentNode.removeChild(CONFIG.ADV_REQUESTS.element);
          return;
       }
-      chatInput.prepend(dash);
+      chatControls.prepend(dash);
       return;
    }
 
-   // Insert BEFORE the chat input
    // Insert BEFORE the chat input
    chatInput.parentNode.insertBefore(dash, chatInput);
 }
@@ -529,7 +531,7 @@ function moveAdvRequestsDash(...args) {
 }
 
 // Wrapper functions for async moveAdvRequestsDash in hooks
-const moveAdvRequestsDashWrapper = () => moveAdvRequestsDash().catch(console.error);
+const moveAdvRequestsDashWrapper = () => Promise.resolve(moveAdvRequestsDash()).catch(console.error);
 
 Hooks.once("renderChatLog", moveAdvRequestsDashWrapper);
 Hooks.on("closeChatLog", moveAdvRequestsDashWrapper);
@@ -733,9 +735,9 @@ function getV12RequestData(reqLevel = 0, useForRequests) {
       data.name = game.user.name;
       break;
    }
-   
+
    data.img = data.img || default_img;
-   data.name = data.name || "";
+
    return data;
 }
 
@@ -797,4 +799,20 @@ export function getRequestData(reqLevel = 0, useForRequests) {
    data.img = data.img || default_img;
    data.name = data.name || "";
    return data;
+}
+
+function getChatControlsContainer() {
+  // Try v13+ selector first
+  let el = document.querySelector('.chat-controls');
+  if (el) return el;
+  // Fallback to v12 selector
+  return document.querySelector('#chat-controls');
+}
+
+function getChatInput() {
+  // Try v13+ selector first
+  let el = document.querySelector('.chat-message-form');
+  if (el) return el;
+  // Fallback to v12 selector
+  return document.querySelector('#chat-message.chat-input');
 }

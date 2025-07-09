@@ -4,7 +4,7 @@ module.exports = defineConfig({
    e2e: {
       baseUrl: 'http://localhost:30000',
       viewportWidth: 1280,
-      viewportHeight: 720,
+      viewportHeight: 768,
       video: false,
       screenshotOnRunFailure: true,
       defaultCommandTimeout: 15000,
