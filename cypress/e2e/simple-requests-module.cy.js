@@ -1,3 +1,6 @@
+import "cypress-if"
+
+
 describe('Simple Requests Module Functionality', () => {
    beforeEach(() => {
       cy.visit('/')
@@ -68,7 +71,6 @@ describe('Simple Requests Module Functionality', () => {
 
       // find and click on 
       cy.get('.fa-regular.fa-hand.ar-request-icon').click();
-      cy.get('.fa-regular.fa-hand.ar-request-icon').click();
 
       // id="ar-chat-queue"
       cy.get("#ar-chat-queue").should("exist");
@@ -82,6 +84,12 @@ describe('Simple Requests Module Functionality', () => {
 
 
       cy.get("#ar-chat-queue", { timeout: 10000 }).should("be.visible");
+
+      cy.get('.fa-regular.fa-hand.ar-request-icon').click();
+      // test whether right click to remove works
+      cy.get('.ar-request-container-chat').should('exist');
+      cy.get('.ar-request-container-chat').rightclick();
+      cy.get('.ar-request-container-chat').should('not.exist');
 
 
       // cy.get('body').then(($body) => {

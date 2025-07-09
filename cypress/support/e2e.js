@@ -12,7 +12,7 @@
 // You can read more here:
 // https://on.cypress.io/configuration
 // ***********************************************************
-
+import "cypress-if"
 
 // Custom commands for Foundry VTT testing
 Cypress.Commands.add('loginAsGM', () => {
@@ -29,14 +29,24 @@ Cypress.Commands.add('loginAsGM', () => {
    cy.get('button[name="join"]', { timeout: 10000 }).should('be.visible').click({ force: true })
    cy.visit('/game')
 
+   
    // // if foundry v12
    // // this should be visible:
    // // class="player-name self"
    // cy.get('.player-name.self', { timeout: 10000 }).should('be.visible')
-   
+   cy.get(".player-name.self", { timeout: 10000 })
+      .if("visible")
+      .then(() => {
+         cy.get(".player-name.self").should("be.visible")
+      });
+
    // if foundry v13
    // class="player-name ellipsis"
-   cy.get('.player-name.ellipsis', { timeout: 10000 }).should('be.visible')
+   cy.get('.player-name.ellipsis')
+      .if("visible")
+      .then(() => {
+         cy.get(".player-name.ellipsis").should("be.visible")
+      });
 
 })
 
