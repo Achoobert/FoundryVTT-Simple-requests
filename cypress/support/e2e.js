@@ -35,7 +35,7 @@ Cypress.Commands.add('loginAsGM', () => {
    // // class="player-name self"
    // cy.get('.player-name.self', { timeout: 10000 }).should('be.visible')
    cy.get(".player-name.self", { timeout: 10000 })
-      .if("visible")
+      .if()
       .then(() => {
          cy.get(".player-name.self").should("be.visible")
       });
@@ -43,7 +43,7 @@ Cypress.Commands.add('loginAsGM', () => {
    // if foundry v13
    // class="player-name ellipsis"
    cy.get('.player-name.ellipsis')
-      .if("visible")
+      .if()
       .then(() => {
          cy.get(".player-name.ellipsis").should("be.visible")
       });

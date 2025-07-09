@@ -6,31 +6,6 @@ if (!window.CONFIG) window.CONFIG = {};
 if (!CONFIG.ADV_REQUESTS) CONFIG.ADV_REQUESTS = {};
 if (!Array.isArray(CONFIG.ADV_REQUESTS.queue)) CONFIG.ADV_REQUESTS.queue = [];
 
-// Version detection and initialization
-let init = () => {
-   // init for version 13
-   console.log("Simple Requests: Initializing for Foundry VTT v13");
-};
-
-// Check if we're in version 12 (older Foundry)
-// if (game.version && game.version.startsWith("12")) {
-if (false) {
-   init = () => {
-      // initialize things for version 12
-      console.error("Simple Requests: Initializing for Foundry VTT v12");
-      initV12();
-   };
-}
-init();
-
-// Version 12 specific functionality
-function initV12() {
-   // Initialize version 12 specific hooks and functionality
-   initV12Hooks();
-}
-initV12Hooks();
-
-
 // queue logic
 function pop_request_LOCAL_QUEUE() {
    let queue = CONFIG.ADV_REQUESTS.queue || [];
@@ -510,63 +485,10 @@ function playSound(src = "modules/simple-requests/assets/request0.ogg") {
    });
 }
 
-// ===== VERSION 12 SPECIFIC CODE =====
-
-// Version 12 hooks initialization
-function initV12Hooks() {
-   // Settings update hook for v12
-   Hooks.on("updateSetting", async (setting, value, options, userId) => {
-      if (setting.key !== `${C.ID}.queue`) return;
-      const queueEls = document.querySelectorAll(".ar-chat-queue");
-      const queue = setting.value;
-      const changes = options.changes || [];
-      
-      if (changes.includes("addRequest")) {
-         const queueItemData = queue.find((item) => item.id == options.reqId);
-         if (!queueItemData) return;
-         queueEls.forEach((queueEl) => {
-            const existingEls = queueEl.querySelectorAll(`[data-id="${options.reqId}"]`);
-            existingEls.forEach(el => el.remove());
-            const requestEl = getRequestElement(queueItemData);
-            const index = queue.findIndex((item) => item.id == queueItemData.id);
-            const prevEl = queueEl.children[index];
-            if (prevEl) {
-               queueEl.insertBefore(requestEl, prevEl);
-            } else {
-               queueEl.append(requestEl);
-            }
-         });
-         
-         if (game.settings.get(C.ID, "soundCreate") && changes.includes("playSound")) {
-            debugger
-            playSound(`modules/${C.ID}/assets/request${queueItemData.level}.wav`);
-         }
-      }
-      
-      if (changes.includes("deleteRequest")) {
-         queueEls.forEach((queueEl) => {
-            const el = queueEl.querySelector(`[data-id="${options.reqId}"]`);
-            if (el) queueEl.removeChild(el);
-         });
-         
-         const soundActivate = game.settings.get(C.ID, "soundActivate") && changes.includes("playSound");
-         if (soundActivate) {
-            debugger
-            const reqClickSound = game.settings.get(C.ID, "reqClickSound");
-            playSound(reqClickSound);
-         }
-      }
-      
-      if (window.SimpleRequestsApp) {
-         window.SimpleRequestsApp._render();
-      }
-   });
-}
-
 function getRequestElement(item) {
    const containerEl = document.createElement('div');
    containerEl.className = `ar-request-container-chat ar-level-${item.level}`;
-   containerEl.dataset.id = item.id;
+   containerEl.dataset.id = item.userId;
    containerEl.dataset.tooltip = item.name;
    addRequestListener(containerEl);
    

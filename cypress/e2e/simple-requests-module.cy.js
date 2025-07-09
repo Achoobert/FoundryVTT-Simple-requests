@@ -11,55 +11,6 @@ describe('Simple Requests Module Functionality', () => {
       cy.loginAsGM()
    })
 
-   it.skip('v12: should detect module presence after login', () => {
-      // Now check for module elements
-      // element w id chat
-      cy.get("#chat").should("be.visible")
-      cy.get("#chat-message").should("be.visible")
-      cy.get("#chat-log").should("be.visible")
-      cy.get("#sidebar").should("be.visible")
-      // cy.get("#sidebar-content").should("be.visible")
-
-      // find and click on 
-      cy.get('.fa-regular.fa-hand.ar-request-icon').click();
-      cy.get('.fa-regular.fa-hand.ar-request-icon').click();
-
-      // id="ar-chat-queue"
-      cy.get("#ar-chat-queue").should("be.visible").click();
-
-      // click on
-      cy.get('.ar-request-container-chat.ar-level-0').click();
-
-      cy.get("#ar-chat-queue").should("be.visible");
-
-
-      // cy.get('body').then(($body) => {
-      //    // Look for module-specific elements (adjust selectors as needed)
-      //    const moduleElements = {
-      //       'module data attribute': $body.find('[data-module="simple-requests"]').length,
-      //       'module class': $body.find('.simple-requests').length,
-      //       'module id': $body.find('#simple-requests').length
-      //    }
-            
-      //    cy.log('Module elements found:', JSON.stringify(moduleElements))
-            
-      //    // Check if module is loaded in Foundry VTT
-      //    cy.window().then((win) => {
-      //       if (win.game && win.game.modules) {
-      //          const module = win.game.modules.get('simple-requests')
-      //          if (module) {
-      //             cy.log('Simple Requests module is loaded in Foundry VTT')
-      //             expect(module).to.exist
-      //          } else {
-      //             cy.log('Simple Requests module not found in Foundry VTT modules')
-      //          }
-      //       } else {
-      //          cy.log('Foundry VTT game object not available')
-      //       }
-      //    })
-      // })
-
-   })
    it.only('v13: should detect module presence after login', () => {
       // Now check for module elements
       // element w id chat
