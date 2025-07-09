@@ -11,7 +11,8 @@ Players can create requests to express their desire to speak without those awkwa
 Three tiers of importance help the GM to judge the urgency of the request
 
 
-When sidebar is collapsed in v13.
+#### When sidebar is collapsed in v13.
+
 ![Collapsed sidebar view in v13](readme_imgs/v13_collapsed_sidebar_view.webp)
 
 ## Usage
@@ -37,6 +38,7 @@ window.simpleRequests.load_queue_requests_LOCAL_QUEUE([]);
 
 ### Image
 Set via `Player Avatar` option in `User Configuration`. 
+
 ![Image selection](readme_imgs/img_select.webp)
 
 ### Audio
