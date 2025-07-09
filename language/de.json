@@ -1,0 +1,43 @@
+{
+   "simple-requests": {
+      "settings": {
+         "soundCreate": "Ton bei Anforderungserstellung",
+         "soundCreateHint": "Einen Ton abspielen, wenn eine Anforderung erstellt wird (Button-Klick)",
+         "soundOnPromptActivate": "Ton bei Anzeige des epischen Fensters",
+         "soundOnPromptActivateHint": "Einen Ton abspielen, wenn das epische Fenster angezeigt wird (SL-Aufruf)",
+         "promptShowSound": "Sounddatei für das epische Fenster",
+         "promptShowSoundHint": "Pfad zur Sounddatei, wenn das epische Fenster angezeigt wird (SL-Aufruf)",
+         "soundActivate": "Ton bei Anforderungsaktivierung",
+         "soundActivateHint": "Einen Ton abspielen, wenn eine Anforderung aktiviert wird (SL klickt auf eine Anforderung)",
+         "reqClickSound": "Sounddatei für Anforderungsaktivierung",
+         "reqClickSoundHint": "Pfad zur Sounddatei für die Aktivierung einer Anforderung",
+         "firstRequest": "Erste Anforderung anzeigen",
+         "firstRequestSound": "Sounddatei für die erste Anforderung",
+         "firstRequestSoundHint": "Sounddatei für die erste (gewöhnliche) Anforderung",
+         "secondRequest": "Zweite Anforderung anzeigen",
+         "secondRequestHint": "Den Button 'Zweite Anforderung' anzeigen (wichtig)",
+         "thirdRequest": "Dritte Anforderung anzeigen",
+         "thirdRequestHint": "Den Button 'Dritte Anforderung' anzeigen (dringend)",
+         "secondRequestSound": "Sounddatei für die zweite Anforderung",
+         "secondRequestSoundHint": "Sounddatei für die zweite (wichtige) Anforderung",
+         "thirdRequestSound": "Sounddatei für die dritte Anforderung",
+         "thirdRequestSoundHint": "Sounddatei für die dritte (dringende) Anforderung"
+      },
+      "errors": {
+         "noReqClickSound": "Datei am angegebenen Pfad nicht gefunden",
+         "actorNotFound": "Schauspieler nicht gefunden - Details in der Konsole",
+         "noControlledTokens": "Wähle ein Token auf der Bühne aus, um eine Anforderung zu erstellen!"
+      },
+      "chatMessage": {
+         "activateRequest1": "Spieler \"",
+         "activateRequest2": "\" hat eine Anforderung gestellt!"
+      },
+      "buttons": {
+         "firstRequestTooltip": "Gewöhnliche Anforderung",
+         "secondRequestTooltip": "Wichtige Anforderung",
+         "thirdRequestTooltip": "Dringende Anforderung!",
+         "queueTransferTooltip": "Position des Anforderungsfensters auf frei ändern",
+         "requestsMenuTooltip": "Anforderungs-Einstellungsmenü öffnen"
+      }
+   }
+}

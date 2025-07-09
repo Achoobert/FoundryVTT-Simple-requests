@@ -1,0 +1,43 @@
+{
+    "simple-requests": {
+        "settings": {
+            "soundCreate": "เสียงเมื่อสร้างคำขอ",
+            "soundCreateHint": "เล่นเสียงเมื่อสร้างคำขอ (คลิกปุ่ม)",
+            "soundOnPromptActivate": "เสียงเมื่อแสดงหน้าต่างแจ้งเตือนพิเศษ",
+            "soundOnPromptActivateHint": "เล่นเสียงเมื่อแสดงหน้าต่างแจ้งเตือนพิเศษ (GM เรียก)",
+            "promptShowSound": "ไฟล์เสียงสำหรับหน้าต่างแจ้งเตือนพิเศษ",
+            "promptShowSoundHint": "เส้นทางไปยังไฟล์เสียงเมื่อแสดงหน้าต่างแจ้งเตือนพิเศษ (GM เรียก)",
+            "soundActivate": "เสียงเมื่อเปิดใช้งานคำขอ",
+            "soundActivateHint": "เล่นเสียงเมื่อเปิดใช้งานคำขอ (GM คลิกที่คำขอของผู้เล่น)",
+            "reqClickSound": "ไฟล์เสียงสำหรับเปิดใช้งานคำขอ",
+            "reqClickSoundHint": "เส้นทางไปยังไฟล์เสียงสำหรับเปิดใช้งานคำขอ",
+            "firstRequest": "แสดงคำขอแรก",
+            "firstRequestSound": "ไฟล์เสียงสำหรับคำขอแรก",
+            "firstRequestSoundHint": "ไฟล์เสียงสำหรับคำขอแรก (ปกติ)",
+            "secondRequest": "แสดงคำขอที่สอง",
+            "secondRequestHint": "แสดงปุ่ม 'คำขอที่สอง' (สำคัญ)",
+            "thirdRequest": "แสดงคำขอที่สาม",
+            "thirdRequestHint": "แสดงปุ่ม 'คำขอที่สาม' (เร่งด่วน)",
+            "secondRequestSound": "ไฟล์เสียงสำหรับคำขอที่สอง",
+            "secondRequestSoundHint": "ไฟล์เสียงสำหรับคำขอที่สอง (สำคัญ)",
+            "thirdRequestSound": "ไฟล์เสียงสำหรับคำขอที่สาม",
+            "thirdRequestSoundHint": "ไฟล์เสียงสำหรับคำขอที่สาม (เร่งด่วน)"
+        },
+        "errors": {
+            "noReqClickSound": "ไม่พบไฟล์ที่เส้นทางที่ระบุ",
+            "actorNotFound": "ไม่พบตัวละคร - ดูรายละเอียดในคอนโซล",
+            "noControlledTokens": "โปรดเลือกโทเคนบนฉากเพื่อสร้างคำขอ!"
+        },
+        "chatMessage": {
+            "activateRequest1": "ผู้เล่น \"",
+            "activateRequest2": "\" ได้ส่งคำขอ!"
+        },
+        "buttons": {
+            "firstRequestTooltip": "คำขอปกติ",
+            "secondRequestTooltip": "คำขอสำคัญ",
+            "thirdRequestTooltip": "คำขอเร่งด่วน!",
+            "queueTransferTooltip": "เปลี่ยนตำแหน่งหน้าต่างคำขอเป็นอิสระ",
+            "requestsMenuTooltip": "เปิดเมนูการตั้งค่าคำขอ"
+        }
+    }
+} 

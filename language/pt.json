@@ -1,0 +1,43 @@
+{
+   "simple-requests": {
+      "settings": {
+         "soundCreate": "Som ao criar uma solicitação",
+         "soundCreateHint": "Reproduzir um som ao criar uma solicitação (clique no botão)",
+         "soundOnPromptActivate": "Som ao mostrar o prompt épico",
+         "soundOnPromptActivateHint": "Reproduzir um som quando o prompt épico for exibido (chamada do Mestre)",
+         "promptShowSound": "Arquivo de som para o prompt épico",
+         "promptShowSoundHint": "Caminho para o arquivo de som quando o prompt épico for exibido (chamada do Mestre)",
+         "soundActivate": "Som ao ativar uma solicitação",
+         "soundActivateHint": "Reproduzir um som ao ativar uma solicitação (clique do Mestre na solicitação de um jogador)",
+         "reqClickSound": "Arquivo de som de ativação da solicitação",
+         "reqClickSoundHint": "Caminho para o arquivo de som ao ativar uma solicitação",
+         "firstRequest": "Mostrar primeira solicitação",
+         "firstRequestSound": "Arquivo de som para a primeira solicitação",
+         "firstRequestSoundHint": "Arquivo de som para a primeira solicitação (comum)",
+         "secondRequest": "Mostrar segunda solicitação",
+         "secondRequestHint": "Mostrar o botão 'Segunda solicitação' (importante)",
+         "thirdRequest": "Mostrar terceira solicitação",
+         "thirdRequestHint": "Mostrar o botão 'Terceira solicitação' (urgente)",
+         "secondRequestSound": "Arquivo de som para a segunda solicitação",
+         "secondRequestSoundHint": "Arquivo de som para a segunda solicitação (importante)",
+         "thirdRequestSound": "Arquivo de som para a terceira solicitação",
+         "thirdRequestSoundHint": "Arquivo de som para a terceira solicitação (urgente)"
+      },
+      "errors": {
+         "noReqClickSound": "Arquivo não encontrado no caminho especificado",
+         "actorNotFound": "Ator não encontrado - detalhes no console",
+         "noControlledTokens": "Selecione um token no palco para criar uma solicitação!"
+      },
+      "chatMessage": {
+         "activateRequest1": "Jogador \"",
+         "activateRequest2": "\" fez uma solicitação!"
+      },
+      "buttons": {
+         "firstRequestTooltip": "Solicitação comum",
+         "secondRequestTooltip": "Solicitação importante",
+         "thirdRequestTooltip": "Solicitação urgente!",
+         "queueTransferTooltip": "Alterar a posição da janela de solicitações para livre",
+         "requestsMenuTooltip": "Abrir o menu de configurações de solicitações"
+      }
+   }
+}

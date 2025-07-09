@@ -1,0 +1,43 @@
+{
+    "simple-requests": {
+        "settings": {
+            "soundCreate": "リクエスト作成時のサウンド",
+            "soundCreateHint": "リクエスト作成時にサウンドを再生します（ボタンクリック）",
+            "soundOnPromptActivate": "エピックプロンプト表示時のサウンド",
+            "soundOnPromptActivateHint": "エピックプロンプトが表示されたときにサウンドを再生します（GMコールアウト）",
+            "promptShowSound": "エピックプロンプト用サウンドファイル",
+            "promptShowSoundHint": "エピックプロンプト表示時のサウンドファイルのパス（GMコールアウト）",
+            "soundActivate": "リクエスト有効化時のサウンド",
+            "soundActivateHint": "リクエストを有効化したときにサウンドを再生します（GMが誰かのリクエストをクリック）",
+            "reqClickSound": "リクエスト有効化サウンドファイル",
+            "reqClickSoundHint": "リクエスト有効化時のサウンドファイルのパス",
+            "firstRequest": "最初のリクエストを表示",
+            "firstRequestSound": "最初のリクエスト用サウンドファイル",
+            "firstRequestSoundHint": "最初の（通常の）リクエスト用サウンドファイル",
+            "secondRequest": "2番目のリクエストを表示",
+            "secondRequestHint": "「2番目のリクエスト」ボタンを表示（重要）",
+            "thirdRequest": "3番目のリクエストを表示",
+            "thirdRequestHint": "「3番目のリクエスト」ボタンを表示（緊急）",
+            "secondRequestSound": "2番目のリクエスト用サウンドファイル",
+            "secondRequestSoundHint": "2番目（重要）のリクエスト用サウンドファイル",
+            "thirdRequestSound": "3番目のリクエスト用サウンドファイル",
+            "thirdRequestSoundHint": "3番目（緊急）のリクエスト用サウンドファイル"
+        },
+        "errors": {
+            "noReqClickSound": "指定されたパスにファイルが見つかりません",
+            "actorNotFound": "アクターが見つかりません - 詳細はコンソールを参照してください",
+            "noControlledTokens": "リクエストを作成するには、シーン上のトークンを選択してください！"
+        },
+        "chatMessage": {
+            "activateRequest1": "プレイヤー\"",
+            "activateRequest2": "\"がリクエストを作成しました！"
+        },
+        "buttons": {
+            "firstRequestTooltip": "通常のリクエスト",
+            "secondRequestTooltip": "重要なリクエスト",
+            "thirdRequestTooltip": "緊急リクエスト！",
+            "queueTransferTooltip": "リクエストウィンドウの位置をフリーに変更",
+            "requestsMenuTooltip": "リクエスト設定メニューを開く"
+        }
+    }
+} 

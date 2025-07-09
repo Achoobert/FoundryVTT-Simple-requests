@@ -487,9 +487,9 @@ function _showEpicPrompt(data) {
    document.body.appendChild(overlay);
 }
 function _promptShowSound() {
-   // if soundOnPromptActivate
-   // use file promptShowSound in settings else default to 'assets/samples/fingerSnapping.ogg'
-   const sound = //
+   if (!game.settings.get("simple-requests", "soundOnPromptActivate")) return;
+   // Get the file path from settings, or use the default
+   const sound = game.settings.get("simple-requests", "promptShowSound") || "modules/simple-requests/assets/samples/fingerSnapping.ogg";
    playSound(sound);
 }
 

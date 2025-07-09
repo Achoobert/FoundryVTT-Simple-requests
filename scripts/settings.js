@@ -23,7 +23,7 @@ Hooks.once('init', function() {
    // Play sound when activating requests
    registerSettings("soundOnPromptActivate", "world", true, Boolean, true)
    // prompt sound (file path)
-   registerSettings("prompShowSound", "world", true, String, "modules/simple-requests/assets/samples/fingerSnapping.ogg", "audio")
+   registerSettings("promptShowSound", "world", true, String, "modules/simple-requests/assets/samples/fingerSnapping.ogg", "audio")
    // ? TODO out of scope?
    // // What to use for requests
    // const ufrChooseList = {

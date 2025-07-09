@@ -1,0 +1,43 @@
+{
+    "simple-requests": {
+        "settings": {
+            "soundCreate": "Sonido al crear una solicitud",
+            "soundCreateHint": "Reproducir un sonido al crear una solicitud (clic en el botón)",
+            "soundOnPromptActivate": "Sonido al mostrar la ventana épica",
+            "soundOnPromptActivateHint": "Reproducir un sonido cuando se muestra la ventana épica (llamada del DJ)",
+            "promptShowSound": "Archivo de sonido para la ventana épica",
+            "promptShowSoundHint": "Ruta al archivo de sonido cuando se muestra la ventana épica (llamada del DJ)",
+            "soundActivate": "Sonido al activar una solicitud",
+            "soundActivateHint": "Reproducir un sonido al activar una solicitud (clic del DJ en la solicitud de un jugador)",
+            "reqClickSound": "Archivo de sonido de activación de solicitud",
+            "reqClickSoundHint": "Ruta al archivo de sonido para la activación de una solicitud",
+            "firstRequest": "Mostrar primera solicitud",
+            "firstRequestSound": "Archivo de sonido para la primera solicitud",
+            "firstRequestSoundHint": "Archivo de sonido para la primera solicitud (común)",
+            "secondRequest": "Mostrar segunda solicitud",
+            "secondRequestHint": "Mostrar el botón 'Segunda solicitud' (importante)",
+            "thirdRequest": "Mostrar tercera solicitud",
+            "thirdRequestHint": "Mostrar el botón 'Tercera solicitud' (urgente)",
+            "secondRequestSound": "Archivo de sonido para la segunda solicitud",
+            "secondRequestSoundHint": "Archivo de sonido para la segunda solicitud (importante)",
+            "thirdRequestSound": "Archivo de sonido para la tercera solicitud",
+            "thirdRequestSoundHint": "Archivo de sonido para la tercera solicitud (urgente)"
+        },
+        "errors": {
+            "noReqClickSound": "Archivo no encontrado en la ruta especificada",
+            "actorNotFound": "Actor no encontrado - detalles en la consola",
+            "noControlledTokens": "¡Selecciona un token en el escenario para crear una solicitud!"
+        },
+        "chatMessage": {
+            "activateRequest1": "Jugador \"",
+            "activateRequest2": "\" ha hecho una solicitud!"
+        },
+        "buttons": {
+            "firstRequestTooltip": "Solicitud común",
+            "secondRequestTooltip": "Solicitud importante",
+            "thirdRequestTooltip": "¡Solicitud urgente!",
+            "queueTransferTooltip": "Cambiar la posición de la ventana de solicitudes a libre",
+            "requestsMenuTooltip": "Abrir el menú de configuración de solicitudes"
+        }
+    }
+} 

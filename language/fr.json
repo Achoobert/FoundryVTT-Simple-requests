@@ -1,0 +1,43 @@
+{
+    "simple-requests": {
+        "settings": {
+            "soundCreate": "Son lors de la création d'une demande",
+            "soundCreateHint": "Jouer un son lors de la création d'une demande (clic sur le bouton)",
+            "soundOnPromptActivate": "Son lors de l'activation de la fenêtre épique",
+            "soundOnPromptActivateHint": "Jouer un son lorsque la fenêtre épique s'affiche (appel du MJ)",
+            "promptShowSound": "Fichier audio pour la fenêtre épique",
+            "promptShowSoundHint": "Chemin du fichier audio à jouer lors de l'affichage de la fenêtre épique (appel du MJ)",
+            "soundActivate": "Son lors de l'activation d'une demande",
+            "soundActivateHint": "Jouer un son lors de l'activation d'une demande (clic du MJ sur la demande d'un joueur)",
+            "reqClickSound": "Fichier audio d'activation de la demande",
+            "reqClickSoundHint": "Chemin du fichier audio à jouer lors de l'activation d'une demande",
+            "firstRequest": "Afficher la première demande",
+            "firstRequestSound": "Fichier audio pour la première demande",
+            "firstRequestSoundHint": "Fichier audio à jouer pour la première demande (courante)",
+            "secondRequest": "Afficher la deuxième demande",
+            "secondRequestHint": "Afficher le bouton 'Deuxième demande' (importante)",
+            "thirdRequest": "Afficher la troisième demande",
+            "thirdRequestHint": "Afficher le bouton 'Troisième demande' (urgente !)",
+            "secondRequestSound": "Fichier audio pour la deuxième demande",
+            "secondRequestSoundHint": "Fichier audio à jouer pour la deuxième demande (importante)",
+            "thirdRequestSound": "Fichier audio pour la troisième demande",
+            "thirdRequestSoundHint": "Fichier audio à jouer pour la troisième demande (urgente)"
+        },
+        "errors": {
+            "noReqClickSound": "Fichier introuvable au chemin spécifié",
+            "actorNotFound": "Acteur introuvable - détails dans la console",
+            "noControlledTokens": "Sélectionnez un jeton sur la scène pour créer une demande !"
+        },
+        "chatMessage": {
+            "activateRequest1": "Joueur \"",
+            "activateRequest2": "\" a fait une demande !"
+        },
+        "buttons": {
+            "firstRequestTooltip": "Demande courante",
+            "secondRequestTooltip": "Demande importante",
+            "thirdRequestTooltip": "Demande urgente !",
+            "queueTransferTooltip": "Changer la position de la fenêtre des demandes en mode libre",
+            "requestsMenuTooltip": "Ouvrir le menu des paramètres des demandes"
+        }
+    }
+}
