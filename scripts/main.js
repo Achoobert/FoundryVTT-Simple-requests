@@ -212,7 +212,6 @@ class SimpleRequestsManager {
       // Play sound for new request if not from self
       if (requestData.userId !== game.user.id) {
          const soundCreate = game.settings.get("simple-requests", "soundCreate");
-         const soundVolume = (game.settings.get("simple-requests", "soundCreateVolume") || 100) / 100;
          if (soundCreate) {
             let soundSettingKey;
             switch (requestData.level) {
@@ -229,7 +228,7 @@ class SimpleRequestsManager {
                soundSettingKey = "firstRequestSound";
             }
             const soundSrc = game.settings.get("simple-requests", soundSettingKey) || "modules/simple-requests/assets/request0.ogg";
-            playSound(soundVolume, soundSrc);
+            playSound(soundSrc);
          }
       }
    }
@@ -279,7 +278,7 @@ class SimpleRequestsManager {
       if (!req) return;
       // Play sound
       const sound = game.settings.get(this.moduleName, "reqClickSound") || "modules/simple-requests/assets/samples/fingerSnapping.ogg";
-      foundry.audio.AudioHelper.play({ src: sound, volume: 0.8, autoplay: true, loop: false });
+      playSound(sound);
       // Chat message
       ChatMessage.create({
          user: game.user.id,
@@ -308,84 +307,6 @@ Hooks.once("socketlib.ready", () => {
    });
 });
 
-// async function renderAdvRequestsDash() {
-//    // // Prepare data for template
-//    // const queue = get_requests_LOCAL_QUEUE();
-//    // const chatElement = document.getElementById("chat");
-//    // const sidebarContent = document.getElementById("sidebar-content");
-//    // const isChatVisible = chatElement && chatElement.offsetParent !== null;
-//    // const isSidebarExpanded = sidebarContent && sidebarContent.classList.contains("expanded");
-   
-//    // const templateData = {
-//    //    queue: queue,
-//    //    showButtons: isChatVisible && isSidebarExpanded,
-//    //    isGM: game.user.isGM,
-//    //    getLevelName: (level) => ["Common", "Important", "Urgent", "test"][level] || "Unknown"
-//    // };
-   
-//    // Render template
-//    let template;
-//    try {
-//       template = await renderTemplate(`modules/${C.ID}/templates/simple-requests-dashboard.hbs`, templateData);
-//    } catch (error) {
-//       console.warn("Simple Requests: Template not found, falling back to manual DOM creation", error);
-//       // Fallback to manual DOM creation
-//       // return renderAdvRequestsDashFallback();
-//       return renderSimpleRequestsQueue();
-//    }
-//    const tempDiv = document.createElement('div');
-//    tempDiv.innerHTML = template;
-//    const dash = tempDiv.firstElementChild;
-   
-//    // Add event listeners
-//    dash.querySelectorAll('.adv-request-chip').forEach(chip => {
-//       const userId = chip.dataset.userId;
-//       const req = queue.find(r => r.userId === userId); // ? unused
-      
-//       if (game.user.isGM) {
-//          chip.onclick = async (event) => {
-//             event.preventDefault();
-//             // GM can pop the oldest, most urgent request
-//             await window.simpleRequests.gm_callout_top_request();
-//             await moveAdvRequestsDash();
-//          };
-//          chip.oncontextmenu = async (event) => {
-//             event.preventDefault();
-//             await window.simpleRequests.removeRequest(userId);
-//          };
-//       } else if (userId === game.user.id) {
-//          chip.onclick = async (event) => {
-//             event.preventDefault();
-//             await window.simpleRequests.removeRequest(game.user.id);
-//          };
-//       }
-//    });
-   
-//    // Add button event listeners
-//    dash.querySelectorAll('.pop-oldest-btn').forEach(btn => {
-//       btn.onclick = async (event) => {
-//          event.preventDefault();
-//          await window.simpleRequests.gm_callout_top_request();
-//          await moveAdvRequestsDash();
-//       };
-//    });
-   
-//    // dash.querySelectorAll('.request-btn').forEach(btn => {
-//    //    btn.onclick = async (event) => {
-//    //       event.preventDefault();
-//    //       const level = parseInt(btn.dataset.level);
-//    //       const requestData = {
-//    //          userId: game.user.id,
-//    //          name: game.user.name,
-//    //          img: game.user.avatar,
-//    //          level
-//    //       };
-//    //       await window.simpleRequests.createRequest(requestData);
-//    //    };
-//    // });
-   
-//    return dash;
-// }
 async function renderSimpleRequestsQueue() {
    // Get the chat controls container
    // ? why? 
@@ -559,10 +480,17 @@ function _showEpicPrompt(data) {
          <h1 class="epic-prompt-name" >${name} has the floor</h1>
       </div>
    `;
+   _promptShowSound()
    // Remove on click or after 5 seconds
    overlay.addEventListener('click', () => overlay.remove());
-   setTimeout(() => overlay.remove(), 500000);
+   setTimeout(() => overlay.remove(), 5000);
    document.body.appendChild(overlay);
+}
+function _promptShowSound() {
+   // if soundOnPromptActivate
+   // use file promptShowSound in settings else default to 'assets/samples/fingerSnapping.ogg'
+   const sound = //
+   playSound(sound);
 }
 
 // Remove any existing dash to avoid duplicates
@@ -571,7 +499,9 @@ function removeAllDash() {
    document.querySelectorAll("#simple-requests-chat-body").forEach(el => el.remove());
 }
 
-function playSound(volume = 0.8, src = "modules/simple-requests/assets/request0.ogg") {
+function playSound(src = "modules/simple-requests/assets/request0.ogg") {
+   // TODO Get volume from client's interface volume settings
+   const volume = game.settings.get("core", "globalInterfaceVolume");
    foundry.audio.AudioHelper.play({
       src,
       volume,
@@ -608,14 +538,8 @@ function initV12Hooks() {
          });
          
          if (game.settings.get(C.ID, "soundCreate") && changes.includes("playSound")) {
-            let volume = game.settings.get(C.ID, "useFoundryInterfaceVolume") ? 
-               game.settings.get("core", "globalInterfaceVolume") : 
-               game.settings.get(C.ID, "soundCreateVolume") * 0.01;
-            if (queueItemData.level == 2) volume *= 1.9;
-            AudioHelper.play({
-               src: `modules/${C.ID}/assets/request${queueItemData.level}.wav`,
-               volume: volume,
-            });
+            debugger
+            playSound(`modules/${C.ID}/assets/request${queueItemData.level}.wav`);
          }
       }
       
@@ -627,18 +551,9 @@ function initV12Hooks() {
          
          const soundActivate = game.settings.get(C.ID, "soundActivate") && changes.includes("playSound");
          if (soundActivate) {
+            debugger
             const reqClickSound = game.settings.get(C.ID, "reqClickSound");
-            if (reqClickSound && await srcExists(reqClickSound)) {
-               const volume = game.settings.get(C.ID, "useFoundryInterfaceVolume") ? 
-                  game.settings.get("core", "globalInterfaceVolume") : 
-                  game.settings.get(C.ID, "soundActivateVolume") * 0.01;
-               AudioHelper.play({
-                  src: reqClickSound,
-                  volume: volume,
-               });
-            } else {
-               ui.notifications.warn(game.i18n.localize(`${C.ID}.errors.noReqClickSound`) + " — " + reqClickSound);
-            }
+            playSound(reqClickSound);
          }
       }
       
@@ -688,114 +603,97 @@ function addRequestListener(element, reRender = false) {
    }
 }
 
-function getV12RequestData(reqLevel = 0, useForRequests) {
-   let data = {
-      level: reqLevel,
-      id: game.user.id
-   };
+// function getV12RequestData(reqLevel = 0, useForRequests) {
+//    let data = {
+//       level: reqLevel,
+//       id: game.user.id
+//    };
    
-   const _actor = game.actors.get(game.settings.get(C.ID, "selectedActorId"));
-   const _controlled = canvas.tokens.controlled[0];
+//    // TODO getfrom the actor assigned toh teh player
+//    const _actor = game.actors.get(game.settings.get(C.ID, "selectedActorId"));
+//    const _controlled = canvas.tokens.controlled[0];
    
-   switch (useForRequests) {
-   case "token":
-      data.img = _actor?.prototypeToken?.texture?.src;
-      data.name = _actor?.prototypeToken?.name;
-      break;
-   case "actor":
-      data.img = _actor?.img;
-      data.name = _actor?.name;
-      break;
-   case "playerToken":
-      data.img = game.user.character?.prototypeToken?.texture?.src;
-      data.name = game.user.character?.prototypeToken?.name;
-      break;
-   case "playerActor":
-      data.img = game.user.character?.img;
-      data.name = game.user.character?.name;
-      break;
-   case "user":
-      data.img = game.user.avatar;
-      data.name = game.user.name;
-      break;
-   case "custom":
-      data.img = game.settings.get(C.ID, "customImage");
-      data.name = game.settings.get(C.ID, "customName");
-      break;
-   case "controlled":
-      data.img = _controlled?.document?.texture?.src;
-      data.name = _controlled?.document?.name;
-      break;
-   default:
-      data.img = game.user.avatar;
-      data.name = game.user.name;
-      break;
-   }
+//    switch (useForRequests) {
+//    case "token":
+//       data.img = _actor?.prototypeToken?.texture?.src;
+//       data.name = _actor?.prototypeToken?.name;
+//       break;
+//    case "actor":
+//       data.img = _actor?.img;
+//       data.name = _actor?.name;
+//       break;
+//    case "playerToken":
+//       data.img = game.user.character?.prototypeToken?.texture?.src;
+//       data.name = game.user.character?.prototypeToken?.name;
+//       break;
+//    case "playerActor":
+//       data.img = game.user.character?.img;
+//       data.name = game.user.character?.name;
+//       break;
+//    case "user":
+//       data.img = game.user.avatar;
+//       data.name = game.user.name;
+//       break;
+//    case "controlled":
+//       data.img = _controlled?.document?.texture?.src;
+//       data.name = _controlled?.document?.name;
+//       break;
+//    default:
+//       data.img = game.user.avatar;
+//       data.name = game.user.name;
+//       break;
+//    }
 
-   data.img = data.img || default_img;
+//    data.img = data.img || default_img;
 
-   return data;
-}
+//    return data;
+// }
 
-// Helper function to check if source exists (for v12 compatibility)
-async function srcExists(src) {
-   return new Promise((resolve) => {
-      const img = new Image();
-      img.onload = () => resolve(true);
-      img.onerror = () => resolve(false);
-      img.src = src;
-   });
-}
-
-// Export getRequestData function for use in other modules
-export function getRequestData(reqLevel = 0, useForRequests) {
-   let data = {
-      level: reqLevel,
-      id: game.user.id
-   };
+// // Export getRequestData function for use in other modules
+// export function getRequestData(reqLevel = 0, useForRequests) {
+//    let data = {
+//       level: reqLevel,
+//       id: game.user.id
+//    };
    
-   const _actor = game.actors.get(game.settings.get(C.ID, "selectedActorId"));
-   const _controlled = canvas.tokens.controlled[0];
+//    const _actor = game.actors.get(game.settings.get(C.ID, "selectedActorId"));
+//    const _controlled = canvas.tokens.controlled[0];
    
-   switch (useForRequests) {
-   case "token":
-      data.img = _actor?.prototypeToken?.texture?.src;
-      data.name = _actor?.prototypeToken?.name;
-      break;
-   case "actor":
-      data.img = _actor?.img;
-      data.name = _actor?.name;
-      break;
-   case "playerToken":
-      data.img = game.user.character?.prototypeToken?.texture?.src;
-      data.name = game.user.character?.prototypeToken?.name;
-      break;
-   case "playerActor":
-      data.img = game.user.character?.img;
-      data.name = game.user.character?.name;
-      break;
-   case "user":
-      data.img = game.user.avatar;
-      data.name = game.user.name;
-      break;
-   case "custom":
-      data.img = game.settings.get(C.ID, "customImage");
-      data.name = game.settings.get(C.ID, "customName");
-      break;
-   case "controlled":
-      data.img = _controlled?.document?.texture?.src;
-      data.name = _controlled?.document?.name;
-      break;
-   default:
-      data.img = game.user.avatar;
-      data.name = game.user.name;
-      break;
-   }
+//    switch (useForRequests) {
+//    case "token":
+//       data.img = _actor?.prototypeToken?.texture?.src;
+//       data.name = _actor?.prototypeToken?.name;
+//       break;
+//    case "actor":
+//       data.img = _actor?.img;
+//       data.name = _actor?.name;
+//       break;
+//    case "playerToken":
+//       data.img = game.user.character?.prototypeToken?.texture?.src;
+//       data.name = game.user.character?.prototypeToken?.name;
+//       break;
+//    case "playerActor":
+//       data.img = game.user.character?.img;
+//       data.name = game.user.character?.name;
+//       break;
+//    case "user":
+//       data.img = game.user.avatar;
+//       data.name = game.user.name;
+//       break;
+//    case "controlled":
+//       data.img = _controlled?.document?.texture?.src;
+//       data.name = _controlled?.document?.name;
+//       break;
+//    default:
+//       data.img = game.user.avatar;
+//       data.name = game.user.name;
+//       break;
+//    }
    
-   data.img = data.img || default_img;
-   data.name = data.name || "";
-   return data;
-}
+//    data.img = data.img || default_img;
+//    data.name = data.name || "";
+//    return data;
+// }
 
 function getChatControlsContainer() {
    // Try v13+ selector first
