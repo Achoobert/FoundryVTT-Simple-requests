@@ -12,6 +12,7 @@
   flex-direction: column-reverse;
   border-radius: 5px 8px 8px 5px;
   overflow: hidden;
+  pointer-events: auto !important;
 }
 
 .ar-chat-button {
@@ -92,6 +93,7 @@
   border-radius: 50%;
   margin: 0 2px;
   position: relative;
+  pointer-events: auto !important;
 }
 
 .ar-request-container-chat>img,
@@ -139,6 +141,9 @@
   }
 }
 
+.ar-queue-warning {
+  pointer-events: auto !important;
+}
 .ar-request-container-chat .ar-queue-warning,
 .ar-request-container-freeScreen .ar-queue-warning {
   position: absolute;
@@ -147,11 +152,13 @@
   width: 65%;
   height: 65%;
   transform: rotate(10deg);
+  pointer-events: auto !important;
 }
 
 .ar-request-container-chat .ar-queue-warning img,
 .ar-request-container-freeScreen .ar-queue-warning img {
   border: none;
+  pointer-events: auto !important;
 }
 
 .ar-chat-queue-transfer {
@@ -249,19 +256,22 @@
   }
 }
 
-.ar-queue-warning.ar-level-0 {
+ar-level-0 {
   animation: rotateClockwise 2s infinite alternate;
   animation: rotateCounterClockwise 2s infinite alternate;
+  animation: slowPulse 2.5s ease-in-out infinite;
 }
 
-.ar-queue-warning.ar-level-1 {
+ar-level-1 {
   animation: rotateClockwise 1s infinite alternate, rotateCounterClockwise 1s infinite alternate, shake 0.8s infinite;
+  animation: fastPulse 1.5s ease-in-out infinite;
 }
 
-.ar-queue-warning.ar-level-2 {
+ar-level-2 {
   animation: rotateClockwise 1s infinite alternate;
   animation: rotateCounterClockwise 1s infinite alternate;
   animation: strong-shake 0.3s infinite;
+  animation: fastPulse 1.5s ease-in-out infinite;
 }
 
 .simple-requests-freeScreen-body {

@@ -27,10 +27,16 @@ Cypress.Commands.add('loginAsGM', () => {
       
    // Click join game button
    cy.get('button[name="join"]', { timeout: 10000 }).should('be.visible').click({ force: true })
+   cy.visit('/game')
 
-   // this should be visible:
-   // class="player-name self"
-   cy.get('.player-name.self', { timeout: 10000 }).should('be.visible')
+   // // if foundry v12
+   // // this should be visible:
+   // // class="player-name self"
+   // cy.get('.player-name.self', { timeout: 10000 }).should('be.visible')
+   
+   // if foundry v13
+   // class="player-name ellipsis"
+   cy.get('.player-name.ellipsis', { timeout: 10000 }).should('be.visible')
 
 })
 
@@ -51,3 +57,11 @@ Cypress.Commands.add('enableModule', (moduleName) => {
    cy.log(`Enabling module: ${moduleName}`)
    // Add module enabling logic here
 }) 
+
+
+Cypress.Commands.add("disableIntercepts", () => {
+   cy.intercept({ method: "GET" }, { log: false });
+   cy.intercept({ resourceType: "fetch" }, { log: false });
+   cy.intercept({ resourceType: "POST" }, { log: false });
+});
+

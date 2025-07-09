@@ -2,7 +2,7 @@ describe('Foundry VTT CI Smoke Test', () => {
    beforeEach(() => {
       cy.visit('/')
       // Wait for page to load
-      cy.wait(3000)
+      cy.get(".join").should("be.visible")
    })
 
    it('should load Foundry VTT and detect page state', () => {

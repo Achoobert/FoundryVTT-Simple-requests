@@ -802,17 +802,17 @@ export function getRequestData(reqLevel = 0, useForRequests) {
 }
 
 function getChatControlsContainer() {
-  // Try v13+ selector first
-  let el = document.querySelector('.chat-controls');
-  if (el) return el;
-  // Fallback to v12 selector
-  return document.querySelector('#chat-controls');
+   // Try v13+ selector first
+   let el = document.querySelector('.chat-controls');
+   if (el) return el;
+   // Fallback to v12 selector
+   return document.querySelector('#chat-controls');
 }
 
 function getChatInput() {
-  // Try v13+ selector first
-  let el = document.querySelector('.chat-message-form');
-  if (el) return el;
-  // Fallback to v12 selector
-  return document.querySelector('#chat-message.chat-input');
+   // Try v13+ selector first
+   let el = document.querySelector('.chat-message-form');
+   if (el) return el;
+   // Fallback to v12 selector
+   return document.querySelector('#chat-message.chat-input');
 }
