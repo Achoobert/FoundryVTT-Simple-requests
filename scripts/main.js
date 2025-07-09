@@ -403,7 +403,7 @@ async function renderSimpleRequestsQueue() {
    queueBox.id = "ar-chat-queue";
    const queue = get_requests_LOCAL_QUEUE();
    queue.forEach((item) => {
-      const containerEl = getV12RequestElement(item);
+      const containerEl = getRequestElement(item);
       queueBox.append(containerEl);
    });
 
@@ -469,7 +469,7 @@ async function renderSimpleRequestsQueue() {
    buttonDiv.classList.add("ar-chat-buttons");
    ["first", "second", "third"].forEach((reqLevel, i) => {
       const button = document.createElement('div');
-      button.className = `ar-chat-button ar-level-${i}`;
+      button.className = `ar-chat-button {i}`;
       button.innerHTML = `<i class="fa-${i == 0 ? "regular" : "solid"} fa-hand${i == 2 ? "-sparkles" : ""} ar-request-icon"></i>`;
       button.dataset.tooltip = game.i18n.localize(`${C.ID}.buttons.${reqLevel}RequestTooltip`);
       
@@ -553,15 +553,15 @@ function _showEpicPrompt(data) {
    // Overlay image for request level
    const overlayImgSrc = `modules/simple-requests/assets/request${level}.webp`;
    overlay.innerHTML = `
-      <div class="epic-prompt-container" style="background: rgba(30,30,30,0.9); border-radius: 2em; padding: 2em; box-shadow: 0 0 40px #000; text-align: center; min-width: 320px; position: relative;">
-         <img src="${img}" alt="${name}" style="width: 160px; height: 160px; border-radius: 50%; object-fit: cover; margin-bottom: 1em; border: 4px solid #fff; box-shadow: 0 0 20px #000;">
-         <img class="simple-requests-img ar-level-${data.level}" src="${overlayImgSrc}" alt="Request Level" style="position: absolute; top: 30px; left: 40%; transform: translateX(-50%); width: 80px; height: 80px; pointer-events: none; opacity: 0.85;">
-         <h1 style="color: #fff; font-size: 2.5em; margin: 0;">${name} has the floor</h1>
+      <div class="epic-prompt-container">
+         <img class="prompt-img ar-img-level-${data.level}" src="${img}" alt="${name}" >
+         <img class="epic-prompt-warning ar-level-${data.level}" src="${overlayImgSrc}" alt="Request Level">
+         <h1 class="epic-prompt-name" >${name} has the floor</h1>
       </div>
    `;
    // Remove on click or after 5 seconds
    overlay.addEventListener('click', () => overlay.remove());
-   setTimeout(() => overlay.remove(), 50000);
+   setTimeout(() => overlay.remove(), 500000);
    document.body.appendChild(overlay);
 }
 
@@ -597,7 +597,7 @@ function initV12Hooks() {
          queueEls.forEach((queueEl) => {
             const existingEls = queueEl.querySelectorAll(`[data-id="${options.reqId}"]`);
             existingEls.forEach(el => el.remove());
-            const requestEl = getV12RequestElement(queueItemData);
+            const requestEl = getRequestElement(queueItemData);
             const index = queue.findIndex((item) => item.id == queueItemData.id);
             const prevEl = queueEl.children[index];
             if (prevEl) {
@@ -648,13 +648,12 @@ function initV12Hooks() {
    });
 }
 
-// Version 12 helper functions
-function getV12RequestElement(item) {
+function getRequestElement(item) {
    const containerEl = document.createElement('div');
    containerEl.className = `ar-request-container-chat ar-level-${item.level}`;
    containerEl.dataset.id = item.id;
    containerEl.dataset.tooltip = item.name;
-   addV12RequestListener(containerEl);
+   addRequestListener(containerEl);
    
    const tokenImgEl = document.createElement('img');
    tokenImgEl.src = item.img;
@@ -668,7 +667,7 @@ function getV12RequestElement(item) {
    return containerEl;
 }
 
-function addV12RequestListener(element, reRender = false) {
+function addRequestListener(element, reRender = false) {
    const elId = element?.dataset?.id;
    if (!game.user.isGM && game.user.id != elId) return;
    
