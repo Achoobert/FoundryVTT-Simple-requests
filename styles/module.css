@@ -10,6 +10,7 @@
     /* Force it to be at the bottom of the flex container */
     align-self: flex-end;
     margin-top: auto;
+    flex-direction: row !important;
 }
 
 .ar-chat-buttons {
