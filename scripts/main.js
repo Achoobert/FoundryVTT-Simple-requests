@@ -105,8 +105,8 @@ Hooks.on("userConnected", (user) => {
       const isFirstGM = game.user.isGM && !activeUsers.some(u => u.isGM && u.id < game.user.id);
       if (isFirstUser || isFirstGM) {
          // Send the current queue to the new user
-         if (window.simpleRequests && typeof window.simpleRequests.syncQueueToOthers === "function") {
-            window.simpleRequests.syncQueueToOthers();
+         if (window.SimplePrompts && typeof window.SimplePrompts.syncQueueToOthers === "function") {
+            window.SimplePrompts.syncQueueToOthers();
          }
       }
    }
@@ -114,7 +114,7 @@ Hooks.on("userConnected", (user) => {
 
 // --- SocketLib integration ---
 
-class SimpleRequestsManager {
+class SimplePromptsManager {
    constructor() {
       this.moduleName = "simple-requests";
       this.socket = socketlib.registerModule(this.moduleName);
@@ -273,8 +273,8 @@ class SimpleRequestsManager {
 
 // Initialize manager after SocketLib is ready
 Hooks.once("socketlib.ready", () => {
-   window.simpleRequests = new SimpleRequestsManager();
-   window.simpleRequests.socket.register("showEpicPrompt", async (data) => {
+   window.SimplePrompts = new SimplePromptsManager();
+   window.SimplePrompts.socket.register("showEpicPrompt", async (data) => {
       remove_request_LOCAL_QUEUE(data.userId);
       // update UI
       await moveAdvRequestsDash();
@@ -282,7 +282,7 @@ Hooks.once("socketlib.ready", () => {
    });
 });
 
-async function renderSimpleRequestsQueue() {
+async function renderSimplePromptsQueue() {
    // Get the chat controls container
    // ? why? 
    const chatControls = getChatControlsContainer();
@@ -352,8 +352,8 @@ async function renderSimpleRequestsQueue() {
       }
    });
    transferButton.addEventListener("click", async () => {
-      if (window.SimpleRequestsApp) {
-         window.SimpleRequestsApp._render(true);
+      if (window.SimplePromptsApp) {
+         window.SimplePromptsApp._render(true);
       }
       document.getElementById("simple-requests-chat-body").style.display = "none";
    });
@@ -377,7 +377,7 @@ async function renderSimpleRequestsQueue() {
             img: game.user.avatar,
             level: i
          };
-         await window.simpleRequests.createRequest(requestData);
+         await window.SimplePrompts.createRequest(requestData);
       };
       buttonDiv.append(button);
    });
@@ -395,7 +395,7 @@ async function moveAdvRequestsDashImpl() {
    // TODO don't render if chat is closed on v12
    removeAllDash();
    // const dash = await renderAdvRequestsDash();
-   const dash = await renderSimpleRequestsQueue();
+   const dash = await renderSimplePromptsQueue();
    if (!dash) return; // Prevent errors if simple-requests-chat-body is undefined
    CONFIG.ADV_REQUESTS.element = dash;
 
@@ -509,19 +509,19 @@ function addRequestListener(element, reRender = false) {
    if (!game.user.isGM && game.user.id != elId) return;
    
    element?.addEventListener('contextmenu', async () => {
-      window.simpleRequests.removeRequest(element?.dataset?.id);
+      window.SimplePrompts.removeRequest(element?.dataset?.id);
    });
    
    element?.addEventListener('click', async () => {
       const isGM = game.user.isGM;
       if (isGM) {
          // TODO modify gm_callout_top_request allow calling out non-top requiest if one passed in
-         window.simpleRequests.gm_callout_top_request();
+         window.SimplePrompts.gm_callout_top_request();
       }
    });
    
-   if (reRender && window.SimpleRequestsApp) {
-      window.SimpleRequestsApp._render(true);
+   if (reRender && window.SimplePromptsApp) {
+      window.SimplePromptsApp._render(true);
    }
 }
 

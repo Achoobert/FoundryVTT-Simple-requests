@@ -77,14 +77,14 @@ function updateChatRequestButtons() {
          buttonsBoxEl.append(button)
       })
    }
-   SimpleRequestsApp._render()
+   SimplePromptsApp._render()
 }
 
 function reRender() {
-   SimpleRequestsApp._render()
+   SimplePromptsApp._render()
 }
 
 function updatePosition(value) {
-   SimpleRequestsApp._render();
+   SimplePromptsApp._render();
    document.getElementById("simple-requests-chat-body").style.display = (value == "chat" ? null : "none")
 }
