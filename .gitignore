@@ -1,3 +1,4 @@
 @eslint
 @eslint-community
 node_modules
+.env

@@ -2,6 +2,29 @@ describe('Foundry VTT CI Smoke Test', () => {
    beforeEach(() => {
       cy.visit('/')
       // Wait for page to load
+      // cy.log(Cypress.env("ADMIN_PASSWORD")):
+      cy.get('body').should('exist')
+
+      cy.url().then((url) => {
+         if (url.includes('/auth')) {
+            cy.log('need to login')
+            cy.get('.password').should('be.visible')
+            cy.get('.password').type(Cypress.env("ADMIN_PASSWORD"))
+
+            cy.get('body').contains('Log In').should('be.visible').click({force:true});
+            cy.wait(300)
+            cy.visit('/setup')
+         } 
+      });
+
+      cy.url().then((url) => {
+         if (url.includes('/setup')) {
+            cy.log('need to open a world')
+            cy.get('body').contains('simple_requests').should('be.visible').rightclick({force:true});
+            cy.get('body').contains('Launch').should('be.visible').click({force:true});
+            cy.visit('/game')
+         } 
+      });
       cy.get(".join").should("be.visible")
    })
 
