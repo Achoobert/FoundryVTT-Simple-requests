@@ -172,6 +172,20 @@ class SimplePromptsManager {
       this.socket.executeForOthers("addRequest", requestData);
       await moveAdvRequestsDash();
    }
+   
+   // get list of all currently active players, and create requests on their behalf
+   async createSocialInitiative() {
+      // TODO offer an option to randomize this
+      const Active_Users = game.users.players.filter((user) => user.active == true);
+      Active_Users.forEach(user => {
+         window.SimplePrompts.createRequest({
+            userId: user.id,
+            name: user.name,
+            img: user.avatar,
+            level: 0
+         })
+      });
+   }
 
    // img: "images/Edmund_Carter.webp"
    // level: 0
@@ -303,12 +317,25 @@ async function renderSimplePromptsQueue() {
       queueBox.append(containerEl);
    });
 
+   // force queue of all players button
+   const queueAllMenuButton = document.createElement("div");
+   queueAllMenuButton.classList.add("queueAll-button");
+   queueAllMenuButton.innerHTML = `<i class="fas fa-list"></i>`;
+   queueAllMenuButton.dataset.tooltip = game.i18n.localize(`${C.ID}.buttons.queueAllMenuTooltip`);
+   queueBox.append(queueAllMenuButton);
+
+   if (game.user.isGM) {
+      queueAllMenuButton.addEventListener("click", () => {
+         window.SimplePrompts.createSocialInitiative();
+      })
+   }
+
    // Requests menu button
-   const requestsMenuButton = document.createElement("div");
-   requestsMenuButton.classList.add("ar-chat-requests-menu");
-   requestsMenuButton.innerHTML = `<i class="fas fa-gear"></i>`;
-   requestsMenuButton.dataset.tooltip = game.i18n.localize(`${C.ID}.buttons.requestsMenuTooltip`);
-   queueBox.append(requestsMenuButton);
+   // const requestsMenuButton = document.createElement("div");
+   // requestsMenuButton.classList.add("ar-chat-requests-menu");
+   // requestsMenuButton.innerHTML = `<i class="fas fa-gear"></i>`;
+   // requestsMenuButton.dataset.tooltip = game.i18n.localize(`${C.ID}.buttons.requestsMenuTooltip`);
+   // queueBox.append(requestsMenuButton);
 
    // Transfer button
    const transferButton = document.createElement("div");
@@ -394,14 +421,11 @@ async function moveAdvRequestsDashImpl() {
 
    // TODO don't render if chat is closed on v12
    removeAllDash();
-   // const dash = await renderAdvRequestsDash();
    const dash = await renderSimplePromptsQueue();
    if (!dash) return; // Prevent errors if simple-requests-chat-body is undefined
    CONFIG.ADV_REQUESTS.element = dash;
 
    if (!chatInput) {
-      // we may be on v12
-      // class="simple-requests-chat-body"
       const chatControls = getChatControlsContainer();
       if(!chatControls){
          if (CONFIG.ADV_REQUESTS.element?.parentNode) CONFIG.ADV_REQUESTS.element.parentNode.removeChild(CONFIG.ADV_REQUESTS.element);
@@ -410,9 +434,6 @@ async function moveAdvRequestsDashImpl() {
       chatControls.prepend(dash);
       return;
    }
-
-   // probibally v13: detect sidebar state: 
-   // Insert BEFORE the chat input
    chatInput.parentNode.insertBefore(dash, chatInput);
 }
 
@@ -431,7 +452,6 @@ Hooks.on("closeChatLog", moveAdvRequestsDashWrapper);
 Hooks.on("activateChatLog", moveAdvRequestsDashWrapper);
 Hooks.on("deactivateChatLog", moveAdvRequestsDashWrapper);
 // Function collapseSidebar
-// collapseSidebar(sidebar: Sidebar, collapsed: boolean): 
 Hooks.on("collapseSidebar", moveAdvRequestsDashWrapper);
 
 // Utility to show a fullscreen epic prompt
@@ -456,7 +476,7 @@ function _showEpicPrompt(data) {
       </div>
    `;
    _promptShowSound()
-   // Remove on click or after 5 seconds
+   // we'll remove onclick, or after 5 seconds
    overlay.addEventListener('click', () => overlay.remove());
    setTimeout(() => overlay.remove(), 5000);
    document.body.appendChild(overlay);
@@ -475,7 +495,6 @@ function removeAllDash() {
 }
 
 function playSound(src = "modules/simple-requests/assets/request0.ogg") {
-   // TODO Get volume from client's interface volume settings
    const volume = game.settings.get("core", "globalInterfaceVolume");
    foundry.audio.AudioHelper.play({
       src,
@@ -513,8 +532,7 @@ function addRequestListener(element, reRender = false) {
    });
    
    element?.addEventListener('click', async () => {
-      const isGM = game.user.isGM;
-      if (isGM) {
+      if (game.user.isGM) {
          // TODO modify gm_callout_top_request allow calling out non-top requiest if one passed in
          window.SimplePrompts.gm_callout_top_request();
       }
@@ -525,98 +543,6 @@ function addRequestListener(element, reRender = false) {
    }
 }
 
-// function getV12RequestData(reqLevel = 0, useForRequests) {
-//    let data = {
-//       level: reqLevel,
-//       id: game.user.id
-//    };
-   
-//    // TODO getfrom the actor assigned toh teh player
-//    const _actor = game.actors.get(game.settings.get(C.ID, "selectedActorId"));
-//    const _controlled = canvas.tokens.controlled[0];
-   
-//    switch (useForRequests) {
-//    case "token":
-//       data.img = _actor?.prototypeToken?.texture?.src;
-//       data.name = _actor?.prototypeToken?.name;
-//       break;
-//    case "actor":
-//       data.img = _actor?.img;
-//       data.name = _actor?.name;
-//       break;
-//    case "playerToken":
-//       data.img = game.user.character?.prototypeToken?.texture?.src;
-//       data.name = game.user.character?.prototypeToken?.name;
-//       break;
-//    case "playerActor":
-//       data.img = game.user.character?.img;
-//       data.name = game.user.character?.name;
-//       break;
-//    case "user":
-//       data.img = game.user.avatar;
-//       data.name = game.user.name;
-//       break;
-//    case "controlled":
-//       data.img = _controlled?.document?.texture?.src;
-//       data.name = _controlled?.document?.name;
-//       break;
-//    default:
-//       data.img = game.user.avatar;
-//       data.name = game.user.name;
-//       break;
-//    }
-
-//    data.img = data.img || default_img;
-
-//    return data;
-// }
-
-// // Export getRequestData function for use in other modules
-// export function getRequestData(reqLevel = 0, useForRequests) {
-//    let data = {
-//       level: reqLevel,
-//       id: game.user.id
-//    };
-   
-//    const _actor = game.actors.get(game.settings.get(C.ID, "selectedActorId"));
-//    const _controlled = canvas.tokens.controlled[0];
-   
-//    switch (useForRequests) {
-//    case "token":
-//       data.img = _actor?.prototypeToken?.texture?.src;
-//       data.name = _actor?.prototypeToken?.name;
-//       break;
-//    case "actor":
-//       data.img = _actor?.img;
-//       data.name = _actor?.name;
-//       break;
-//    case "playerToken":
-//       data.img = game.user.character?.prototypeToken?.texture?.src;
-//       data.name = game.user.character?.prototypeToken?.name;
-//       break;
-//    case "playerActor":
-//       data.img = game.user.character?.img;
-//       data.name = game.user.character?.name;
-//       break;
-//    case "user":
-//       data.img = game.user.avatar;
-//       data.name = game.user.name;
-//       break;
-//    case "controlled":
-//       data.img = _controlled?.document?.texture?.src;
-//       data.name = _controlled?.document?.name;
-//       break;
-//    default:
-//       data.img = game.user.avatar;
-//       data.name = game.user.name;
-//       break;
-//    }
-   
-//    data.img = data.img || default_img;
-//    data.name = data.name || "";
-//    return data;
-// }
-
 function getChatControlsContainer() {
    // Try v13+ selector first
    let el = document.querySelector('.chat-controls');
@@ -626,10 +552,6 @@ function getChatControlsContainer() {
 }
 
 function getChatInput() {
-   // Try v12+ selector first
-   // let el = document.querySelector('.chat-message-form');
-   // if (el) return el;
-   // Fallback to v13 selector
    const chatInput = document.querySelector("#chat-message.chat-input");
    return chatInput
 }

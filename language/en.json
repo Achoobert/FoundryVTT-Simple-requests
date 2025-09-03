@@ -37,7 +37,8 @@
             "secondRequestTooltip": "Important request",
             "thirdRequestTooltip": "Urgent request!",
             "queueTransferTooltip": "Change the position of the requests window to Free",
-            "requestsMenuTooltip": "Open the requests settings menu"
+            "requestsMenuTooltip": "Open the requests settings menu",
+            "queueAllMenuTooltip": "add all active players to queue in random order"
         }
     }
 }

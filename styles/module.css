@@ -354,7 +354,8 @@
   border-bottom: none;
 }
 
-.ar-chat-requests-menu {
+.ar-chat-requests-menu,
+.queueAll-button {
   position: absolute;
   top: 0;
   right: 0;
@@ -365,7 +366,8 @@
   cursor: pointer;
 }
 
-.ar-chat-requests-menu i {
+.ar-chat-requests-menu i,
+.queueAll-button i {
   font-size: 85% !important;
   margin: 0;
   justify-self: center;
