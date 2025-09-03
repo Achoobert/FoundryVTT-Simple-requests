@@ -1,6 +1,6 @@
 {
   "name": "simple-requests",
-  "version": "1.0.4",
+  "version": "1.0.6",
   "description": "A Foundry VTT module that adds a convenient way to use the Requests rule",
   "scripts": {
     "test": "cypress run",
