@@ -20,6 +20,11 @@ describe('Simple Requests Module Functionality', () => {
       cy.get("#sidebar").should("be.visible")
       // cy.get("#sidebar-content").should("be.visible")
 
+      cy.get('.fa-comments').click();
+
+      // find and click on 
+      cy.get('.fa-list').click();
+
       // find and click on 
       cy.get('.fa-regular.fa-hand.ar-request-icon').click();
 
