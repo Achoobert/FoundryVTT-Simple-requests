@@ -1,7 +1,7 @@
 {
   "title": "Simple Requests",
   "description": "A module that adds a convenient way to use the Requests rule, allowing the GM to more effectively distribute attention between players.",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "compatibility": {
     "minimum": "12",
     "verified": "13"
