@@ -1,28 +1,24 @@
 # Simple Requests
 
-
-The request queue will be displayed above the chat. Create requests using the buttons on the right
-
-![Full sidebar view](readme_imgs/full_sidebar_view.webp)
-## Overview
-
 Players can create requests to express their desire to speak without those awkward pauses and interruptions in the voice chat.
 
 Three tiers of importance help the GM to judge the urgency of the request
 
+Queue is displayed above the chat-input. Create requests using the "🤚" buttons. Pop top request by left clicking on it, silently dismiss any request by right clicking. 
 
-#### When sidebar is collapsed in v13.
+<img src="readme_imgs/request_buttons.webp" alt="Full sidebar view" style="max-width: 300px; width: 100%; height: auto;" />
 
-![Collapsed sidebar view in v13](readme_imgs/v13_collapsed_sidebar_view.webp)
+<img src="readme_imgs/prompt.webp" alt="Popup Prompt" style="max-width: 500px; width: 100%; height: auto;" />
 
-## Usage
+<video src="readme_imgs/example.mp4" controls playsinline style="max-width: 400px; width: 100%; height: auto;">
+  Side-by-side example of the request queue in chat.
+</video>
 
-When a player clicks on their request, or when the GM right-clicks, the request is silently removed.
+#### When sidebar is collapsed in v13+
 
-## Epic Prompt
-When the GM clicks on a request, they "activate" the *top* request, triggering the activation sound and an "epic prompt" for all users
 
-![Epic prompt](readme_imgs/epic_prompt.webp)
+<img src="readme_imgs/faded_sidebar.webp" alt="Collapsed sidebar view in v13" style="max-width: 300px; width: 100%; height: auto;" />
+
 
 #### Macro to call out top request
 
@@ -39,7 +35,8 @@ window.simpleRequests.load_queue_requests_LOCAL_QUEUE([]);
 ### Image
 Set via `Player Avatar` option in `User Configuration`. 
 
-![Image selection](readme_imgs/img_select.webp)
+
+<img src="readme_imgs/img_select.webp" alt="Image selection" width="200" />
 
 ### Audio
 Each level of request uses a different sound. GM can change in settings.
@@ -65,35 +62,20 @@ The heavy lifting here is done by socketLib
 
 ---
 
-## Features
-
-- Simple-requests page in GM settings
-- Uses the same UI look, DOM placement, and CSS structure as dice-calculator for the default (above chat message input) position
-- Single source of truth for the queue (in-memory object, synchronized via SocketLib)
-- Modular code: queue UI and logic can be reused regardless of UI state (docked and floating modes)
-- Options to match notification features of `raise-my-hand`
-
-### Basic
-
-- [x] All requests and queue changes are synchronized across all clients (using SocketLib)
 - [x] GM can customize an audio sound for each category of request
-- [x] Render a queue UI below (or above) the chat input, inside the chat sidebar
+- [x] Render a queue UI above the chat input, inside the chat sidebar
 - [x] Each request in the queue displays:
-  - [x] The player's name and image (configurable: token, avatar, etc.)
-  - [x] The request's importance level (Common, Important, Urgent), visually distinct
-- [x] Provide buttons for players to add a request at any level
+  - [x] The player's image and name on hover 
+  - [x] The importance displayed via icons and motion
+- [x] Buttons for players to set urgency level
 - [x] Players can remove their own requests by clicking (LMB or RMB)
 - [x] GMs can remove any request with RMB, or "activate" a request with LMB (triggers a sound and chat message)
 - [x] E2E tests for dev sanity
 
-### Advanced
+### Potential future features (existed in original mod, but removed during port)
 
-- [ ] Allow players to choose the image used for their request (token, avatar, etc.) via settings
 - [ ] If no image is found, prompt the user to set one
 - [ ] Allow the request queue to be moved from under the chat to a free position on the screen (via settings or Shift+LMB)
 - [ ] Provide a button to return the queue to its default position
-- [ ] Allow resizing the queue window via settings
-- [ ] Ensure the UI is accessible and visually clear for all users
 
 ---
-
