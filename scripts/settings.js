@@ -62,14 +62,14 @@ function changeChatQueueHeight() {
 }
 
 function updateChatRequestButtons() {
-   const buttonsBoxEl = document.getElementById("simple-requests-chat-body")?.querySelector(".ar-chat-buttons")
+   const buttonsBoxEl = document.getElementById("simple-requests-chat-body")?.querySelector(".sr-chat-buttons")
    if (buttonsBoxEl) {
       buttonsBoxEl.innerHTML = "";
       ["first", "second", "third"].forEach((reqLevel, i) => {
          if (!game.settings.get(C.ID, `${reqLevel}Request`)) return
          const button = document.createElement('div')
-         button.className = `ar-chat-button ar-level-${i}`
-         button.innerHTML = `<i class=\"fa-${i == 0 ? "regular" : "solid"} fa-hand${i == 2 ? "-sparkles" : ""} ar-request-icon\"></i>`
+         button.className = `sr-chat-button sr-level-${i}`
+         button.innerHTML = `<i class=\"fa-${i == 0 ? "regular" : "solid"} fa-hand${i == 2 ? "-sparkles" : ""} sr-request-icon\"></i>`
          button.dataset.tooltip = game.i18n.localize(`${C.ID}.buttons.${reqLevel}RequestTooltip`)
          button.addEventListener("click", async () => {
             await addRequest(i)
@@ -82,7 +82,7 @@ function updateChatRequestButtons() {
 
 function reRender() {
    // Usually the view is not loaded when user is accessing settings.
-   if (window.SimplePromptsApp) {
-      window.SimplePromptsApp._render(true);
+   if (window.SimpleRequestsApp) {
+      window.SimpleRequestsApp._render(true);
    }
 }

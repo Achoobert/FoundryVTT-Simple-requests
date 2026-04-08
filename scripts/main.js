@@ -1,14 +1,14 @@
 import { Constants as C } from "./const.js";
 const default_img = "icons/magic/control/debuff-energy-hold-blue-yellow.webp" // TODO link better
 
-// Ensure CONFIG.ADV_REQUESTS and queue are always initialized
+// Ensure CONFIG.SMP_REQUESTS and queue are always initialized
 if (!window.CONFIG) window.CONFIG = {};
-if (!CONFIG.ADV_REQUESTS) CONFIG.ADV_REQUESTS = {};
-if (!Array.isArray(CONFIG.ADV_REQUESTS.queue)) CONFIG.ADV_REQUESTS.queue = [];
+if (!CONFIG.SMP_REQUESTS) CONFIG.SMP_REQUESTS = {};
+if (!Array.isArray(CONFIG.SMP_REQUESTS.queue)) CONFIG.SMP_REQUESTS.queue = [];
 
 // queue logic
 function pop_request_LOCAL_QUEUE() {
-   let queue = CONFIG.ADV_REQUESTS.queue || [];
+   let queue = CONFIG.SMP_REQUESTS.queue || [];
    log_socket("old", queue)
    // Sort by level (descending: urgent first), then by timestamp ( oldest first )
    let selected_request = queue.slice().sort((a, b) => {
@@ -24,7 +24,7 @@ function pop_request_LOCAL_QUEUE() {
 };
 
 function get_requests_LOCAL_QUEUE() {
-   let queue = CONFIG.ADV_REQUESTS.queue || [];
+   let queue = CONFIG.SMP_REQUESTS.queue || [];
    // Sort by level (descending: urgent first), then by timestamp ( oldest first )
    return queue.slice().sort((a, b) => {
       if (b.level !== a.level) return b.level - a.level;
@@ -37,7 +37,7 @@ function get_requests_LOCAL_QUEUE() {
  * @param {Object} requestData - Must include userId, name, img, level
  */
 function add_new_request_LOCAL_QUEUE(requestData) {
-   let queue = CONFIG.ADV_REQUESTS.queue || [];
+   let queue = CONFIG.SMP_REQUESTS.queue || [];
    // if user has a request with same urgency
    const existing = queue.find(r => r.userId === requestData.userId);
    if (existing && existing.level === requestData.level) {
@@ -51,7 +51,7 @@ function add_new_request_LOCAL_QUEUE(requestData) {
       if (b.level !== a.level) return b.level - a.level;
       return a.timestamp - b.timestamp;
    });
-   CONFIG.ADV_REQUESTS.queue = queue;
+   CONFIG.SMP_REQUESTS.queue = queue;
    return queue;
 }
 
@@ -60,7 +60,7 @@ function add_new_request_LOCAL_QUEUE(requestData) {
  * @param {string} userId
  */
 function remove_request_LOCAL_QUEUE(userId) {
-   let queue = CONFIG.ADV_REQUESTS.queue || [];
+   let queue = CONFIG.SMP_REQUESTS.queue || [];
    if (typeof userId === 'undefined' || userId === null) {
       // Remove the first (oldest, most urgent) request
       if (queue.length > 0) queue.splice(0, 1);
@@ -68,7 +68,7 @@ function remove_request_LOCAL_QUEUE(userId) {
       // Remove any/all requests for this user
       queue = queue.filter(r => r.userId !== userId);
    }
-   CONFIG.ADV_REQUESTS.queue = queue;
+   CONFIG.SMP_REQUESTS.queue = queue;
    return queue;
 }
 
@@ -80,11 +80,11 @@ function load_queue_requests_LOCAL_QUEUE(newQueue) {
    // Validate and sort, most urgent & oldest
    // there should only be one request per user
    if (!Array.isArray(newQueue)) return;
-   CONFIG.ADV_REQUESTS.queue = newQueue.slice().sort((a, b) => {
+   CONFIG.SMP_REQUESTS.queue = newQueue.slice().sort((a, b) => {
       if (b.level !== a.level) return b.level - a.level;
       return a.timestamp - b.timestamp;
    });
-   return CONFIG.ADV_REQUESTS.queue;
+   return CONFIG.SMP_REQUESTS.queue;
 }
 
 // enable when debugging
@@ -139,18 +139,18 @@ class SimplePromptsManager {
    async _syncQueue(newQueue) {
       log_socket("syncing queue", newQueue);
       load_queue_requests_LOCAL_QUEUE(newQueue);
-      await moveAdvRequestsDash();
+      await moveSimpleRequestsDash();
    }
    async _createRequest(newQueue) {
       
       log_socket("syncing queue", newQueue);
       load_queue_requests_LOCAL_QUEUE(newQueue);
-      await moveAdvRequestsDash();
+      await moveSimpleRequestsDash();
    }
 
    syncQueueToOthers() {
-      log_socket("sending queue", CONFIG.ADV_REQUESTS.queue);
-      this.socket.executeForOthers("syncQueue", CONFIG.ADV_REQUESTS.queue);
+      log_socket("sending queue", CONFIG.SMP_REQUESTS.queue);
+      this.socket.executeForOthers("syncQueue", CONFIG.SMP_REQUESTS.queue);
    }
 
    // can only be called by a GM
@@ -160,7 +160,7 @@ class SimplePromptsManager {
       // popup message for all
       this.socket.executeForOthers("showEpicPrompt", toShow);
       _showEpicPrompt(toShow);
-      await moveAdvRequestsDash();
+      await moveSimpleRequestsDash();
    }
 
    // When THIS CLIENT creates a request locally
@@ -170,7 +170,7 @@ class SimplePromptsManager {
       add_new_request_LOCAL_QUEUE(requestData);
       // Send to all other clients
       this.socket.executeForOthers("addRequest", requestData);
-      await moveAdvRequestsDash();
+      await moveSimpleRequestsDash();
    }
    
    // get list of all currently active players, and create requests on their behalf
@@ -197,7 +197,7 @@ class SimplePromptsManager {
    async _addRequest(requestData) {
       log_socket("receiving request from other client", requestData);
       add_new_request_LOCAL_QUEUE(requestData);
-      await moveAdvRequestsDash();
+      await moveSimpleRequestsDash();
       // Play sound for new request if not from self
       if (requestData.userId !== game.user.id) {
          const soundCreate = game.settings.get("simple-requests", "soundCreate");
@@ -232,7 +232,7 @@ class SimplePromptsManager {
       if (this.isAuthorizedToRemove(userId)) {
          log_socket("removing request locally", userId);
          remove_request_LOCAL_QUEUE(userId);
-         await moveAdvRequestsDash();
+         await moveSimpleRequestsDash();
          // Send to all other clients
          this.socket.executeForOthers("removeRequest", userId);
       }
@@ -242,14 +242,14 @@ class SimplePromptsManager {
    async _removeRequest(userId) {
       log_socket("receiving remove request from other client", userId);
       remove_request_LOCAL_QUEUE(userId);
-      await moveAdvRequestsDash();
+      await moveSimpleRequestsDash();
    }
 
    // Update entire queue (for bulk operations)
    async updateRequestQueue(queueData) {
       log_socket("updating entire queue", queueData);
       load_queue_requests_LOCAL_QUEUE(queueData);
-      await moveAdvRequestsDash();
+      await moveSimpleRequestsDash();
       this.socket.executeForOthers("updateRequestQueue", queueData);
    }
 
@@ -257,12 +257,12 @@ class SimplePromptsManager {
    async _updateRequestQueue(queueData) {
       log_socket("receiving queue update from other client", queueData);
       load_queue_requests_LOCAL_QUEUE(queueData);
-      await moveAdvRequestsDash();
+      await moveSimpleRequestsDash();
    }
 
    async _activateRequest(userId) {
       log_socket("activating request", userId);
-      let queue = CONFIG.ADV_REQUESTS.queue || [];
+      let queue = CONFIG.SMP_REQUESTS.queue || [];
       const req = queue.find(r => r.userId === userId);
       if (!req) return;
       // Play sound
@@ -276,7 +276,7 @@ class SimplePromptsManager {
       });
       // Remove request
       remove_request_LOCAL_QUEUE(userId);
-      await moveAdvRequestsDash();
+      await moveSimpleRequestsDash();
       this.syncQueueToOthers();
    }
 
@@ -291,7 +291,7 @@ Hooks.once("socketlib.ready", () => {
    window.SimplePrompts.socket.register("showEpicPrompt", async (data) => {
       remove_request_LOCAL_QUEUE(data.userId);
       // update UI
-      await moveAdvRequestsDash();
+      await moveSimpleRequestsDash();
       _showEpicPrompt(data);
    });
 });
@@ -309,8 +309,8 @@ async function renderSimplePromptsQueue() {
 
    // Queue display
    const queueBox = document.createElement("div");
-   queueBox.classList.add("ar-chat-queue");
-   queueBox.id = "ar-chat-queue";
+   queueBox.classList.add("sr-chat-queue");
+   queueBox.id = "sr-chat-queue";
    const queue = get_requests_LOCAL_QUEUE();
    queue.forEach((item) => {
       const containerEl = getRequestElement(item);
@@ -332,14 +332,14 @@ async function renderSimplePromptsQueue() {
 
    // Requests menu button
    // const requestsMenuButton = document.createElement("div");
-   // requestsMenuButton.classList.add("ar-chat-requests-menu");
+   // requestsMenuButton.classList.add("sr-chat-requests-menu");
    // requestsMenuButton.innerHTML = `<i class="fas fa-gear"></i>`;
    // requestsMenuButton.dataset.tooltip = game.i18n.localize(`${C.ID}.buttons.requestsMenuTooltip`);
    // queueBox.append(requestsMenuButton);
 
    // Transfer button
    const transferButton = document.createElement("div");
-   transferButton.className = "ar-chat-queue-transfer ar-hidden";
+   transferButton.className = "sr-chat-queue-transfer sr-hidden";
    transferButton.innerHTML = `<i class="fas fa-up-right-from-square"></i>`;
    transferButton.dataset.tooltip = game.i18n.localize(`${C.ID}.buttons.queueTransferTooltip`);
    queueBox.append(transferButton);
@@ -349,38 +349,38 @@ async function renderSimplePromptsQueue() {
    new_request_element.addEventListener("mouseover", (e) => {
       isElementHovered = true;
       if (e.shiftKey) {
-         transferButton.classList.toggle("ar-hidden", false);
-         queueBox.querySelectorAll(".ar-request-container-chat").forEach((el) => {
-            el.classList.toggle("ar-hidden", true);
+         transferButton.classList.toggle("sr-hidden", false);
+         queueBox.querySelectorAll(".sr-request-container-chat").forEach((el) => {
+            el.classList.toggle("sr-hidden", true);
          });
       }
    });
    new_request_element.addEventListener("mouseout", (e) => {
       isElementHovered = false;
-      transferButton.classList.toggle("ar-hidden", true);
-      queueBox.querySelectorAll(".ar-request-container-chat").forEach((el) => {
-         el.classList.toggle("ar-hidden", false);
+      transferButton.classList.toggle("sr-hidden", true);
+      queueBox.querySelectorAll(".sr-request-container-chat").forEach((el) => {
+         el.classList.toggle("sr-hidden", false);
       });
    });
    document.addEventListener("keydown", (e) => {
       if ((e.code == "ShiftLeft" || e.code == "ShiftRight") && isElementHovered) {
-         transferButton.classList.toggle("ar-hidden", false);
-         queueBox.querySelectorAll(".ar-request-container-chat").forEach((el) => {
-            el.classList.toggle("ar-hidden", true);
+         transferButton.classList.toggle("sr-hidden", false);
+         queueBox.querySelectorAll(".sr-request-container-chat").forEach((el) => {
+            el.classList.toggle("sr-hidden", true);
          });
       }
    });
    document.addEventListener("keyup", (e) => {
       if ((e.code == "ShiftLeft" || e.code == "ShiftRight") && isElementHovered) {
-         transferButton.classList.toggle("ar-hidden", true);
-         queueBox.querySelectorAll(".ar-request-container-chat").forEach((el) => {
-            el.classList.toggle("ar-hidden", false);
+         transferButton.classList.toggle("sr-hidden", true);
+         queueBox.querySelectorAll(".sr-request-container-chat").forEach((el) => {
+            el.classList.toggle("sr-hidden", false);
          });
       }
    });
    transferButton.addEventListener("click", async () => {
-      if (window.SimplePromptsApp) {
-         window.SimplePromptsApp._render(true);
+      if (window.SimpleRequestsApp) {
+         window.SimpleRequestsApp._render(true);
       }
       document.getElementById("simple-requests-chat-body").style.display = "none";
    });
@@ -389,11 +389,11 @@ async function renderSimplePromptsQueue() {
 
    // Request buttons
    const buttonDiv = document.createElement("div");
-   buttonDiv.classList.add("ar-chat-buttons");
+   buttonDiv.classList.add("sr-chat-buttons");
    ["first", "second", "third"].forEach((reqLevel, i) => {
       const button = document.createElement('div');
-      button.className = `ar-chat-button {i}`;
-      button.innerHTML = `<i class="fa-${i == 0 ? "regular" : "solid"} fa-hand${i == 2 ? "-sparkles" : ""} ar-request-icon"></i>`;
+      button.className = `sr-chat-button sr-level-${i}`;
+      button.innerHTML = `<i class="fa-${i == 0 ? "regular" : "solid"} fa-hand${i == 2 ? "-sparkles" : ""} sr-request-icon"></i>`;
       button.dataset.tooltip = game.i18n.localize(`${C.ID}.buttons.${reqLevel}RequestTooltip`);
       
       button.onclick = async (event) => {
@@ -413,22 +413,22 @@ async function renderSimplePromptsQueue() {
    return new_request_element;
 }
 
-let moveAdvRequestsDashTimeout;
-async function moveAdvRequestsDashImpl() {
-   log_socket("moveAdvRequestsDash called by", game.user.name);
-   log_socket("current queue", CONFIG.ADV_REQUESTS.queue);
+let moveSimpleRequestsDashTimeout;
+async function moveSimpleRequestsDashImpl() {
+   log_socket("moveSimpleRequestsDash called by", game.user.name);
+   log_socket("current queue", CONFIG.SMP_REQUESTS.queue);
    let chatInput = getChatInput();
 
    // TODO don't render if chat is closed on v12
    removeAllDash();
    const dash = await renderSimplePromptsQueue();
    if (!dash) return; // Prevent errors if simple-requests-chat-body is undefined
-   CONFIG.ADV_REQUESTS.element = dash;
+   CONFIG.SMP_REQUESTS.element = dash;
 
    if (!chatInput) {
       const chatControls = getChatControlsContainer();
       if(!chatControls){
-         if (CONFIG.ADV_REQUESTS.element?.parentNode) CONFIG.ADV_REQUESTS.element.parentNode.removeChild(CONFIG.ADV_REQUESTS.element);
+         if (CONFIG.SMP_REQUESTS.element?.parentNode) CONFIG.SMP_REQUESTS.element.parentNode.removeChild(CONFIG.SMP_REQUESTS.element);
          return;
       }
       chatControls.prepend(dash);
@@ -437,22 +437,22 @@ async function moveAdvRequestsDashImpl() {
    chatInput.parentNode.insertBefore(dash, chatInput);
 }
 
-function moveAdvRequestsDash(...args) {
-   if (moveAdvRequestsDashTimeout) clearTimeout(moveAdvRequestsDashTimeout);
-   moveAdvRequestsDashTimeout = setTimeout(() => {
-      moveAdvRequestsDashImpl.apply(this, args);
+function moveSimpleRequestsDash(...args) {
+   if (moveSimpleRequestsDashTimeout) clearTimeout(moveSimpleRequestsDashTimeout);
+   moveSimpleRequestsDashTimeout = setTimeout(() => {
+      moveSimpleRequestsDashImpl.apply(this, args);
    }, 100);
 }
 
-// Wrapper functions for async moveAdvRequestsDash in hooks
-const moveAdvRequestsDashWrapper = () => Promise.resolve(moveAdvRequestsDash()).catch(console.error);
+// Wrapper functions for async moveSimpleRequestsDash in hooks
+const moveSimpleRequestsDashWrapper = () => Promise.resolve(moveSimpleRequestsDash()).catch(console.error);
 
-Hooks.once("renderChatLog", moveAdvRequestsDashWrapper);
-Hooks.on("closeChatLog", moveAdvRequestsDashWrapper);
-Hooks.on("activateChatLog", moveAdvRequestsDashWrapper);
-Hooks.on("deactivateChatLog", moveAdvRequestsDashWrapper);
+Hooks.once("renderChatLog", moveSimpleRequestsDashWrapper);
+Hooks.on("closeChatLog", moveSimpleRequestsDashWrapper);
+Hooks.on("activateChatLog", moveSimpleRequestsDashWrapper);
+Hooks.on("deactivateChatLog", moveSimpleRequestsDashWrapper);
 // Function collapseSidebar
-Hooks.on("collapseSidebar", moveAdvRequestsDashWrapper);
+Hooks.on("collapseSidebar", moveSimpleRequestsDashWrapper);
 
 // Utility to show a fullscreen epic prompt
 // WIP, should allow themeing per each system! 
@@ -461,17 +461,17 @@ function _showEpicPrompt(data) {
    const img = data.img || "icons/svg/mystery-man.svg";
    const level = typeof data.level === "number" ? data.level : 0;
    // Remove any existing prompt
-   document.querySelectorAll('#ar-epic-prompt').forEach(el => el.remove());
+   document.querySelectorAll('#sr-epic-prompt').forEach(el => el.remove());
    // Create overlay
    const overlay = document.createElement('div');
-   overlay.id = 'ar-epic-prompt';
-   overlay.className = 'ar-epic-prompt-overlay';
+   overlay.id = 'sr-epic-prompt';
+   overlay.className = 'sr-epic-prompt-overlay';
    // Overlay image for request level
    const overlayImgSrc = `modules/simple-requests/assets/request${level}.webp`;
    overlay.innerHTML = `
       <div class="epic-prompt-container">
-         <img class="prompt-img ar-img-level-${data.level}" src="${img}" alt="${name}" >
-         <img class="epic-prompt-warning ar-level-${data.level}" src="${overlayImgSrc}" alt="Request Level">
+         <img class="prompt-img sr-img-level-${data.level}" src="${img}" alt="${name}" >
+         <img class="epic-prompt-warning sr-level-${data.level}" src="${overlayImgSrc}" alt="Request Level">
          <h1 class="epic-prompt-name" >${name} has the floor</h1>
       </div>
    `;
@@ -506,7 +506,7 @@ function playSound(src = "modules/simple-requests/assets/request0.ogg") {
 
 function getRequestElement(item) {
    const containerEl = document.createElement('div');
-   containerEl.className = `ar-request-container-chat ar-level-${item.level}`;
+   containerEl.className = `sr-request-container-chat sr-level-${item.level}`;
    containerEl.dataset.id = item.userId;
    containerEl.dataset.tooltip = item.name;
    addRequestListener(containerEl);
@@ -516,7 +516,7 @@ function getRequestElement(item) {
    containerEl.append(tokenImgEl);
    
    const warningEl = document.createElement('div');
-   warningEl.className = `ar-queue-warning ar-level-${item.level}`;
+   warningEl.className = `sr-queue-warning sr-level-${item.level}`;
    warningEl.innerHTML = `<img src="modules/${C.ID}/assets/request${item.level}.webp"/>`;
    containerEl.append(warningEl);
    
@@ -538,8 +538,8 @@ function addRequestListener(element, reRender = false) {
       }
    });
    
-   if (reRender && window.SimplePromptsApp) {
-      window.SimplePromptsApp._render(true);
+   if (reRender && window.SimpleRequestsApp) {
+      window.SimpleRequestsApp._render(true);
    }
 }
 

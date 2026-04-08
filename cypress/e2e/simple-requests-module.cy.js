@@ -18,7 +18,7 @@ describe('Simple Requests Module Functionality', () => {
       cy.get("#chat-message").should("be.visible")
       // cy.get("#chat-log").should("be.visible")
       cy.get("#sidebar").should("be.visible")
-      // cy.get("#sidebar-content").should("be.visible")
+      // cy.get("#sidebsr-content").should("be.visible")
 
       cy.get('.fa-comments').click();
 
@@ -26,26 +26,26 @@ describe('Simple Requests Module Functionality', () => {
       cy.get('.fa-list').click();
 
       // find and click on 
-      cy.get('.fa-regular.fa-hand.ar-request-icon').click();
+      cy.get('.fa-regular.fa-hand.sr-request-icon').click();
 
-      // id="ar-chat-queue"
-      cy.get("#ar-chat-queue").should("exist");
+      // id="sr-chat-queue"
+      cy.get("#sr-chat-queue").should("exist");
 
       // click on
-      cy.get('.ar-request-container-chat.ar-level-0').click();
+      cy.get('.sr-request-container-chat.sr-level-0').click();
 
       // foundry v13 has an epic prompt
-      // id="ar-epic-prompt"
-      cy.get("#ar-epic-prompt").should("be.visible");
+      // id="sr-epic-prompt"
+      cy.get("#sr-epic-prompt").should("be.visible");
 
 
-      cy.get("#ar-chat-queue", { timeout: 10000 }).should("be.visible");
+      cy.get("#sr-chat-queue", { timeout: 10000 }).should("be.visible");
 
-      cy.get('.fa-regular.fa-hand.ar-request-icon').click();
+      cy.get('.fa-regular.fa-hand.sr-request-icon').click();
       // test whether right click to remove works
-      cy.get('.ar-request-container-chat').should('exist');
-      cy.get('.ar-request-container-chat').rightclick();
-      cy.get('.ar-request-container-chat').should('not.exist');
+      cy.get('.sr-request-container-chat').should('exist');
+      cy.get('.sr-request-container-chat').rightclick();
+      cy.get('.sr-request-container-chat').should('not.exist');
 
 
       // cy.get('body').then(($body) => {

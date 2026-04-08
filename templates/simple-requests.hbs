@@ -1,0 +1,35 @@
+<div class="simple-requests-freeScreen-body{{#unless show}} sr-hidden{{/unless}}" style="z-index: {{_z}}; height: {{_h}}px; top: {{_y}}%; right: {{_x}}%;">
+    <div class="sr-resizable-handle"><i class="fas fa-bars"></i></div>
+    <div class="sr-freeScreen-queue" style="width: {{_w}};{{#if widthDependOnQueue}} overflow-x: hidden;{{/if}}" id="sr-freeScreen-queue">
+        {{#each queue}}
+            <div class="sr-request-container-freeScreen sr-level-{{level}}" data-id="{{id}}" data-tooltip="{{name}}">
+                <img src="{{img}}">
+                <div class="sr-queue-warning sr-level-{{level}}">
+                    <img src="modules/simple-requests/assets/request{{level}}.webp">
+                </div>
+            </div>
+        {{/each}}
+    </div>
+    <div class="sr-freeScreen-buttons">
+        {{#if firstRequest}}
+            <div class="sr-freeScreen-button sr-level-0" data-level="0" data-tooltip="{{localize "simple-requests.buttons.firstRequestTooltip"}}">
+                <i class="fa-regular fa-hand sr-request-icon"></i>
+            </div>
+        {{/if}}
+        {{#if secondRequest}}
+            <div class="sr-freeScreen-button sr-level-1" data-level="1" data-tooltip="{{localize "simple-requests.buttons.secondRequestTooltip"}}">
+                <i class="fa-solid fa-hand sr-request-icon"></i>
+            </div>
+        {{/if}}
+        {{#if thirdRequest}}
+            <div class="sr-freeScreen-button sr-level-2" data-level="2" data-tooltip="{{localize "simple-requests.buttons.thirdRequestTooltip"}}">
+                <i class="fa-solid fa-hand-sparkles sr-request-icon"></i>
+            </div>
+        {{/if}}
+    </div>
+    <div class="sr-freeScreen-addButtons">
+        <div class="sr-freeScreen-mover" style="cursor: grab"><i class="fas fa-arrows-up-down-left-right"></i></div>
+        <div class="sr-window-to-chat" style="cursor: pointer"><i class="fas fa-message"></i></div>
+    </div>
+</div>
+{{!--  --}}

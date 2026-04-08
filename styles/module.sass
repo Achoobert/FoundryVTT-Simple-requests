@@ -5,7 +5,7 @@
     order: -1
 
 
-.ar-chat-buttons
+.sr-chat-buttons
     display: flex
     justify-content: center
     align-items: center
@@ -14,7 +14,7 @@
     overflow: hidden
 
 
-.ar-chat-button
+.sr-chat-button
     flex: 1
     min-width: 30px
     display: grid
@@ -24,8 +24,8 @@
     border: 1px solid black
     box-shadow: 0 0 6px inset #8d9ea7
 
-.ar-chat-queue,
-.ar-freeScreen-queue
+.sr-chat-queue,
+.sr-freeScreen-queue
     flex: 1
     position: relative
     border-radius: 5px
@@ -35,12 +35,12 @@
     overflow-x: scroll
     overflow-y: hidden
 
-.ar-chat-queue
+.sr-chat-queue
     border: 1px solid black
     padding: 1px
     box-shadow: 0 0 6px inset #8d9ea7
 
-.ar-freeScreen-queue
+.sr-freeScreen-queue
     padding: 1px
     min-width: 11px
 
@@ -62,13 +62,13 @@
         
 
 // Контейнер для заявок ПОД ЧАТОМ
-.ar-request-container-chat
+.sr-request-container-chat
     transition: transform 0.3s ease-in-out
-    &.ar-hidden
+    &.sr-hidden
         transform: translateY(55px)
     
-.ar-request-container-chat,
-.ar-request-container-freeScreen
+.sr-request-container-chat,
+.sr-request-container-freeScreen
     width: fit-content
     height: 90%
     border-radius: 50%
@@ -77,13 +77,13 @@
     & > img
         height: 100%
         border-radius: 50%
-    &.ar-level-1
+    &.sr-level-1
         box-shadow: 0 0 6px 5px #ff00007d, 0 0 4px 2px #ff0000b5
         animation: slowPulse 2.5s ease-in-out infinite 
-    &.ar-level-2
+    &.sr-level-2
         box-shadow: 0 0 6px 5px #ff00007d, 0 0 4px 2px #ff0000b5
         animation: fastPulse 1.5s ease-in-out infinite
-    .ar-queue-warning
+    .sr-queue-warning
         position: absolute
         top: -5%
         right: -15%
@@ -94,7 +94,7 @@
             border: none
 
 // Кнопка смены расположения окна заявок
-.ar-chat-queue-transfer
+.sr-chat-queue-transfer
     position: absolute
     width: 99.5%
     height: 100%
@@ -107,7 +107,7 @@
         text-shadow: -3px 3px 1px black
         font-size: 20px
         transform: rotate(270deg)
-    &.ar-hidden
+    &.sr-hidden
         transform: translateY(-50px)
 
 // Анимация восклицательных знаков для заявок
@@ -141,11 +141,11 @@
         transform: translateX(-2px)
 
 
-.ar-text-level-0
+.sr-text-level-0
     color: #fff
-.ar-text-level-1
+.sr-text-level-1
     color: #ff3333
-.ar-text-level-2
+.sr-text-level-2
     animation: chipColorPulse 1.2s infinite alternate
 
 @keyframes chipColorPulse
@@ -156,13 +156,13 @@
     100%
         color: #ffff00
 
-.ar-queue-warning
-    &.ar-level-0
+.sr-queue-warning
+    &.sr-level-0
         animation: rotateClockwise 2s infinite alternate
         animation: rotateCounterClockwise 2s infinite alternate
-    &.ar-level-1
+    &.sr-level-1
         animation: rotateClockwise 1s infinite alternate, rotateCounterClockwise 1s infinite alternate, shake 0.8s infinite
-    &.ar-level-2
+    &.sr-level-2
         animation: rotateClockwise 1s infinite alternate
         animation: rotateCounterClockwise 1s infinite alternate
         animation: strong-shake 0.3s infinite
@@ -180,10 +180,10 @@
     i
         text-shadow: 2px 2px 0px black
         color: #b9b2a2
-    &.ar-hidden
+    &.sr-hidden
         display: none !important
 
-.ar-resizable-handle
+.sr-resizable-handle
     position: absolute
     bottom: 0
     left: 0
@@ -195,14 +195,14 @@
     i
         transform: rotate(45deg) translate(-4px, 1px)
 
-.ar-freeScreen-addButtons
+.sr-freeScreen-addButtons
     align-items: center
     justify-items: center
     display: grid
     div
         padding: 0 5px
 
-.ar-freeScreen-button
+.sr-freeScreen-button
     flex: 1
     min-width: 30px
     display: grid
@@ -210,7 +210,7 @@
     align-items: center
     cursor: pointer
 
-.ar-freeScreen-buttons
+.sr-freeScreen-buttons
     display: flex
     justify-content: center
     align-items: center
@@ -236,7 +236,7 @@
         align-self: center
         line-height: 100% !important
 
-.ar-chat-requests-menu
+.sr-chat-requests-menu
     position: absolute
     top: 0
     right: 0
@@ -252,10 +252,10 @@
         align-self: center
         line-height: 100% !important
 
-.adv-request-chip
-    &.ar-text-level-0
+.smp-request-chip
+    &.sr-text-level-0
         color: #fff
-    &.ar-text-level-1
+    &.sr-text-level-1
         color: #ff3333
-    &.ar-text-level-2
+    &.sr-text-level-2
         animation: chipColorPulse 1.2s infinite alternate
