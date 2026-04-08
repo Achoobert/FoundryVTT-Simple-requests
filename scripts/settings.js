@@ -24,6 +24,8 @@ Hooks.once('init', function() {
    registerSettings("soundOnPromptActivate", "world", true, Boolean, true)
    // prompt sound (file path)
    registerSettings("promptShowSound", "world", true, String, "modules/simple-requests/assets/samples/fingerSnapping.ogg", "audio")
+   // epic prompt headline ({name} = requester display name)
+   registerSettings("epicPromptHeadline", "world", true, String, "{name} has the floor")
    // ? TODO out of scope?
    // // What to use for requests
    // const ufrChooseList = {

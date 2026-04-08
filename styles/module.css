@@ -354,6 +354,17 @@
   border-bottom: none;
 }
 
+.sr-queue-menu-actions {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  z-index: 2;
+}
+
 .sr-chat-requests-menu,
 .queueAll-button {
   position: absolute;
@@ -366,6 +377,12 @@
   cursor: pointer;
 }
 
+.sr-queue-menu-actions .queueAll-button {
+  position: relative;
+  top: auto;
+  right: auto;
+}
+
 .sr-chat-requests-menu i,
 .queueAll-button i {
   font-size: 85% !important;
@@ -375,6 +392,35 @@
   line-height: 100% !important;
 }
 
+.sr-callout-mode {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+}
+
+.sr-callout-mode-opt {
+  display: flex;
+  align-items: center;
+  gap: 0.35em;
+}
+
+.sr-callout-dice-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.sr-callout-die {
+  min-width: 2.25em;
+  padding: 4px 6px;
+  cursor: pointer;
+}
+
+.sr-callout-die.active {
+  outline: 2px solid var(--color-border-highlight, #782e22);
+  font-weight: bold;
+}
 
 .epic-prompt-container {
   background: rgba(30, 30, 30, 0.9);

@@ -1,4 +1,12 @@
-import { Constants as C } from "./const.js";
+import {
+   Constants as C,
+   PLAYER_CALLOUT_DIE_FACES,
+   PLAYER_CALLOUT_ROLL_COUNT_MAX,
+   PLAYER_CALLOUT_ROLL_COUNT_MIN,
+   escapeHtmlForAttr
+} from "./const.js";
+import { showEpicPrompt } from "./epic-prompt.js";
+
 const default_img = "icons/magic/control/debuff-energy-hold-blue-yellow.webp" // TODO link better
 
 // Ensure CONFIG.SMP_REQUESTS and queue are always initialized
@@ -159,8 +167,28 @@ class SimplePromptsManager {
       log_socket("sending pop_top_request", toShow);
       // popup message for all
       this.socket.executeForOthers("showEpicPrompt", toShow);
-      _showEpicPrompt(toShow);
+      showEpicPrompt(toShow);
       await moveSimpleRequestsDash();
+   }
+
+   /**
+    * GM-only: show epic prompt on one player’s client immediately (no queue).
+    * Uses executeForEveryone like activateRequest; non-recipients ignore via __srTargeted.
+    */
+   gmSendTargetedPlayerCallout(payload) {
+      if (!game.user.isGM) return;
+      log_socket("targeted epic prompt", payload);
+      this.socket.executeForEveryone("showEpicPrompt", {
+         __srTargeted: true,
+         __srRecipientId: payload.userId,
+         skipQueueSync: true,
+         userId: payload.userId,
+         name: payload.name,
+         img: payload.img,
+         level: typeof payload.level === "number" ? payload.level : 0,
+         headlineText: payload.headlineText,
+         rollFormula: payload.rollFormula
+      });
    }
 
    // When THIS CLIENT creates a request locally
@@ -289,10 +317,16 @@ class SimplePromptsManager {
 Hooks.once("socketlib.ready", () => {
    window.SimplePrompts = new SimplePromptsManager();
    window.SimplePrompts.socket.register("showEpicPrompt", async (data) => {
-      remove_request_LOCAL_QUEUE(data.userId);
-      // update UI
-      await moveSimpleRequestsDash();
-      _showEpicPrompt(data);
+      const targeted = data.__srTargeted === true;
+      const recipientId = data.__srRecipientId;
+      if (targeted && recipientId !== game.user.id) return;
+
+      const { __srTargeted: _srT, __srRecipientId: _srR, ...rest } = data;
+      if (!rest.skipQueueSync) {
+         remove_request_LOCAL_QUEUE(rest.userId);
+         await moveSimpleRequestsDash();
+      }
+      showEpicPrompt(rest);
    });
 });
 
@@ -317,18 +351,30 @@ async function renderSimplePromptsQueue() {
       queueBox.append(containerEl);
    });
 
-   // force queue of all players button
+   const menuStack = document.createElement("div");
+   menuStack.classList.add("sr-queue-menu-actions");
+
    const queueAllMenuButton = document.createElement("div");
    queueAllMenuButton.classList.add("queueAll-button");
    queueAllMenuButton.innerHTML = `<i class="fas fa-list"></i>`;
    queueAllMenuButton.dataset.tooltip = game.i18n.localize(`${C.ID}.buttons.queueAllMenuTooltip`);
-   queueBox.append(queueAllMenuButton);
+   menuStack.append(queueAllMenuButton);
 
    if (game.user.isGM) {
+      const pickPlayerMenuButton = document.createElement("div");
+      pickPlayerMenuButton.classList.add("queueAll-button");
+      pickPlayerMenuButton.innerHTML = `<i class="fas fa-bullhorn"></i>`;
+      pickPlayerMenuButton.dataset.tooltip = game.i18n.localize(`${C.ID}.buttons.pickPlayerCalloutTooltip`);
+      menuStack.append(pickPlayerMenuButton);
       queueAllMenuButton.addEventListener("click", () => {
          window.SimplePrompts.createSocialInitiative();
-      })
+      });
+      pickPlayerMenuButton.addEventListener("click", () => {
+         openPlayerCalloutDialog();
+      });
    }
+
+   queueBox.append(menuStack);
 
    // Requests menu button
    // const requestsMenuButton = document.createElement("div");
@@ -454,38 +500,116 @@ Hooks.on("deactivateChatLog", moveSimpleRequestsDashWrapper);
 // Function collapseSidebar
 Hooks.on("collapseSidebar", moveSimpleRequestsDashWrapper);
 
-// Utility to show a fullscreen epic prompt
-// WIP, should allow themeing per each system! 
-function _showEpicPrompt(data) {
-   const name = data.name || "Player";
-   const img = data.img || "icons/svg/mystery-man.svg";
-   const level = typeof data.level === "number" ? data.level : 0;
-   // Remove any existing prompt
-   document.querySelectorAll('#sr-epic-prompt').forEach(el => el.remove());
-   // Create overlay
-   const overlay = document.createElement('div');
-   overlay.id = 'sr-epic-prompt';
-   overlay.className = 'sr-epic-prompt-overlay';
-   // Overlay image for request level
-   const overlayImgSrc = `modules/simple-requests/assets/request${level}.webp`;
-   overlay.innerHTML = `
-      <div class="epic-prompt-container">
-         <img class="prompt-img sr-img-level-${data.level}" src="${img}" alt="${name}" >
-         <img class="epic-prompt-warning sr-level-${data.level}" src="${overlayImgSrc}" alt="Request Level">
-         <h1 class="epic-prompt-name" >${name} has the floor</h1>
-      </div>
-   `;
-   _promptShowSound()
-   // we'll remove onclick, or after 5 seconds
-   overlay.addEventListener('click', () => overlay.remove());
-   setTimeout(() => overlay.remove(), 5000);
-   document.body.appendChild(overlay);
-}
-function _promptShowSound() {
-   if (!game.settings.get("simple-requests", "soundOnPromptActivate")) return;
-   // Get the file path from settings, or use the default
-   const sound = game.settings.get("simple-requests", "promptShowSound") || "modules/simple-requests/assets/samples/fingerSnapping.ogg";
-   playSound(sound);
+function openPlayerCalloutDialog() {
+   if (!game.user.isGM || !window.SimplePrompts) return;
+   const L = (k) => game.i18n.localize(`${C.ID}.pickPlayerCallout.${k}`);
+   const players = game.users.players.filter((u) => u.active);
+   if (!players.length) {
+      ui.notifications.warn(L("noPlayers"));
+      return;
+   }
+   const dieButtons = PLAYER_CALLOUT_DIE_FACES.map(
+      (f) => `<button type="button" class="sr-callout-die" data-faces="${f}">d${f}</button>`
+   ).join("");
+   let countOptions = "";
+   for (let n = PLAYER_CALLOUT_ROLL_COUNT_MIN; n <= PLAYER_CALLOUT_ROLL_COUNT_MAX; n++) {
+      countOptions += `<option value="${n}">${n}</option>`;
+   }
+   const userOptions = players.map(
+      (u) => `<option value="${u.id}">${escapeHtmlForAttr(u.name)}</option>`
+   ).join("");
+
+   new Dialog({
+      title: L("dialogTitle"),
+      content: `
+<form class="sr-pick-player-callout-form">
+  <div class="form-group">
+    <label>${L("playerLabel")}</label>
+    <select name="userId">${userOptions}</select>
+  </div>
+  <div class="form-group">
+    <label>${L("calloutType")}</label>
+    <div class="sr-callout-mode">
+      <label class="sr-callout-mode-opt"><input type="radio" name="calloutMode" value="up" checked> ${L("modeUp")}</label>
+      <label class="sr-callout-mode-opt"><input type="radio" name="calloutMode" value="dice"> ${L("modeDice")}</label>
+    </div>
+  </div>
+  <div class="form-group sr-callout-dice-row" style="display:none">
+    <label>${L("pickDie")}</label>
+    <div class="sr-callout-dice-buttons">${dieButtons}</div>
+    <input type="hidden" name="dieFaces" value="">
+  </div>
+  <div class="form-group sr-callout-count-row" style="display:none">
+    <label>${L("countLabel")}</label>
+    <select name="diceCount">${countOptions}</select>
+  </div>
+</form>`,
+      buttons: {
+         send: {
+            icon: '<i class="fas fa-bullhorn"></i>',
+            label: L("submit"),
+            callback: (html) => {
+               const userId = html.find('[name="userId"]').val();
+               const mode = html.find('[name="calloutMode"]:checked').val();
+               const target = game.users.get(userId);
+               if (!target) {
+                  ui.notifications.warn(L("noPlayers"));
+                  return false;
+               }
+               let img = target.avatar;
+               if (!img && target.character) {
+                  const actor = game.actors.get(target.character);
+                  img = actor?.img;
+               }
+               img = img || "icons/svg/mystery-man.svg";
+               if (mode === "up") {
+                  window.SimplePrompts.gmSendTargetedPlayerCallout({
+                     userId: target.id,
+                     name: target.name,
+                     img,
+                     level: 0,
+                     headlineText: L("upHeadline")
+                  });
+                  return true;
+               }
+               const faces = html.find('[name="dieFaces"]').val();
+               const count = parseInt(html.find('[name="diceCount"]').val(), 10);
+               if (!faces || !count) {
+                  ui.notifications.warn(L("needDieAndCount"));
+                  return false;
+               }
+               const formula = `${count}d${faces}`;
+               const headlineText = L("rollHeadline").replaceAll("{formula}", formula);
+               window.SimplePrompts.gmSendTargetedPlayerCallout({
+                  userId: target.id,
+                  name: target.name,
+                  img,
+                  level: 0,
+                  headlineText,
+                  rollFormula: formula
+               });
+               return true;
+            }
+         }
+      },
+      default: "send",
+      render: (html) => {
+         const syncDiceRows = () => {
+            const mode = html.find('[name="calloutMode"]:checked').val();
+            const show = mode === "dice";
+            html.find(".sr-callout-dice-row").toggle(show);
+            html.find(".sr-callout-count-row").toggle(show);
+         };
+         html.find('[name="calloutMode"]').on("change", syncDiceRows);
+         syncDiceRows();
+         html.find(".sr-callout-die").on("click", (ev) => {
+            const btn = ev.currentTarget;
+            html.find(".sr-callout-die").removeClass("active");
+            btn.classList.add("active");
+            html.find('[name="dieFaces"]').val(btn.dataset.faces);
+         });
+      }
+   }).render(true);
 }
 
 // Remove any existing dash to avoid duplicates

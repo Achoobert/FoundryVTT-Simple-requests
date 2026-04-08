@@ -25,6 +25,8 @@ describe('Simple Requests Module Functionality', () => {
       // find and click on 
       cy.get('.fa-list').click();
 
+      cy.get('.sr-queue-menu-actions .fa-bullhorn').should('exist');
+
       // find and click on 
       cy.get('.fa-regular.fa-hand.sr-request-icon').click();
 

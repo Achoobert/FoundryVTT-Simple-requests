@@ -7,6 +7,8 @@
             "soundOnPromptActivateHint": "Play a sound when the epic prompt is shown (GM callout)",
             "promptShowSound": "Prompt activation sound file",
             "promptShowSoundHint": "Path to the file for the sound when the epic prompt is shown (GM callout)",
+            "epicPromptHeadline": "Prompt headline",
+            "epicPromptHeadlineHint": "\"{name} has the floor\" or \"It's {name}'s turn\".",
             "soundActivate": "Sound on request activation",
             "soundActivateHint": "Play a sound when activating a request (click on someone's request as GM)",
             "reqClickSound": "Request activation sound file",
@@ -38,7 +40,23 @@
             "thirdRequestTooltip": "Urgent request!",
             "queueTransferTooltip": "Change the position of the requests window to Free",
             "requestsMenuTooltip": "Open the requests settings menu",
-            "queueAllMenuTooltip": "add all active players to queue in random order"
+            "queueAllMenuTooltip": "add all active players to queue",
+            "pickPlayerCalloutTooltip": "Send a player callout or roll prompt"
+        },
+        "pickPlayerCallout": {
+            "dialogTitle": "Player callout",
+            "playerLabel": "Player",
+            "calloutType": "Message",
+            "modeUp": "You're up!",
+            "modeDice": "Ask for a roll",
+            "pickDie": "Pick a die type",
+            "countLabel": "Number of dice",
+            "submit": "Send",
+            "upHeadline": "You're up!",
+            "rollHeadline": "Click anywhere to roll {formula}",
+            "noPlayers": "No active players to notify.",
+            "needDieAndCount": "Select a die type and how many to roll.",
+            "rollFailed": "Could not roll dice. Check the formula or your system."
         }
     }
 }
