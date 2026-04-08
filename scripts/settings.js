@@ -77,14 +77,12 @@ function updateChatRequestButtons() {
          buttonsBoxEl.append(button)
       })
    }
-   SimplePromptsApp._render()
+   reRender()
 }
 
 function reRender() {
-   SimplePromptsApp._render()
-}
-
-function updatePosition(value) {
-   SimplePromptsApp._render();
-   document.getElementById("simple-requests-chat-body").style.display = (value == "chat" ? null : "none")
+   // Usually the view is not loaded when user is accessing settings.
+   if (window.SimplePromptsApp) {
+      window.SimplePromptsApp._render(true);
+   }
 }
