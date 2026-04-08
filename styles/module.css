@@ -34,6 +34,14 @@
   box-shadow: 0 0 6px inset #8d9ea7;
 }
 
+/* Chat hand-raise triggers: no .sr-level-* animations (those stay on queue items / free-screen UI) */
+.sr-chat-button.sr-chat-hand-level-0,
+.sr-chat-button.sr-chat-hand-level-1,
+.sr-chat-button.sr-chat-hand-level-2 {
+  border: none;
+  animation: none;
+}
+
 .sr-chat-queue,
 .sr-freeScreen-queue {
   flex: 1;

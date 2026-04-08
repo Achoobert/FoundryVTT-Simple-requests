@@ -70,7 +70,7 @@ function updateChatRequestButtons() {
       ["first", "second", "third"].forEach((reqLevel, i) => {
          if (!game.settings.get(C.ID, `${reqLevel}Request`)) return
          const button = document.createElement('div')
-         button.className = `sr-chat-button sr-level-${i}`
+         button.className = `sr-chat-button sr-chat-hand-level-${i}`
          button.innerHTML = `<i class=\"fa-${i == 0 ? "regular" : "solid"} fa-hand${i == 2 ? "-sparkles" : ""} sr-request-icon\"></i>`
          button.dataset.tooltip = game.i18n.localize(`${C.ID}.buttons.${reqLevel}RequestTooltip`)
          button.addEventListener("click", async () => {
