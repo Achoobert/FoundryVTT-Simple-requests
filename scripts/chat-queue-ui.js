@@ -27,7 +27,7 @@ function getRequestElement(item) {
    return containerEl;
 }
 
-function addRequestListener(element, reRender = false) {
+function addRequestListener(element) {
    const elId = element?.dataset?.id;
    if (!game.user.isGM && game.user.id != elId) return;
 
@@ -40,10 +40,6 @@ function addRequestListener(element, reRender = false) {
          window.SimplePrompts.gm_callout_top_request();
       }
    });
-
-   if (reRender && window.SimpleRequestsApp) {
-      window.SimpleRequestsApp._render(true);
-   }
 }
 
 function getChatControlsContainer() {
@@ -142,9 +138,6 @@ async function renderSimplePromptsQueue() {
       }
    });
    transferButton.addEventListener("click", async () => {
-      if (window.SimpleRequestsApp) {
-         window.SimpleRequestsApp._render(true);
-      }
       document.getElementById("simple-requests-chat-body").style.display = "none";
    });
 
@@ -153,6 +146,7 @@ async function renderSimplePromptsQueue() {
    const buttonDiv = document.createElement("div");
    buttonDiv.classList.add("sr-chat-buttons");
    ["first", "second", "third"].forEach((reqLevel, i) => {
+      if (!game.settings.get(C.ID, `${reqLevel}Request`)) return;
       const button = document.createElement("div");
       button.className = `sr-chat-button sr-chat-hand-level-${i}`;
       button.innerHTML = `<i class="fa-${i == 0 ? "regular" : "solid"} fa-hand${i == 2 ? "-sparkles" : ""} sr-request-icon"></i>`;

@@ -11,6 +11,7 @@
             "epicPromptHeadlineHint": "\"{name} has the floor\" or \"It's {name}'s turn\".",
             "soundActivate": "Sound on request activation",
             "soundActivateHint": "Play a sound when activating a request (click on someone's request as GM)",
+            "soundActivateHint": "Play a sound when activating a request (socket/macro activateRequest)",
             "reqClickSound": "Request activation sound file",
             "reqClickSoundHint": "Path to the file for the sound when activating a request",
             "firstRequest": "Show First request",
@@ -25,21 +26,14 @@
             "thirdRequestSound": "Third Request Sound File",
             "thirdRequestSoundHint": "Audio file to play for the third (urgent) request."
         },
-        "errors": {
-            "noReqClickSound": "File not found at the specified path",
-            "actorNotFound": "Actor not found - details in console",
-            "noControlledTokens": "Select a token on the stage to create a request!"
-        },
         "chatMessage": {
-            "activateRequest1": "Player \"",
-            "activateRequest2": "\" made a request!"
+            "activateRequest": "{name} made a request!"
         },
         "buttons": {
             "firstRequestTooltip": "Common request",
             "secondRequestTooltip": "Important request",
             "thirdRequestTooltip": "Urgent request!",
             "queueTransferTooltip": "Change the position of the requests window to Free",
-            "requestsMenuTooltip": "Open the requests settings menu",
             "queueAllMenuTooltip": "add all active players to queue",
             "pickPlayerCalloutTooltip": "Send a player callout or roll prompt"
         },

@@ -138,12 +138,15 @@ class SimplePromptsManager {
       const queue = CONFIG.SMP_REQUESTS.queue || [];
       const req = queue.find(r => r.userId === userId);
       if (!req) return;
-      const sound = game.settings.get(this.moduleName, "reqClickSound") || "modules/simple-requests/assets/samples/fingerSnapping.ogg";
-      playSound(sound);
+      if (game.settings.get(this.moduleName, "soundActivate")) {
+         const sound = game.settings.get(this.moduleName, "reqClickSound")
+            || "modules/simple-requests/assets/samples/fingerSnapping.ogg";
+         playSound(sound);
+      }
       ChatMessage.create({
          user: game.user.id,
          speaker: { alias: game.user.name },
-         content: `${req.name} ${game.i18n.localize("simple-requests.chatMessage.activateRequest2")}`
+         content: game.i18n.format("simple-requests.chatMessage.activateRequest", { name: req.name })
       });
       remove_request_LOCAL_QUEUE(userId);
       await moveSimpleRequestsDash();
