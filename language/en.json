@@ -23,7 +23,9 @@
             "secondRequestSound": "Second Request Sound File",
             "secondRequestSoundHint": "Audio file to play for the second (important) request.",
             "thirdRequestSound": "Third Request Sound File",
-            "thirdRequestSoundHint": "Audio file to play for the third (urgent) request."
+            "thirdRequestSoundHint": "Audio file to play for the third (urgent) request.",
+            "queueAllPlayersOnly": "Queue all: players only",
+            "queueAllPlayersOnlyHint": "When enabled, “add all to queue” only includes users with the Player role. When disabled, every connected user (including GMs and Assistants) is included. Order is randomized each time."
         },
         "chatMessage": {
             "activateRequest": "{name} made a request!"
@@ -33,7 +35,7 @@
             "secondRequestTooltip": "Important request",
             "thirdRequestTooltip": "Urgent request!",
             "queueTransferTooltip": "Change the position of the requests window to Free",
-            "queueAllMenuTooltip": "add all active players to queue",
+            "queueAllMenuTooltip": "Add all connected users to the queue (random order)",
             "pickPlayerCalloutTooltip": "Send a player callout or roll prompt"
         },
         "pickPlayerCallout": {

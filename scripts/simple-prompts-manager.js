@@ -36,6 +36,21 @@ function playActivateRequestSoundIfEnabled() {
    playSound(sound);
 }
 
+function shuffleArrayInPlace(array) {
+   for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+   }
+   return array;
+}
+
+function getActiveUsersForQueueAll(playersOnly) {
+   if (playersOnly) {
+      return game.users.players.filter((u) => u.active);
+   }
+   return game.users.filter((u) => u.active);
+}
+
 class SimplePromptsManager {
    constructor() {
       this.moduleName = C.ID;
@@ -96,15 +111,20 @@ class SimplePromptsManager {
    }
 
    async createSocialInitiative() {
-      const Active_Users = game.users.players.filter((user) => user.active == true);
-      Active_Users.forEach(user => {
-         window.SimplePrompts.createRequest({
+      const playersOnly = game.settings.get(this.moduleName, "queueAllPlayersOnly");
+      const users = getActiveUsersForQueueAll(playersOnly).slice();
+      shuffleArrayInPlace(users);
+      const baseTs = Date.now();
+      for (let i = 0; i < users.length; i++) {
+         const user = users[i];
+         await this.createRequest({
             userId: user.id,
             name: user.name,
             img: user.avatar,
-            level: 0
+            level: 0,
+            timestamp: baseTs + i
          });
-      });
+      }
    }
 
    async _addRequest(requestData) {

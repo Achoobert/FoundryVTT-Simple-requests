@@ -33,6 +33,8 @@ Hooks.once('init', function() {
    registerSettings("thirdRequest", "world", true, Boolean, true, null, updateChatRequestButtons);
    registerSettings("thirdRequestSound", "world", true, String, "modules/simple-requests/assets/request2.ogg", "audio");
 
+   registerSettings("queueAllPlayersOnly", "world", true, Boolean, false);
+
    registerSettings("queue", "world", false, Array, []);
 });
 
