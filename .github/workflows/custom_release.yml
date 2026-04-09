@@ -30,13 +30,12 @@
 #   - Has the module's entry on FoundryVTT's module administration site
 #     (https://foundryvtt.com/admin) been updated?
 #
-name: Auto Release on Main/Master
+name: Auto Release on Main
 
 on:
   push:
     branches:
       - main
-      - master
   workflow_dispatch:
 
 jobs:
@@ -47,7 +46,7 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Get Version from module.json
         id: get_version_from_manifest
@@ -96,12 +95,12 @@ jobs:
           cp module.json ./simple-requests/
           [ -f README.md ] && cp README.md ./simple-requests/
           [ -f LICENSE ] && cp LICENSE ./simple-requests/
-          [ -d templates ] && cp -r templates ./simple-requests/
+          [ -d assets ] && cp -r assets ./simple-requests/
+          [ -d language ] && cp -r language ./simple-requests/
           [ -d scripts ] && cp -r scripts ./simple-requests/
           [ -d styles ] && cp -r styles ./simple-requests/
-          [ -d packs ] && cp -r packs ./simple-requests/
-          [ -d language ] && cp -r language ./simple-requests/
-          [ -d assets ] && cp -r assets ./simple-requests/
+          [ -d templates ] && cp -r templates ./simple-requests/
+
 
       - name: Create Module Archive
         run: |

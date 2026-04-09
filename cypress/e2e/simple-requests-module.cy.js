@@ -79,7 +79,7 @@ describe('Simple Requests Module Functionality', () => {
 
    })
 
-   it.only('roll', () => {
+   it('roll', () => {
       cy.get("#chat-message").should("be.visible")
       cy.get("#sidebar").should("be.visible")
       cy.get('.fa-comments').click();
