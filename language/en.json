@@ -40,16 +40,18 @@
         "pickPlayerCallout": {
             "dialogTitle": "Player callout",
             "playerLabel": "Player",
-            "calloutType": "Message",
-            "modeUp": "You're up!",
-            "modeDice": "Ask for a roll",
-            "pickDie": "Pick a die type",
+            "messageSection": "Message",
+            "messageLabel": "Callout text",
+            "messageDefault": "You're next",
+            "rollSection": "Ask for a roll",
+            "pickDie": "Die type",
+            "cancel": "Cancel",
             "countLabel": "Number of dice",
-            "submit": "Send",
-            "upHeadline": "You're up!",
+            "sendMessageButton": "Send message",
             "rollHeadline": "Roll {formula}",
             "noPlayers": "No active players to notify.",
-            "needDieAndCount": "Select a die type and how many to roll.",
+            "needMessage": "Enter a message to send.",
+            "needDieAndCount": "Choose how many dice and a die type.",
             "rollFailed": "Could not roll dice. Check the formula or your system."
         }
     }

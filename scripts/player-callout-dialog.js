@@ -5,12 +5,27 @@ import {
    PLAYER_CALLOUT_ROLL_COUNT_MIN
 } from "./const.js";
 
+function resolveCalloutTarget(html, L) {
+   const userId = html.find('[name="userId"]').val();
+   const target = game.users.get(userId);
+   if (!target) {
+      ui.notifications.warn(L("noPlayers"));
+      return null;
+   }
+   let img = target.avatar;
+   if (!img && target.character) {
+      const actor = game.actors.get(target.character);
+      img = actor?.img;
+   }
+   img = img || "icons/svg/mystery-man.svg";
+   return { userId: target.id, name: target.name, img, level: 0 };
+}
+
 export async function openPlayerCalloutDialog() {
    if (!game.user.isGM || !window.SimplePrompts) return;
    const L = (k) => game.i18n.localize(`${C.ID}.pickPlayerCallout.${k}`);
    const players = game.users.players.filter((u) => u.active);
    if (!players.length) {
-      // this will be seen by GMs trying to test the module: we will allow them to notify themselves
       players.push(game.user);
    }
    const diceCounts = [];
@@ -23,7 +38,8 @@ export async function openPlayerCalloutDialog() {
       content = await foundry.applications.handlebars.renderTemplate(template, {
          players: players.map((u) => ({ id: u.id, name: u.name })),
          dieFaces: PLAYER_CALLOUT_DIE_FACES,
-         diceCounts
+         diceCounts,
+         messageDefault: game.i18n.localize(`${C.ID}.pickPlayerCallout.messageDefault`)
       });
    } catch (err) {
       console.error("simple-requests: pick-player-callout template failed", err);
@@ -31,73 +47,54 @@ export async function openPlayerCalloutDialog() {
       return;
    }
 
-   new Dialog({
+   let dialog;
+   dialog = new Dialog({
       title: L("dialogTitle"),
       content,
       buttons: {
-         send: {
-            icon: '<i class="fas fa-bullhorn"></i>',
-            label: L("submit"),
-            callback: (html) => {
-               const userId = html.find('[name="userId"]').val();
-               const mode = html.find('[name="calloutMode"]:checked').val();
-               const target = game.users.get(userId);
-               if (!target) {
-                  ui.notifications.warn(L("noPlayers"));
-                  return false;
-               }
-               let img = target.avatar;
-               if (!img && target.character) {
-                  const actor = game.actors.get(target.character);
-                  img = actor?.img;
-               }
-               img = img || "icons/svg/mystery-man.svg";
-               if (mode === "up") {
-                  window.SimplePrompts.gmSendTargetedPlayerCallout({
-                     userId: target.id,
-                     name: target.name,
-                     img,
-                     level: 0,
-                     headlineText: L("upHeadline")
-                  });
-                  return true;
-               }
-               const faces = html.find('[name="dieFaces"]').val();
-               const count = parseInt(html.find('[name="diceCount"]').val(), 10);
-               if (!faces || !count) {
-                  ui.notifications.warn(L("needDieAndCount"));
-                  return false;
-               }
-               const formula = `${count}d${faces}`;
-               const headlineText = L("rollHeadline").replaceAll("{formula}", formula);
-               window.SimplePrompts.gmSendTargetedPlayerCallout({
-                  userId: target.id,
-                  name: target.name,
-                  img,
-                  level: 0,
-                  headlineText,
-                  rollFormula: formula
-               });
-               return true;
-            }
+         close: {
+            icon: '<i class="fas fa-times"></i>',
+            label: L("cancel"),
+            callback: () => true
          }
       },
-      default: "send",
       render: (html) => {
-         const syncDiceRows = () => {
-            const mode = html.find('[name="calloutMode"]:checked').val();
-            const show = mode === "dice";
-            html.find(".sr-callout-dice-row").toggle(show);
-            html.find(".sr-callout-count-row").toggle(show);
-         };
-         html.find('[name="calloutMode"]').on("change", syncDiceRows);
-         syncDiceRows();
-         html.find(".sr-callout-die").on("click", (ev) => {
-            const btn = ev.currentTarget;
-            html.find(".sr-callout-die").removeClass("active");
-            btn.classList.add("active");
-            html.find('[name="dieFaces"]').val(btn.dataset.faces);
+         html.find(".sr-callout-message-form").on("submit", (ev) => {
+            ev.preventDefault();
+            const base = resolveCalloutTarget(html, L);
+            if (!base) return;
+            const text = String(html.find('[name="calloutMessage"]').val() ?? "").trim();
+            if (!text) {
+               ui.notifications.warn(L("needMessage"));
+               return;
+            }
+            window.SimplePrompts.gmSendTargetedPlayerCallout({
+               ...base,
+               headlineText: text
+            });
+            dialog.close();
+         });
+         html.find(".sr-callout-dice-form").on("submit", (ev) => {
+            ev.preventDefault();
+            const submitter = ev.originalEvent?.submitter;
+            const faces = submitter?.value ?? submitter?.getAttribute?.("value");
+            const count = parseInt(String(html.find('[name="diceCount"]').val()), 10);
+            if (!faces || !Number.isFinite(count) || count < 1) {
+               ui.notifications.warn(L("needDieAndCount"));
+               return;
+            }
+            const base = resolveCalloutTarget(html, L);
+            if (!base) return;
+            const formula = `${count}d${faces}`;
+            const headlineText = L("rollHeadline").replaceAll("{formula}", formula);
+            window.SimplePrompts.gmSendTargetedPlayerCallout({
+               ...base,
+               headlineText,
+               rollFormula: formula
+            });
+            dialog.close();
          });
       }
-   }).render(true);
+   });
+   dialog.render(true);
 }

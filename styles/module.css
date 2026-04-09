@@ -304,25 +304,35 @@
   line-height: 100% !important;
 }
 
-.sr-callout-mode {
+.sr-pick-player-callout {
+  min-height: 250px;
   display: flex;
   flex-direction: column;
-  gap: 0.35em;
+  gap: 0.75rem;
 }
 
-.sr-callout-mode-opt {
-  display: flex;
-  align-items: center;
-  gap: 0.35em;
+.sr-callout-section-title {
+  margin: 0 0 0.35rem;
+  font-size: var(--font-size-14, 0.85rem);
+  font-weight: 600;
+  opacity: 0.9;
+  border-bottom: 1px solid var(--color-border-light, rgba(255, 255, 255, 0.12));
+  padding-bottom: 0.25rem;
 }
 
-.sr-pick-player-callout-form {
-  min-height: 250px;
+.sr-callout-message-form .form-group,
+.sr-callout-dice-form .form-group {
+  margin-bottom: 0.5rem;
 }
+
+.sr-callout-send-message {
+  margin-top: 0.25rem;
+}
+
 .sr-callout-dice-buttons {
   display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 6px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
   margin-top: 4px;
 }
 
@@ -330,11 +340,6 @@
   min-width: 0;
   padding: 4px 6px;
   cursor: pointer;
-}
-
-.sr-callout-die.active {
-  outline: 2px solid var(--color-border-highlight, #782e22);
-  font-weight: bold;
 }
 
 .epic-prompt-container {

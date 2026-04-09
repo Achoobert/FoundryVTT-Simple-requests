@@ -41,19 +41,14 @@ describe('Simple Requests Module Functionality', () => {
       // callout test
 
       cy.get('.sr-queue-menu-actions .fa-bullhorn', { timeout: 10000 }).click();
-      cy.get('.sr-pick-player-callout-form').should('be.visible', { timeout: 10000 });
-      cy.get('.sr-pick-player-callout-form').find('select[name="userId"]').should('be.visible');
-      // cy.get('.sr-pick-player-callout-form').find('select[name="calloutMode"]').should('be.visible');
-      cy.get('.sr-pick-player-callout-form').find('select[name="diceCount"]').should('be.visible');
-      cy.get('.sr-pick-player-callout-form').find('button[name="submit"]').should('be.visible');
+      cy.get('.sr-pick-player-callout').should('be.visible', { timeout: 10000 });
+      cy.get('.sr-pick-player-callout').find('select[name="userId"]').should('be.visible');
+      cy.get('.sr-pick-player-callout').find('select[name="diceCount"]').should('be.visible');
+      cy.get('.sr-callout-message-form').find('input[name="calloutMessage"]').should('be.visible');
+      cy.get('.sr-callout-message-form').find('button[type="submit"]').should('be.visible');
 
-      // test the dice buttons
-      // sr-callout-die d100
-      cy.get('.sr-callout-dice-buttons').find('button').eq(4).click();
-      cy.get('.sr-callout-dice-buttons').find('button').click();
-
-      cy.get('.sr-pick-player-callout-form').find('button[name="submit"]').click();
-      cy.get('.sr-pick-player-callout-form').should('not.exist');
+      cy.get('.sr-callout-dice-buttons').find('button[type="submit"]').first().click();
+      cy.get('.sr-pick-player-callout').should('not.exist');
 
 
       // cy.get('body').then(($body) => {
@@ -93,19 +88,14 @@ describe('Simple Requests Module Functionality', () => {
       cy.get('.fa-list').click();
 
       cy.get('.sr-queue-menu-actions .fa-bullhorn', { timeout: 10000 }).click();
-      cy.get('.sr-pick-player-callout-form').should('be.visible', { timeout: 10000 });
-      cy.get('.sr-pick-player-callout-form').find('select[name="userId"]').should('be.visible');
-      // cy.get('.sr-pick-player-callout-form').find('select[name="calloutMode"]').should('be.visible');
-      cy.get('.sr-pick-player-callout-form').find('select[name="diceCount"]').should('be.visible');
-      cy.get('.sr-pick-player-callout-form').find('button[name="submit"]').should('be.visible');
+      cy.get('.sr-pick-player-callout').should('be.visible', { timeout: 10000 });
+      cy.get('.sr-pick-player-callout').find('select[name="userId"]').should('be.visible');
+      cy.get('.sr-pick-player-callout').find('select[name="diceCount"]').should('be.visible');
+      cy.get('.sr-callout-message-form').find('input[name="calloutMessage"]').should('be.visible');
+      cy.get('.sr-callout-message-form').find('button[type="submit"]').should('be.visible');
 
-      // test the dice buttons
-      // sr-callout-die d100
-      cy.get('.sr-callout-dice-buttons').find('button').eq(4).click();
-      cy.get('.sr-callout-dice-buttons').find('button').click();
-
-      cy.get('.sr-pick-player-callout-form').find('button[name="submit"]').click();
-      cy.get('.sr-pick-player-callout-form').should('not.exist');
+      cy.get('.sr-callout-dice-buttons').find('button[type="submit"]').first().click();
+      cy.get('.sr-pick-player-callout').should('not.exist');
    })
 
    it('should handle module UI elements when present', () => {
