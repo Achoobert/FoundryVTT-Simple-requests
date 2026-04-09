@@ -1,4 +1,27 @@
-import { Constants as C, escapeHtmlForAttr } from "./const.js";
+import { Constants as C, escapeHtmlForAttr, PLAYER_CALLOUT_DIE_FACES } from "./const.js";
+
+const DICE_MASK_FALLBACK = "icons/dice/d20black.svg";
+
+const D10_MASK_URL = "icons/dice/d10black.svg";
+
+/**
+ * @param {string | null} formula - e.g. "2d6"
+ * @returns {{ showDiceOverlay: boolean, dicePercentile?: boolean, diceMaskUrl?: string | null }}
+ */
+function diceOverlayFromFormula(formula) {
+   if (!formula) return { showDiceOverlay: false };
+   const m = formula.trim().match(/^(\d+)d(\d+)$/i);
+   if (!m) return { showDiceOverlay: false };
+   const faces = parseInt(m[2], 10);
+   if (!Number.isFinite(faces)) return { showDiceOverlay: false };
+   if (faces === 100) {
+      return { showDiceOverlay: true, dicePercentile: true };
+   }
+   const url = PLAYER_CALLOUT_DIE_FACES.includes(faces)
+      ? `icons/dice/d${faces}black.svg`
+      : DICE_MASK_FALLBACK;
+   return { showDiceOverlay: true, diceMaskUrl: url };
+}
 
 function playInterfaceSound(src) {
    const volume = game.settings.get("core", "globalInterfaceVolume");
@@ -48,6 +71,11 @@ export async function showEpicPrompt(data) {
 
    document.querySelectorAll("#sr-epic-prompt").forEach((el) => el.remove());
 
+   const rollFormula = typeof data.rollFormula === "string" && data.rollFormula.trim()
+      ? data.rollFormula.trim()
+      : null;
+   const { showDiceOverlay, dicePercentile, diceMaskUrl } = diceOverlayFromFormula(rollFormula);
+
    const overlay = document.createElement("div");
    overlay.id = "sr-epic-prompt";
    overlay.className = "sr-epic-prompt-overlay";
@@ -59,7 +87,11 @@ export async function showEpicPrompt(data) {
          safeName,
          level,
          overlayImgSrc,
-         headlineHtml
+         headlineHtml,
+         showDiceOverlay,
+         dicePercentile: !!dicePercentile,
+         diceMaskUrl,
+         d10MaskUrl: D10_MASK_URL
       });
    } catch (err) {
       console.error("simple-requests: epic-prompt template failed", err);
@@ -68,10 +100,6 @@ export async function showEpicPrompt(data) {
    }
 
    promptShowSound();
-
-   const rollFormula = typeof data.rollFormula === "string" && data.rollFormula.trim()
-      ? data.rollFormula.trim()
-      : null;
 
    let dismissed = false;
    const dismiss = () => {

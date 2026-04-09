@@ -16,45 +16,42 @@ describe('Simple Requests Module Functionality', () => {
       // element w id chat
       // cy.get("#chat").should("be.visible")
       cy.get("#chat-message").should("be.visible")
-      // cy.get("#chat-log").should("be.visible")
       cy.get("#sidebar").should("be.visible")
-      // cy.get("#sidebsr-content").should("be.visible")
-
       cy.get('.fa-comments').click();
 
       // find and click on 
       cy.get('.fa-list').click();
 
-      cy.get('.sr-queue-menu-actions .fa-bullhorn').should('exist');
-
       // find and click on 
       cy.get('.fa-regular.fa-hand.sr-request-icon').click();
-
-      // id="sr-chat-queue"
       cy.get("#sr-chat-queue").should("exist");
 
       // click on
       cy.get('.sr-request-container-chat.sr-level-0').click();
-
-      // foundry v13 has an epic prompt
-      // id="sr-epic-prompt"
       cy.get("#sr-epic-prompt").should("be.visible");
 
 
       cy.get("#sr-chat-queue", { timeout: 10000 }).should("be.visible");
-
       cy.get('.fa-regular.fa-hand.sr-request-icon').click();
       // test whether right click to remove works
       cy.get('.sr-request-container-chat').should('exist');
       cy.get('.sr-request-container-chat').rightclick();
       cy.get('.sr-request-container-chat').should('not.exist');
 
-      // 
+      // callout test
+
+      cy.get('.sr-queue-menu-actions .fa-bullhorn', { timeout: 10000 }).click();
       cy.get('.sr-pick-player-callout-form').should('be.visible', { timeout: 10000 });
       cy.get('.sr-pick-player-callout-form').find('select[name="userId"]').should('be.visible');
-      cy.get('.sr-pick-player-callout-form').find('select[name="calloutMode"]').should('be.visible');
+      // cy.get('.sr-pick-player-callout-form').find('select[name="calloutMode"]').should('be.visible');
       cy.get('.sr-pick-player-callout-form').find('select[name="diceCount"]').should('be.visible');
       cy.get('.sr-pick-player-callout-form').find('button[name="submit"]').should('be.visible');
+
+      // test the dice buttons
+      cy.get('.sr-callout-dice-buttons').find('button').click();
+      // sr-callout-die d100
+      cy.get('.sr-callout-dice-buttons').find('button').eq(4).click();
+
       cy.get('.sr-pick-player-callout-form').find('button[name="submit"]').click();
       cy.get('.sr-pick-player-callout-form').should('not.exist');
 
