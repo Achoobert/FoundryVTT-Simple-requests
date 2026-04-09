@@ -35,7 +35,7 @@ class SimplePromptsManager {
       const toShow = pop_request_LOCAL_QUEUE();
       log_socket("sending pop_top_request", toShow);
       this.socket.executeForOthers("showEpicPrompt", toShow);
-      showEpicPrompt(toShow);
+      await showEpicPrompt(toShow);
       await moveSimpleRequestsDash();
    }
 
@@ -180,6 +180,6 @@ Hooks.once("socketlib.ready", () => {
          remove_request_LOCAL_QUEUE(rest.userId);
          await moveSimpleRequestsDash();
       }
-      showEpicPrompt(rest);
+      await showEpicPrompt(rest);
    });
 });

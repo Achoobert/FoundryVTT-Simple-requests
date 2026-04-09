@@ -13,7 +13,7 @@ function playInterfaceSound(src) {
 function promptShowSound() {
    if (!game.settings.get(C.ID, "soundOnPromptActivate")) return;
    const sound = game.settings.get(C.ID, "promptShowSound")
-      || "modules/simple-requests/assets/samples/fingerSnapping.ogg";
+      || `modules/${C.ID}/assets/samples/fingerSnapping.ogg`;
    playInterfaceSound(sound);
 }
 
@@ -26,8 +26,9 @@ function promptShowSound() {
  * @param {number} [data.level]
  * @param {string} [data.headlineText] - overrides epicPromptHeadline template
  * @param {string} [data.rollFormula] - e.g. "2d6"
+ * @returns {Promise<void>}
  */
-export function showEpicPrompt(data) {
+export async function showEpicPrompt(data) {
    const name = data.name || "Player";
    const safeName = escapeHtmlForAttr(name);
    const img = data.img || "icons/svg/mystery-man.svg";
@@ -50,14 +51,21 @@ export function showEpicPrompt(data) {
    const overlay = document.createElement("div");
    overlay.id = "sr-epic-prompt";
    overlay.className = "sr-epic-prompt-overlay";
-   const overlayImgSrc = `modules/simple-requests/assets/request${level}.webp`;
-   overlay.innerHTML = `
-      <div class="epic-prompt-container">
-         <img class="prompt-img sr-img-level-${level}" src="${img}" alt="${safeName}" >
-         <img class="epic-prompt-warning sr-level-${level}" src="${overlayImgSrc}" alt="">
-         <h1 class="epic-prompt-name" >${headlineHtml}</h1>
-      </div>
-   `;
+   const overlayImgSrc = `modules/${C.ID}/assets/request${level}.webp`;
+   const template = `modules/${C.ID}/templates/epic-prompt-overlay.hbs`;
+   try {
+      overlay.innerHTML = await foundry.applications.handlebars.renderTemplate(template, {
+         img,
+         safeName,
+         level,
+         overlayImgSrc,
+         headlineHtml
+      });
+   } catch (err) {
+      console.error("simple-requests: epic-prompt template failed", err);
+      ui.notifications?.error?.("simple-requests: could not show epic prompt.");
+      return;
+   }
 
    promptShowSound();
 

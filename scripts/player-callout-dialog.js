@@ -2,11 +2,10 @@ import {
    Constants as C,
    PLAYER_CALLOUT_DIE_FACES,
    PLAYER_CALLOUT_ROLL_COUNT_MAX,
-   PLAYER_CALLOUT_ROLL_COUNT_MIN,
-   escapeHtmlForAttr
+   PLAYER_CALLOUT_ROLL_COUNT_MIN
 } from "./const.js";
 
-export function openPlayerCalloutDialog() {
+export async function openPlayerCalloutDialog() {
    if (!game.user.isGM || !window.SimplePrompts) return;
    const L = (k) => game.i18n.localize(`${C.ID}.pickPlayerCallout.${k}`);
    const players = game.users.players.filter((u) => u.active);
@@ -14,42 +13,27 @@ export function openPlayerCalloutDialog() {
       ui.notifications.warn(L("noPlayers"));
       return;
    }
-   const dieButtons = PLAYER_CALLOUT_DIE_FACES.map(
-      (f) => `<button type="button" class="sr-callout-die" data-faces="${f}">d${f}</button>`
-   ).join("");
-   let countOptions = "";
+   const diceCounts = [];
    for (let n = PLAYER_CALLOUT_ROLL_COUNT_MIN; n <= PLAYER_CALLOUT_ROLL_COUNT_MAX; n++) {
-      countOptions += `<option value="${n}">${n}</option>`;
+      diceCounts.push(n);
    }
-   const userOptions = players.map(
-      (u) => `<option value="${u.id}">${escapeHtmlForAttr(u.name)}</option>`
-   ).join("");
+   const template = `modules/${C.ID}/templates/pick-player-callout.hbs`;
+   let content;
+   try {
+      content = await foundry.applications.handlebars.renderTemplate(template, {
+         players: players.map((u) => ({ id: u.id, name: u.name })),
+         dieFaces: PLAYER_CALLOUT_DIE_FACES,
+         diceCounts
+      });
+   } catch (err) {
+      console.error("simple-requests: pick-player-callout template failed", err);
+      ui.notifications.error("simple-requests: could not open player callout dialog.");
+      return;
+   }
 
    new Dialog({
       title: L("dialogTitle"),
-      content: `
-<form class="sr-pick-player-callout-form">
-  <div class="form-group">
-    <label>${L("playerLabel")}</label>
-    <select name="userId">${userOptions}</select>
-  </div>
-  <div class="form-group">
-    <label>${L("calloutType")}</label>
-    <div class="sr-callout-mode">
-      <label class="sr-callout-mode-opt"><input type="radio" name="calloutMode" value="up" checked> ${L("modeUp")}</label>
-      <label class="sr-callout-mode-opt"><input type="radio" name="calloutMode" value="dice"> ${L("modeDice")}</label>
-    </div>
-  </div>
-  <div class="form-group sr-callout-dice-row" style="display:none">
-    <label>${L("pickDie")}</label>
-    <div class="sr-callout-dice-buttons">${dieButtons}</div>
-    <input type="hidden" name="dieFaces" value="">
-  </div>
-  <div class="form-group sr-callout-count-row" style="display:none">
-    <label>${L("countLabel")}</label>
-    <select name="diceCount">${countOptions}</select>
-  </div>
-</form>`,
+      content,
       buttons: {
          send: {
             icon: '<i class="fas fa-bullhorn"></i>',

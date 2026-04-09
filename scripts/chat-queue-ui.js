@@ -92,7 +92,7 @@ async function renderSimplePromptsQueue() {
          window.SimplePrompts.createSocialInitiative();
       });
       pickPlayerMenuButton.addEventListener("click", () => {
-         openPlayerCalloutDialog();
+         openPlayerCalloutDialog().catch((e) => console.error(e));
       });
    }
 
