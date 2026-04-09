@@ -1,4 +1,4 @@
-import { Constants as C, visualNoverIsActive } from "./const.js";
+import { Constants as C } from "./const.js";
 
 Hooks.once('init', function() {
    const registerSettings = (key, _scope = 'world', _config = true, _type = Boolean, _default = true, _filePicker = null, onChange = () => {}, _choices = null, _range = null) => {

@@ -11,7 +11,7 @@ describe('Simple Requests Module Functionality', () => {
       cy.loginAsGM()
    })
 
-   it.only('v13: should detect module presence after login', () => {
+   it.only('gm only test of module', () => {
       // Now check for module elements
       // element w id chat
       // cy.get("#chat").should("be.visible")
@@ -48,6 +48,15 @@ describe('Simple Requests Module Functionality', () => {
       cy.get('.sr-request-container-chat').should('exist');
       cy.get('.sr-request-container-chat').rightclick();
       cy.get('.sr-request-container-chat').should('not.exist');
+
+      // 
+      cy.get('.sr-pick-player-callout-form').should('be.visible', { timeout: 10000 });
+      cy.get('.sr-pick-player-callout-form').find('select[name="userId"]').should('be.visible');
+      cy.get('.sr-pick-player-callout-form').find('select[name="calloutMode"]').should('be.visible');
+      cy.get('.sr-pick-player-callout-form').find('select[name="diceCount"]').should('be.visible');
+      cy.get('.sr-pick-player-callout-form').find('button[name="submit"]').should('be.visible');
+      cy.get('.sr-pick-player-callout-form').find('button[name="submit"]').click();
+      cy.get('.sr-pick-player-callout-form').should('not.exist');
 
 
       // cy.get('body').then(($body) => {

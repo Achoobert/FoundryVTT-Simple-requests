@@ -10,8 +10,8 @@ export async function openPlayerCalloutDialog() {
    const L = (k) => game.i18n.localize(`${C.ID}.pickPlayerCallout.${k}`);
    const players = game.users.players.filter((u) => u.active);
    if (!players.length) {
-      ui.notifications.warn(L("noPlayers"));
-      return;
+      // this will be seen by GMs trying to test the module: we will allow them to notify themselves
+      players.push(game.user);
    }
    const diceCounts = [];
    for (let n = PLAYER_CALLOUT_ROLL_COUNT_MIN; n <= PLAYER_CALLOUT_ROLL_COUNT_MAX; n++) {
