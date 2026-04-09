@@ -1,11 +1,10 @@
 {
   "name": "simple-requests",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "A Foundry VTT module that adds a convenient way to use the Requests rule",
   "scripts": {
     "test": "cypress run",
     "test:open": "cypress open",
-    "test:headed": "cypress run --headed",
     "test:watch": "cypress run --watch",
     "test:dev": "cypress open --config baseUrl=http://localhost:30000",
     "test:ci": "cypress run --headless --browser chrome --config-file cypress.config.ci.js",

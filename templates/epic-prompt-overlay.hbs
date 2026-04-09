@@ -1,0 +1,23 @@
+<div class="epic-prompt-container">
+  <div class="epic-prompt-portrait-wrap">
+    <img class="prompt-img sr-img-level-{{level}}" src="{{img}}" alt="{{safeName}}">
+    {{#if showDiceOverlay}}
+    <div class="sr-epic-dice-overlay-host">
+      {{#if dicePercentile}}
+      <div class="sr-epic-dice-percentile" aria-hidden="true">
+        <div class="sr-epic-dice-pair-slot sr-epic-dice-pair-first">
+          <div class="sr-epic-dice-overlay sr-epic-dice-vibrate" style="mask: url('{{d10MaskUrl}}') center 2px / contain no-repeat; -webkit-mask: url('{{d10MaskUrl}}') center 2px / contain no-repeat;"></div>
+        </div>
+        <div class="sr-epic-dice-pair-slot sr-epic-dice-pair-second">
+          <div class="sr-epic-dice-overlay sr-epic-dice-vibrate" style="mask: url('{{d10MaskUrl}}') center 2px / contain no-repeat; -webkit-mask: url('{{d10MaskUrl}}') center 2px / contain no-repeat;"></div>
+        </div>
+      </div>
+      {{else}}
+      <div class="sr-epic-dice-overlay sr-epic-dice-vibrate" style="mask: url('{{diceMaskUrl}}') center 2px / contain no-repeat; -webkit-mask: url('{{diceMaskUrl}}') center 2px / contain no-repeat;" aria-hidden="true"></div>
+      {{/if}}
+    </div>
+    {{/if}}
+  </div>
+  <img class="epic-prompt-warning sr-level-{{level}}" src="{{overlayImgSrc}}" alt="">
+  <h1 class="epic-prompt-name">{{{headlineHtml}}}</h1>
+</div>

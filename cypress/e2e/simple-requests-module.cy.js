@@ -11,41 +11,44 @@ describe('Simple Requests Module Functionality', () => {
       cy.loginAsGM()
    })
 
-   it.only('v13: should detect module presence after login', () => {
+   it('gm only test of module', () => {
       // Now check for module elements
       // element w id chat
       // cy.get("#chat").should("be.visible")
       cy.get("#chat-message").should("be.visible")
-      // cy.get("#chat-log").should("be.visible")
       cy.get("#sidebar").should("be.visible")
-      // cy.get("#sidebar-content").should("be.visible")
-
       cy.get('.fa-comments').click();
 
       // find and click on 
       cy.get('.fa-list').click();
 
       // find and click on 
-      cy.get('.fa-regular.fa-hand.ar-request-icon').click();
-
-      // id="ar-chat-queue"
-      cy.get("#ar-chat-queue").should("exist");
+      cy.get('.fa-regular.fa-hand.sr-request-icon').click();
+      cy.get("#sr-chat-queue").should("exist");
 
       // click on
-      cy.get('.ar-request-container-chat.ar-level-0').click();
-
-      // foundry v13 has an epic prompt
-      // id="ar-epic-prompt"
-      cy.get("#ar-epic-prompt").should("be.visible");
+      cy.get('.sr-request-container-chat.sr-level-0').click();
+      cy.get("#sr-epic-prompt").should("be.visible");
 
 
-      cy.get("#ar-chat-queue", { timeout: 10000 }).should("be.visible");
-
-      cy.get('.fa-regular.fa-hand.ar-request-icon').click();
+      cy.get("#sr-chat-queue", { timeout: 10000 }).should("be.visible");
+      cy.get('.fa-regular.fa-hand.sr-request-icon').click();
       // test whether right click to remove works
-      cy.get('.ar-request-container-chat').should('exist');
-      cy.get('.ar-request-container-chat').rightclick();
-      cy.get('.ar-request-container-chat').should('not.exist');
+      cy.get('.sr-request-container-chat').should('exist');
+      cy.get('.sr-request-container-chat').rightclick();
+      cy.get('.sr-request-container-chat').should('not.exist');
+
+      // callout test
+
+      cy.get('.sr-queue-menu-actions .fa-bullhorn', { timeout: 10000 }).click();
+      cy.get('.sr-pick-player-callout').should('be.visible', { timeout: 10000 });
+      cy.get('.sr-pick-player-callout').find('select[name="userId"]').should('be.visible');
+      cy.get('.sr-pick-player-callout').find('select[name="diceCount"]').should('be.visible');
+      cy.get('.sr-callout-message-form').find('input[name="calloutMessage"]').should('be.visible');
+      cy.get('.sr-callout-message-form').find('button[type="submit"]').should('be.visible');
+
+      cy.get('.sr-callout-dice-buttons').find('button[type="submit"]').first().click();
+      cy.get('.sr-pick-player-callout').should('not.exist');
 
 
       // cy.get('body').then(($body) => {
@@ -74,6 +77,25 @@ describe('Simple Requests Module Functionality', () => {
       //    })
       // })
 
+   })
+
+   it('roll', () => {
+      cy.get("#chat-message").should("be.visible")
+      cy.get("#sidebar").should("be.visible")
+      cy.get('.fa-comments').click();
+
+      // find and click on 
+      cy.get('.fa-list').click();
+
+      cy.get('.sr-queue-menu-actions .fa-bullhorn', { timeout: 10000 }).click();
+      cy.get('.sr-pick-player-callout').should('be.visible', { timeout: 10000 });
+      cy.get('.sr-pick-player-callout').find('select[name="userId"]').should('be.visible');
+      cy.get('.sr-pick-player-callout').find('select[name="diceCount"]').should('be.visible');
+      cy.get('.sr-callout-message-form').find('input[name="calloutMessage"]').should('be.visible');
+      cy.get('.sr-callout-message-form').find('button[type="submit"]').should('be.visible');
+
+      cy.get('.sr-callout-dice-buttons').find('button[type="submit"]').first().click();
+      cy.get('.sr-pick-player-callout').should('not.exist');
    })
 
    it('should handle module UI elements when present', () => {
