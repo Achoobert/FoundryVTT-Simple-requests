@@ -1,4 +1,5 @@
 import { playSound } from "./audio.js";
+import { Constants as C } from "./const.js";
 import { log_socket } from "./debug-log.js";
 import { showEpicPrompt } from "./epic-prompt.js";
 import { moveSimpleRequestsDash } from "./chat-queue-ui.js";
@@ -9,13 +10,40 @@ import {
    remove_request_LOCAL_QUEUE
 } from "./queue-store.js";
 
+function soundSettingKeyForRequestLevel(level) {
+   switch (level) {
+   case 0:
+      return "firstRequestSound";
+   case 1:
+      return "secondRequestSound";
+   case 2:
+      return "thirdRequestSound";
+   default:
+      return "firstRequestSound";
+   }
+}
+
+function playCreateRequestSoundForLevel(level) {
+   const key = soundSettingKeyForRequestLevel(level);
+   const soundSrc = game.settings.get(C.ID, key) || "modules/simple-requests/assets/request0.ogg";
+   playSound(soundSrc);
+}
+
+function playActivateRequestSoundIfEnabled() {
+   if (!game.settings.get(C.ID, "soundActivate")) return;
+   const sound = game.settings.get(C.ID, "reqClickSound")
+      || "modules/simple-requests/assets/samples/fingerSnapping.ogg";
+   playSound(sound);
+}
+
 class SimplePromptsManager {
    constructor() {
-      this.moduleName = "simple-requests";
+      this.moduleName = C.ID;
       this.socket = socketlib.registerModule(this.moduleName);
       this.socket.register("addRequest", this._addRequest.bind(this));
       this.socket.register("removeRequest", this._removeRequest.bind(this));
       this.socket.register("activateRequest", this._activateRequest.bind(this));
+      this.socket.register("playActivateSound", playActivateRequestSoundIfEnabled);
       this.socket.register("updateRequestQueue", this._updateRequestQueue.bind(this));
       this.socket.register("syncQueue", this._syncQueue.bind(this));
    }
@@ -32,6 +60,7 @@ class SimplePromptsManager {
    }
 
    async gm_callout_top_request() {
+      this.socket.executeForEveryone("playActivateSound");
       const toShow = pop_request_LOCAL_QUEUE();
       log_socket("sending pop_top_request", toShow);
       this.socket.executeForOthers("showEpicPrompt", toShow);
@@ -42,6 +71,7 @@ class SimplePromptsManager {
    gmSendTargetedPlayerCallout(payload) {
       if (!game.user.isGM) return;
       log_socket("targeted epic prompt", payload);
+      this.socket.executeForEveryone("playActivateSound");
       this.socket.executeForEveryone("showEpicPrompt", {
          __srTargeted: true,
          __srRecipientId: payload.userId,
@@ -58,6 +88,9 @@ class SimplePromptsManager {
    async createRequest(requestData) {
       log_socket("creating request locally", requestData);
       add_new_request_LOCAL_QUEUE(requestData);
+      if (game.settings.get(this.moduleName, "soundCreate") && requestData.userId === game.user.id) {
+         playCreateRequestSoundForLevel(requestData.level);
+      }
       this.socket.executeForOthers("addRequest", requestData);
       await moveSimpleRequestsDash();
    }
@@ -78,26 +111,8 @@ class SimplePromptsManager {
       log_socket("receiving request from other client", requestData);
       add_new_request_LOCAL_QUEUE(requestData);
       await moveSimpleRequestsDash();
-      if (requestData.userId !== game.user.id) {
-         const soundCreate = game.settings.get("simple-requests", "soundCreate");
-         if (soundCreate) {
-            let soundSettingKey;
-            switch (requestData.level) {
-            case 0:
-               soundSettingKey = "firstRequestSound";
-               break;
-            case 1:
-               soundSettingKey = "secondRequestSound";
-               break;
-            case 2:
-               soundSettingKey = "thirdRequestSound";
-               break;
-            default:
-               soundSettingKey = "firstRequestSound";
-            }
-            const soundSrc = game.settings.get("simple-requests", soundSettingKey) || "modules/simple-requests/assets/request0.ogg";
-            playSound(soundSrc);
-         }
+      if (game.settings.get(this.moduleName, "soundCreate")) {
+         playCreateRequestSoundForLevel(requestData.level);
       }
    }
 
@@ -138,11 +153,7 @@ class SimplePromptsManager {
       const queue = CONFIG.SMP_REQUESTS.queue || [];
       const req = queue.find(r => r.userId === userId);
       if (!req) return;
-      if (game.settings.get(this.moduleName, "soundActivate")) {
-         const sound = game.settings.get(this.moduleName, "reqClickSound")
-            || "modules/simple-requests/assets/samples/fingerSnapping.ogg";
-         playSound(sound);
-      }
+      playActivateRequestSoundIfEnabled();
       ChatMessage.create({
          user: game.user.id,
          speaker: { alias: game.user.name },

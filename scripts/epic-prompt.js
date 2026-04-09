@@ -4,6 +4,10 @@ const DICE_MASK_FALLBACK = "icons/sundries/gaming/dice-pair-white-green.webp";
 
 const D10_MASK_URL = "icons/dice/d10black.svg";
 
+const DICE_RATTLE_SAMPLES = [0, 1, 2, 3, 4].map(
+   (i) => `modules/${C.ID}/assets/samples/dice_rattle_${i}.ogg`
+);
+
 /**
  * @param {string | null} formula - e.g. "2d6"
  * @returns {{ showDiceOverlay: boolean, dicePercentile?: boolean, diceMaskUrl?: string | null }}
@@ -48,6 +52,12 @@ function promptShowSound() {
    const sound = game.settings.get(C.ID, "promptShowSound")
       || `modules/${C.ID}/assets/samples/fingerSnapping.ogg`;
    playInterfaceSound(sound);
+}
+
+function playDiceRollPromptSound() {
+   if (!game.settings.get(C.ID, "soundOnPromptActivate")) return;
+   const src = DICE_RATTLE_SAMPLES[Math.floor(Math.random() * DICE_RATTLE_SAMPLES.length)];
+   playInterfaceSound(src);
 }
 
 /**
@@ -109,7 +119,11 @@ export async function showEpicPrompt(data) {
       return;
    }
 
-   promptShowSound();
+   if (rollFormula) {
+      playDiceRollPromptSound();
+   } else {
+      promptShowSound();
+   }
 
    let dismissed = false;
    let rollHandled = false;
