@@ -1,6 +1,6 @@
-import { Constants as C, escapeHtmlForAttr, PLAYER_CALLOUT_DIE_FACES } from "./const.js";
+import { Constants as C, escapeHtmlForAttr, PLAYER_CALLOUT_DIE_FACES, D2_MASK_URL } from "./const.js";
 
-const DICE_MASK_FALLBACK = "icons/dice/d20black.svg";
+const DICE_MASK_FALLBACK = "icons/sundries/gaming/dice-pair-white-green.webp";
 
 const D10_MASK_URL = "icons/dice/d10black.svg";
 
@@ -14,9 +14,19 @@ function diceOverlayFromFormula(formula) {
    if (!m) return { showDiceOverlay: false };
    const faces = parseInt(m[2], 10);
    if (!Number.isFinite(faces)) return { showDiceOverlay: false };
+   // note that d100 is not included in the icons: so we'll display two d10 icons with a slight offset
    if (faces === 100) {
       return { showDiceOverlay: true, dicePercentile: true };
    }
+   // if d2 use coin
+   if (faces === 2) {
+      return { showDiceOverlay: true, diceMaskUrl: D2_MASK_URL };
+   }
+   // if d3 use d4 i guess
+   if (faces === 3) {
+      return { showDiceOverlay: true, diceMaskUrl: `icons/dice/d4black.svg` };
+   }
+
    const url = PLAYER_CALLOUT_DIE_FACES.includes(faces)
       ? `icons/dice/d${faces}black.svg`
       : DICE_MASK_FALLBACK;

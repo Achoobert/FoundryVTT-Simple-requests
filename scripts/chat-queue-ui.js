@@ -76,24 +76,28 @@ async function renderSimplePromptsQueue() {
    const menuStack = document.createElement("div");
    menuStack.classList.add("sr-queue-menu-actions");
 
-   const queueAllMenuButton = document.createElement("div");
-   queueAllMenuButton.classList.add("queueAll-button");
-   queueAllMenuButton.innerHTML = `<i class="fas fa-list"></i>`;
-   queueAllMenuButton.dataset.tooltip = game.i18n.localize(`${C.ID}.buttons.queueAllMenuTooltip`);
-   menuStack.append(queueAllMenuButton);
-
    if (game.user.isGM) {
-      const pickPlayerMenuButton = document.createElement("div");
-      pickPlayerMenuButton.classList.add("queueAll-button");
-      pickPlayerMenuButton.innerHTML = `<i class="fas fa-bullhorn"></i>`;
-      pickPlayerMenuButton.dataset.tooltip = game.i18n.localize(`${C.ID}.buttons.pickPlayerCalloutTooltip`);
-      menuStack.append(pickPlayerMenuButton);
+      const gmActions = document.createElement("div");
+      gmActions.classList.add("sr-queue-gm-actions");
+
+      const queueAllMenuButton = document.createElement("div");
+      queueAllMenuButton.classList.add("sr-queue-gm-button", "sr-queue-gm-queue-all");
+      queueAllMenuButton.innerHTML = `<i class="fas fa-list"></i>`;
+      queueAllMenuButton.dataset.tooltip = game.i18n.localize(`${C.ID}.buttons.queueAllMenuTooltip`);
       queueAllMenuButton.addEventListener("click", () => {
          window.SimplePrompts.createSocialInitiative();
       });
+
+      const pickPlayerMenuButton = document.createElement("div");
+      pickPlayerMenuButton.classList.add("sr-queue-gm-button", "sr-queue-gm-pick-player");
+      pickPlayerMenuButton.innerHTML = `<i class="fas fa-bullhorn"></i>`;
+      pickPlayerMenuButton.dataset.tooltip = game.i18n.localize(`${C.ID}.buttons.pickPlayerCalloutTooltip`);
       pickPlayerMenuButton.addEventListener("click", () => {
          openPlayerCalloutDialog().catch((e) => console.error(e));
       });
+
+      gmActions.append(queueAllMenuButton, pickPlayerMenuButton);
+      menuStack.append(gmActions);
    }
 
    queueBox.append(menuStack);

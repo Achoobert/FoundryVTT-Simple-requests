@@ -53,7 +53,7 @@
             "countLabel": "Number of dice",
             "submit": "Send",
             "upHeadline": "You're up!",
-            "rollHeadline": "Click anywhere to roll {formula}",
+            "rollHeadline": "Roll {formula}",
             "noPlayers": "No active players to notify.",
             "needDieAndCount": "Select a die type and how many to roll.",
             "rollFailed": "Could not roll dice. Check the formula or your system."
