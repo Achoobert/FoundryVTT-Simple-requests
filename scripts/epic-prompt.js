@@ -112,6 +112,7 @@ export async function showEpicPrompt(data) {
    promptShowSound();
 
    let dismissed = false;
+   let rollHandled = false;
    const dismiss = () => {
       if (dismissed) return;
       dismissed = true;
@@ -124,6 +125,9 @@ export async function showEpicPrompt(data) {
    overlay.addEventListener("click", async () => {
       if (dismissed) return;
       if (rollFormula) {
+         if (rollHandled) return;
+         rollHandled = true;
+         clearTimeout(timeoutId);
          try {
             const roll = new Roll(rollFormula);
             await roll.evaluate({ async: true });
@@ -134,7 +138,6 @@ export async function showEpicPrompt(data) {
             console.error("simple-requests: roll failed", err);
             ui.notifications?.warn?.(game.i18n.localize(`${C.ID}.pickPlayerCallout.rollFailed`));
          }
-         clearTimeout(timeoutId);
          dismiss();
          return;
       }
