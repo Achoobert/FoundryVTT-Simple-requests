@@ -11,7 +11,7 @@ describe('Simple Requests Module Functionality', () => {
       cy.loginAsGM()
    })
 
-   it.only('gm only test of module', () => {
+   it('gm only test of module', () => {
       // Now check for module elements
       // element w id chat
       // cy.get("#chat").should("be.visible")
@@ -48,9 +48,9 @@ describe('Simple Requests Module Functionality', () => {
       cy.get('.sr-pick-player-callout-form').find('button[name="submit"]').should('be.visible');
 
       // test the dice buttons
-      cy.get('.sr-callout-dice-buttons').find('button').click();
       // sr-callout-die d100
       cy.get('.sr-callout-dice-buttons').find('button').eq(4).click();
+      cy.get('.sr-callout-dice-buttons').find('button').click();
 
       cy.get('.sr-pick-player-callout-form').find('button[name="submit"]').click();
       cy.get('.sr-pick-player-callout-form').should('not.exist');
@@ -82,6 +82,30 @@ describe('Simple Requests Module Functionality', () => {
       //    })
       // })
 
+   })
+
+   it.only('roll', () => {
+      cy.get("#chat-message").should("be.visible")
+      cy.get("#sidebar").should("be.visible")
+      cy.get('.fa-comments').click();
+
+      // find and click on 
+      cy.get('.fa-list').click();
+
+      cy.get('.sr-queue-menu-actions .fa-bullhorn', { timeout: 10000 }).click();
+      cy.get('.sr-pick-player-callout-form').should('be.visible', { timeout: 10000 });
+      cy.get('.sr-pick-player-callout-form').find('select[name="userId"]').should('be.visible');
+      // cy.get('.sr-pick-player-callout-form').find('select[name="calloutMode"]').should('be.visible');
+      cy.get('.sr-pick-player-callout-form').find('select[name="diceCount"]').should('be.visible');
+      cy.get('.sr-pick-player-callout-form').find('button[name="submit"]').should('be.visible');
+
+      // test the dice buttons
+      // sr-callout-die d100
+      cy.get('.sr-callout-dice-buttons').find('button').eq(4).click();
+      cy.get('.sr-callout-dice-buttons').find('button').click();
+
+      cy.get('.sr-pick-player-callout-form').find('button[name="submit"]').click();
+      cy.get('.sr-pick-player-callout-form').should('not.exist');
    })
 
    it('should handle module UI elements when present', () => {

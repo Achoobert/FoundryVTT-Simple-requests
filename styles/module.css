@@ -112,23 +112,17 @@
   border: none !important;
 }
 
-
-
-.sr-prompt-color-pulse {
-  animation: chipColorPulse 1.2s infinite alternate
-}
-
-@keyframes chipColorPulse {
+@keyframes colorPulse {
   0% {
-    color: #ff3333;
+    background-color: #a0c9f8;
   }
 
   50% {
-    color: #ffa500;
+    background-color: #ddec9a;
   }
 
   100% {
-    color: #ffff00;
+    background-color: #f6bdaf;
   }
 }
 
@@ -385,7 +379,8 @@
   height: 60%;
   flex-shrink: 0;
   pointer-events: none;
-  background-color: rgba(255, 220, 120, 0.95);
+  background-color: #4bff33;
+    animation: colorPulse 1.2s infinite alternate;
   filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.75)) drop-shadow(0 0 12px rgba(0, 0, 0, 0.45));
 }
 
@@ -424,7 +419,10 @@
 }
 
 .sr-epic-dice-vibrate {
-  animation: shake 0.8s infinite, fastPulse 1.5s ease-in-out infinite;
+  animation:
+      shake 0.8s infinite,
+      fastPulse 1.5s ease-in-out infinite,
+      colorPulse 1.2s infinite alternate;
 }
 .epic-prompt-warning {
   position: absolute;
@@ -459,6 +457,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  
 }
 
 .sr-queue-menu-actions .sr-queue-gm-button i {
