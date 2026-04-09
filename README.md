@@ -1,8 +1,8 @@
 # Simple Requests
 
-Players can create requests to express their desire to speak without those awkward pauses and interruptions in the voice chat.
+Players can requests to speak, GM can ask for simple dice rolls without any of those awkward pauses and interruptions in the voice chat.
 
-Three tiers of importance help the GM to judge the urgency of the request
+Three tiers of importance help the GM to judge the urgency of the request. Also features "add all active players to queue" to help everyone at the table speak.
 
 Queue is displayed above the chat-input. Create requests using the "🤚" buttons. Pop top request by left clicking on it, silently dismiss any request by right clicking. 
 

@@ -21,10 +21,10 @@ Hooks.once('init', function() {
 
    registerSettings("soundCreate", "world", true, Boolean, true);
    registerSettings("soundOnPromptActivate", "world", true, Boolean, true);
-   registerSettings("promptShowSound", "world", true, String, "modules/simple-requests/assets/samples/fingerSnapping.ogg", "audio");
+   registerSettings("promptShowSound", "world", true, String, "modules/simple-requests/assets/request0.ogg", "audio");
    registerSettings("epicPromptHeadline", "world", true, String, "{name} has the floor");
    registerSettings("soundActivate", "world", true, Boolean, true);
-   registerSettings("reqClickSound", "world", true, String, "modules/simple-requests/assets/samples/fingerSnapping.ogg", "audio");
+   registerSettings("reqClickSound", "world", true, String, "modules/simple-requests/assets/request0.ogg", "audio");
 
    registerSettings("firstRequest", "world", true, Boolean, true, null, updateChatRequestButtons);
    registerSettings("firstRequestSound", "world", true, String, "modules/simple-requests/assets/request0.ogg", "audio");
@@ -32,6 +32,8 @@ Hooks.once('init', function() {
    registerSettings("secondRequestSound", "world", true, String, "modules/simple-requests/assets/request1.ogg", "audio");
    registerSettings("thirdRequest", "world", true, Boolean, true, null, updateChatRequestButtons);
    registerSettings("thirdRequestSound", "world", true, String, "modules/simple-requests/assets/request2.ogg", "audio");
+
+   registerSettings("queueAllPlayersOnly", "world", true, Boolean, false);
 
    registerSettings("queue", "world", false, Array, []);
 });
