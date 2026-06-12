@@ -1,4 +1,4 @@
-import { Constants as C } from "./const.js";
+import { Constants as C, getQueueItemDisplayName, getRequestDisplayName } from "./const.js";
 import { log_socket } from "./debug-log.js";
 import { openPlayerCalloutDialog } from "./player-callout-dialog.js";
 import { get_requests_LOCAL_QUEUE } from "./queue-store.js";
@@ -12,7 +12,7 @@ function getRequestElement(item) {
    const containerEl = document.createElement("div");
    containerEl.className = `sr-request-container-chat sr-level-${item.level}`;
    containerEl.dataset.id = item.userId;
-   containerEl.dataset.tooltip = item.name;
+   containerEl.dataset.tooltip = getQueueItemDisplayName(item);
    addRequestListener(containerEl);
 
    const tokenImgEl = document.createElement("img");
@@ -156,7 +156,7 @@ async function renderSimplePromptsQueue() {
          event.preventDefault();
          const requestData = {
             userId: game.user.id,
-            name: game.user.name,
+            name: getRequestDisplayName(game.user),
             img: game.user.avatar,
             level: i
          };

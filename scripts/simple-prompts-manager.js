@@ -1,5 +1,5 @@
 import { playSound } from "./audio.js";
-import { Constants as C } from "./const.js";
+import { Constants as C, getRequestDisplayName } from "./const.js";
 import { log_socket } from "./debug-log.js";
 import { showEpicPrompt } from "./epic-prompt.js";
 import { moveSimpleRequestsDash } from "./chat-queue-ui.js";
@@ -119,7 +119,7 @@ class SimplePromptsManager {
          const user = users[i];
          await this.createRequest({
             userId: user.id,
-            name: user.name,
+            name: getRequestDisplayName(user),
             img: user.avatar,
             level: 0,
             timestamp: baseTs + i
@@ -177,7 +177,9 @@ class SimplePromptsManager {
       ChatMessage.create({
          user: game.user.id,
          speaker: { alias: game.user.name },
-         content: game.i18n.format("simple-requests.chatMessage.activateRequest", { name: req.name })
+         content: game.i18n.format("simple-requests.chatMessage.activateRequest", {
+            name: getRequestDisplayName(game.users.get(userId)) || req.name
+         })
       });
       remove_request_LOCAL_QUEUE(userId);
       await moveSimpleRequestsDash();

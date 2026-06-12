@@ -1,5 +1,6 @@
 import {
    Constants as C,
+   getRequestDisplayName,
    PLAYER_CALLOUT_DIE_FACES,
    PLAYER_CALLOUT_ROLL_COUNT_MAX,
    PLAYER_CALLOUT_ROLL_COUNT_MIN
@@ -18,7 +19,7 @@ function resolveCalloutTarget(html, L) {
       img = actor?.img;
    }
    img = img || "icons/svg/mystery-man.svg";
-   return { userId: target.id, name: target.name, img, level: 0 };
+   return { userId: target.id, name: getRequestDisplayName(target), img, level: 0 };
 }
 
 export async function openPlayerCalloutDialog() {
@@ -36,7 +37,7 @@ export async function openPlayerCalloutDialog() {
    let content;
    try {
       content = await foundry.applications.handlebars.renderTemplate(template, {
-         players: players.map((u) => ({ id: u.id, name: u.name })),
+         players: players.map((u) => ({ id: u.id, name: getRequestDisplayName(u) })),
          dieFaces: PLAYER_CALLOUT_DIE_FACES,
          diceCounts,
          messageDefault: game.i18n.localize(`${C.ID}.pickPlayerCallout.messageDefault`)

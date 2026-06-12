@@ -4,6 +4,7 @@
   "description": "A Foundry VTT module that adds a convenient way to use the Requests rule",
   "scripts": {
     "test": "cypress run",
+    "test:unit": "node --test tests/get-request-display-name.test.mjs",
     "test:watch": "cypress run --watch",
     "test:dev": "cypress open --config baseUrl=http://localhost:30000",
     "test:ci": "cypress run --headless --browser chrome --config-file cypress.config.ci.js"

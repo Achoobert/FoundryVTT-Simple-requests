@@ -18,6 +18,7 @@ Hooks.once('init', function() {
          ...(_range ? { range: _range } : {})
       });
    };
+   registerSettings("useCharacterName", "world", true, Boolean, false, null, updateChatRequestButtons);
 
    registerSettings("soundCreate", "world", true, Boolean, true);
    registerSettings("soundOnPromptActivate", "world", true, Boolean, true);
