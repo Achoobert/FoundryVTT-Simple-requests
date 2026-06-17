@@ -1,0 +1,41 @@
+{
+  "id": "simple-requests-tests",
+  "title": "Simple Requests Tests",
+  "description": "Test suite to run Quench tests in game on the Simple Requests module",
+  "authors": [
+    {
+      "name": "Miskatonic Investigative Society"
+    },
+    {
+      "name": "kwitczak"
+    }
+  ],
+  "version": "0.0.1",
+  "compatibility": {
+    "minimum": "13",
+    "verified": "14"
+  },
+  "relationships": {
+    "requires": [
+      {
+        "id": "quench",
+        "type": "module",
+        "reason": "Process Tests powered by Mocha."
+      },
+      {
+        "id": "simple-requests",
+        "type": "module",
+        "reason": "Test suite for the Simple Requests module."
+      },
+      {
+        "id": "socketlib",
+        "type": "module",
+        "manifest": "https://raw.githubusercontent.com/manuelVo/foundryvtt-socketlib/master/module.json",
+        "reason": "Required by Simple Requests."
+      }
+    ]
+  },
+  "esmodules": [
+    "module.js"
+  ]
+}

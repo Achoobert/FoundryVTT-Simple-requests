@@ -2,15 +2,23 @@
   "name": "simple-requests",
   "version": "1.0.8",
   "description": "A Foundry VTT module that adds a convenient way to use the Requests rule",
+  "workspaces": [
+    "quench"
+  ],
   "scripts": {
-    "test": "cypress run",
+    "quench:build": "npm run build -w quench",
+    "quench:watch": "npm run watch -w quench",
+    "test:quench": "cypress run --spec cypress/e2e/quench.cy.js",
+    "test": "concurrently -k -s first -n quench,cy \"npm:quench:watch\" \"npm run test:quench\"",
+    "test:all": "npm run test:unit && npm run test:quench",
     "test:unit": "node --test tests/get-request-display-name.test.mjs",
     "test:watch": "cypress run --watch",
     "test:dev": "cypress open --config baseUrl=http://localhost:30000",
     "test:ci": "cypress run --headless --browser chrome --config-file cypress.config.ci.js"
   },
   "devDependencies": {
-    "cypress": "^14.0.0",
+    "concurrently": "^9.1.2",
+    "cypress": "^15.17.0",
     "cypress-if": "^1.13.2",
     "eslint": "^9.30.1"
   }
