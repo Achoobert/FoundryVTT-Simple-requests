@@ -15,6 +15,8 @@ export default function register(quench) {
           const mod = game.modules.get(MODULE_ID)
           assert.isObject(mod.api)
           assert.isFunction(mod.api.openPlayerCalloutDialog)
+          assert.isFunction(mod.api.getRequestDisplayName)
+          assert.isFunction(mod.api.getQueueItemDisplayName)
         })
       })
     },
