@@ -17,7 +17,7 @@
     "test:ci": "cypress run --headless --browser chrome --config-file cypress.config.ci.js"
   },
   "devDependencies": {
-    "concurrently": "^9.1.2",
+    "concurrently": "^10.0.3",
     "cypress": "^15.17.0",
     "cypress-if": "^1.13.2",
     "eslint": "^9.30.1"
