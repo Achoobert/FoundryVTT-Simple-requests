@@ -25,7 +25,9 @@
             "thirdRequestSound": "Third Request Sound File",
             "thirdRequestSoundHint": "Audio file to play for the third (urgent) request.",
             "queueAllPlayersOnly": "Queue all: players only",
-            "queueAllPlayersOnlyHint": "When enabled, “add all to queue” only includes users with the Player role. When disabled, every connected user (including GMs and Assistants) is included. Order is randomized each time."
+            "queueAllPlayersOnlyHint": "When enabled, “add all to queue” only includes users with the Player role. When disabled, every connected user (including GMs and Assistants) is included. Order is randomized each time.",
+            "useCharacterName": "Use character names",
+            "useCharacterNameHint": "Show each player's assigned character name instead of their user name in the request queue, callouts, and prompts. Falls back to the user name when no character is assigned."
         },
         "chatMessage": {
             "activateRequest": "{name} made a request!"

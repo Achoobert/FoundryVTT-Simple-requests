@@ -2,3 +2,12 @@
 @eslint-community
 node_modules
 .env
+node_modules/
+*.todo
+fvtt.config.js
+package-lock.json
+screenshots/
+quench/fvtt.config.js
+quench/node_modules/
+quench/cypress/screenshots/
+quench/build/

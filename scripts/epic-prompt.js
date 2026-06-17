@@ -1,4 +1,10 @@
-import { Constants as C, escapeHtmlForAttr, PLAYER_CALLOUT_DIE_FACES, D2_MASK_URL } from "./const.js";
+import {
+   Constants as C,
+   escapeHtmlForAttr,
+   getRequestDisplayName,
+   PLAYER_CALLOUT_DIE_FACES,
+   D2_MASK_URL
+} from "./const.js";
 
 const DICE_MASK_FALLBACK = "icons/sundries/gaming/dice-pair-white-green.webp";
 
@@ -72,7 +78,8 @@ function playDiceRollPromptSound() {
  * @returns {Promise<void>}
  */
 export async function showEpicPrompt(data) {
-   const name = data.name || "Player";
+   const promptUser = data.userId ? game.users.get(data.userId) : null;
+   const name = getRequestDisplayName(promptUser) || data.name || "Player";
    const safeName = escapeHtmlForAttr(name);
    const img = data.img || "icons/svg/mystery-man.svg";
    const level = typeof data.level === "number" ? Math.min(2, Math.max(0, data.level)) : 0;
