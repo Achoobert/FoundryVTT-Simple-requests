@@ -33,7 +33,11 @@ jobs:
         with:
           foundry_version: '14.364'
           foundry_world: simple-requests-test
-          build_script: npm run build
+          build_script: |
+            dest=foundrydata/Data/modules/simple-requests
+            mkdir -p "$dest"
+            cp module.json "$dest/"
+            cp -r scripts styles language "$dest/"
           quench_tests_path: ./quench
           quench_build_command: npm run quench:build
           test_command: npm run test:ci
