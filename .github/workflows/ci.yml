@@ -1,0 +1,42 @@
+# run the tests in foundry!
+name: CI
+
+on:
+  push:
+    branches:
+      - e2e-tests
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  actions: write
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    env:
+      FOUNDRY_WAIT_MS: '600000'
+      FOUNDRY_CACHE_VERSION: '14.364'
+      FOUNDRY_CORE_VERSION: '14.364'
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Foundry E2E
+        uses: Achoobert/FoundryvttTestEnv@0.0.1
+        with:
+          foundry_version: '14.364'
+          foundry_world: simple-requests-test
+          build_script: npm run build
+          quench_tests_path: ./quench
+          quench_build_command: npm run quench:build
+          test_command: npm run test:ci
+          foundry_username: ${{ secrets.FOUNDRY_USERNAME }}
+          foundry_password: ${{ secrets.FOUNDRY_PASSWORD }}
+          foundry_admin_key: ${{ secrets.FOUNDRY_ADMIN_KEY }}
