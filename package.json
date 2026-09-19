@@ -6,6 +6,10 @@
     "quench"
   ],
   "scripts": {
+    "build": "webpack --config webpack.config.mjs --mode production",
+    "watch": "webpack --config webpack.config.mjs --mode development",
+    "build:tests": "npm run quench:build",
+    "watch:tests": "npm run quench:watch",
     "quench:build": "npm run build -w quench",
     "quench:watch": "npm run watch -w quench",
     "test:quench": "cypress run --spec cypress/e2e/quench.cy.js",
@@ -18,8 +22,11 @@
   },
   "devDependencies": {
     "concurrently": "^10.0.3",
+    "copy-webpack-plugin": "^14.0.0",
     "cypress": "^15.17.0",
     "cypress-if": "^1.13.2",
-    "eslint": "^9.30.1"
+    "eslint": "^9.30.1",
+    "webpack": "^5.76.1",
+    "webpack-cli": "^5.0.1"
   }
 }
