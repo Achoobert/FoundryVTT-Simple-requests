@@ -24,6 +24,10 @@
             "secondRequestSoundHint": "Audio file to play for the second (important) request.",
             "thirdRequestSound": "Third Request Sound File",
             "thirdRequestSoundHint": "Audio file to play for the third (urgent) request.",
+            "xCardRequest": "Show X card",
+            "xCardRequestHint": "Show the X card button. Confirms, then shows an anonymous prompt to everyone (does not join the queue).",
+            "xCardRequestSound": "X Card Sound File",
+            "xCardRequestSoundHint": "Audio file to play when someone uses the X card.",
             "queueAllPlayersOnly": "Queue all: players only",
             "queueAllPlayersOnlyHint": "When enabled, “add all to queue” only includes users with the Player role. When disabled, every connected user (including GMs and Assistants) is included. Order is randomized each time.",
             "useCharacterName": "Use character names",
@@ -36,9 +40,16 @@
             "firstRequestTooltip": "Common request",
             "secondRequestTooltip": "Important request",
             "thirdRequestTooltip": "Urgent request!",
+            "xCardRequestTooltip": "X card — anonymous pause signal",
             "queueTransferTooltip": "Change the position of the requests window to Free",
             "queueAllMenuTooltip": "Add all connected users to the queue (random order)",
             "pickPlayerCalloutTooltip": "Send a player callout or roll prompt"
+        },
+        "xCard": {
+            "confirmTitle": "Use X card?",
+            "confirmContent": "This will alert everyone anonymously that an X card was used. Continue?",
+            "promptHeadline": "A user has used the X card",
+            "anonName": "Someone"
         },
         "pickPlayerCallout": {
             "dialogTitle": "Player callout",

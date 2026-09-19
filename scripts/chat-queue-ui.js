@@ -164,6 +164,19 @@ async function renderSimplePromptsQueue() {
       };
       buttonDiv.append(button);
    });
+
+   if (game.settings.get(C.ID, "xCardRequest")) {
+      const xCardButton = document.createElement("div");
+      xCardButton.className = "sr-chat-button sr-chat-hand-xcard";
+      xCardButton.innerHTML = `<i class="fa-solid fa-ban sr-request-icon"></i>`;
+      xCardButton.dataset.tooltip = game.i18n.localize(`${C.ID}.buttons.xCardRequestTooltip`);
+      xCardButton.onclick = async (event) => {
+         event.preventDefault();
+         await window.SimplePrompts.createXCard();
+      };
+      buttonDiv.append(xCardButton);
+   }
+
    new_request_element.append(buttonDiv);
 
    return new_request_element;

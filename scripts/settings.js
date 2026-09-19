@@ -31,8 +31,10 @@ Hooks.once('init', function() {
    registerSettings("firstRequestSound", "world", true, String, "modules/simple-requests/assets/request0.ogg", "audio");
    registerSettings("secondRequest", "world", true, Boolean, true, null, updateChatRequestButtons);
    registerSettings("secondRequestSound", "world", true, String, "modules/simple-requests/assets/request1.ogg", "audio");
-   registerSettings("thirdRequest", "world", true, Boolean, true, null, updateChatRequestButtons);
+   registerSettings("thirdRequest", "world", true, Boolean, false, null, updateChatRequestButtons);
    registerSettings("thirdRequestSound", "world", true, String, "modules/simple-requests/assets/request2.ogg", "audio");
+   registerSettings("xCardRequest", "world", true, Boolean, true, null, updateChatRequestButtons);
+   registerSettings("xCardRequestSound", "world", true, String, "modules/simple-requests/assets/request2.ogg", "audio");
 
    registerSettings("queueAllPlayersOnly", "world", true, Boolean, false);
 

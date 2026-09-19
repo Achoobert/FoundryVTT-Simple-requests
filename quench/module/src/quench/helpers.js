@@ -17,6 +17,8 @@ export const EXPECTED_SETTING_KEYS = [
   'secondRequestSound',
   'thirdRequest',
   'thirdRequestSound',
+  'xCardRequest',
+  'xCardRequestSound',
   'queueAllPlayersOnly',
   'queue'
 ]
