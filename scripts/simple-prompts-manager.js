@@ -29,6 +29,24 @@ function playCreateRequestSoundForLevel(level) {
    playSound(soundSrc);
 }
 
+function playXCardCreateSoundIfEnabled() {
+   if (!game.settings.get(C.ID, "soundCreate")) return;
+   const soundSrc = game.settings.get(C.ID, "xCardRequestSound")
+      || "modules/simple-requests/assets/request2.ogg";
+   playSound(soundSrc);
+}
+
+/** Anon prompt payload built locally on each client — never carries clicker identity. */
+function buildXCardPromptData() {
+   return {
+      name: game.i18n.localize(`${C.ID}.xCard.anonName`),
+      img: "icons/svg/mystery-man.svg",
+      level: 2,
+      headlineText: game.i18n.localize(`${C.ID}.xCard.promptHeadline`),
+      skipQueueSync: true
+   };
+}
+
 function playActivateRequestSoundIfEnabled() {
    if (!game.settings.get(C.ID, "soundActivate")) return;
    const sound = game.settings.get(C.ID, "reqClickSound")
@@ -61,6 +79,7 @@ class SimplePromptsManager {
       this.socket.register("playActivateSound", playActivateRequestSoundIfEnabled);
       this.socket.register("updateRequestQueue", this._updateRequestQueue.bind(this));
       this.socket.register("syncQueue", this._syncQueue.bind(this));
+      this.socket.register("showXCardPrompt", this._showXCardPrompt.bind(this));
    }
 
    async _syncQueue(newQueue) {
@@ -108,6 +127,27 @@ class SimplePromptsManager {
       }
       this.socket.executeForOthers("addRequest", requestData);
       await moveSimpleRequestsDash();
+   }
+
+   async createXCard() {
+      const confirmed = await Dialog.confirm({
+         title: game.i18n.localize(`${C.ID}.xCard.confirmTitle`),
+         content: `<p>${game.i18n.localize(`${C.ID}.xCard.confirmContent`)}</p>`,
+         defaultYes: false
+      });
+      if (!confirmed) return;
+
+      log_socket("creating x-card prompt locally");
+      playXCardCreateSoundIfEnabled();
+      // No identity on the wire — peers rebuild the prompt from local i18n only.
+      this.socket.executeForOthers("showXCardPrompt");
+      await showEpicPrompt(buildXCardPromptData());
+   }
+
+   async _showXCardPrompt() {
+      log_socket("receiving x-card prompt from other client");
+      playXCardCreateSoundIfEnabled();
+      await showEpicPrompt(buildXCardPromptData());
    }
 
    async createSocialInitiative() {

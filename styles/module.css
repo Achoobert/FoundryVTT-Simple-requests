@@ -35,7 +35,8 @@
 
 .sr-chat-button.sr-chat-hand-level-0,
 .sr-chat-button.sr-chat-hand-level-1,
-.sr-chat-button.sr-chat-hand-level-2 {
+.sr-chat-button.sr-chat-hand-level-2,
+.sr-chat-button.sr-chat-hand-xcard {
   border: none;
   animation: none;
 }
