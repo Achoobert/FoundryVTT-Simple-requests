@@ -22,6 +22,12 @@
         <h4 class="sr-callout-section-title">{{localize "simple-requests.pickPlayerCallout.rollSection"}}</h4>
         <form class="sr-callout-dice-form">
           <div class="form-group">
+            <label>
+              <input type="checkbox" name="hideRoll">
+              {{localize "simple-requests.pickPlayerCallout.hideLabel"}}
+            </label>
+          </div>
+          <div class="form-group">
             <label>{{localize "simple-requests.pickPlayerCallout.countLabel"}}</label>
             <select name="diceCount">
               {{#each diceCounts}}
