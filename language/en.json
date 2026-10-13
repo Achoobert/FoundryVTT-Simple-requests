@@ -59,6 +59,8 @@
       "messageDefault": "You're next",
       "rollSection": "Ask for a roll",
       "hideLabel": "Hide Result",
+      "advantageLabel": "Advantage (Keep Highest)",
+      "disadvantageLabel": "Disadvantage (Keep Lowest)",
       "pickDie": "Die type",
       "cancel": "Cancel",
       "countLabel": "Number of dice",

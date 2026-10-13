@@ -93,6 +93,14 @@ export async function openPlayerCalloutDialog() {
         });
         dialog.close();
       });
+      const advCheckbox = html.find('[name="advantage"]');
+      const disCheckbox = html.find('[name="disadvantage"]');
+      advCheckbox.on("change", () => {
+        if (advCheckbox.is(":checked")) disCheckbox.prop("checked", false);
+      });
+      disCheckbox.on("change", () => {
+        if (disCheckbox.is(":checked")) advCheckbox.prop("checked", false);
+      });
       html.find(".sr-callout-dice-form").on("submit", (ev) => {
         ev.preventDefault();
         const submitter = ev.originalEvent?.submitter;
@@ -108,7 +116,10 @@ export async function openPlayerCalloutDialog() {
         const base = resolveCalloutTarget(html, L);
         if (!base) return;
         const hideRoll = html.find('[name="hideRoll"]').is(":checked");
-        const formula = `${count}d${faces}`;
+        const advantage = html.find('[name="advantage"]').is(":checked");
+        const disadvantage = html.find('[name="disadvantage"]').is(":checked");
+        const keepSuffix = advantage ? "kh1" : disadvantage ? "kl1" : "";
+        const formula = `${count}d${faces}${keepSuffix}`;
         const headlineText = L("rollHeadline").replaceAll("{formula}", formula);
         window.SimplePrompts.gmSendTargetedPlayerCallout({
           ...base,
