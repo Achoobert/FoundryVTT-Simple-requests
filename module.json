@@ -1,7 +1,7 @@
 {
   "title": "Simple Requests",
   "description": "A module that adds a convenient way to use the Requests rule, allowing the GM to more effectively distribute attention between players.",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "compatibility": {
     "minimum": "12",
     "verified": "14"
@@ -22,13 +22,8 @@
     }
   ],
   "socket": true,
-  "esmodules": [
-    "scripts/main.js",
-    "scripts/settings.js"
-  ],
-  "styles": [
-    "styles/module.css"
-  ],
+  "esmodules": ["scripts/main.js", "scripts/settings.js"],
+  "styles": ["styles/module.css"],
   "languages": [
     {
       "lang": "en",
